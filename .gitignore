@@ -1,13 +1,14 @@
 HELP.md
-.pem
-.jar
-.env
+
 .gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
-
+.env
+*.jar
+*.pem
+*.key
 ### STS ###
 .apt_generated
 .classpath
