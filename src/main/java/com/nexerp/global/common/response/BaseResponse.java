@@ -1,12 +1,11 @@
 package com.nexerp.global.common.response;
 
+import static java.time.format.DateTimeFormatter.ISO_INSTANT;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.nexerp.global.common.exception.ErrorCode;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import lombok.AccessLevel;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
@@ -15,14 +14,6 @@ import org.springframework.http.HttpStatus;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"timestamp", "isSuccess", "status", "code", "message", "result"})
 public class BaseResponse<T> {
-
-  // 시간 출력 위치 고정 > 한국 시간으로 고정함으로써 프론트와 백 모두 이해하기 쉬운 직관적인 이해
-  private static final ZoneId KOREA_ZONE = ZoneId.of("Asia/Seoul");
-
-  // 시간 표기 패턴 고정
-  private static final DateTimeFormatter KST_FORMATTER = DateTimeFormatter
-      .ofPattern("yyyy-MM-dd'T'HH:mm:ss")
-      .withZone(KOREA_ZONE);
 
   // 요청 시간을 전달 함으로 로그와 비교하여 문제 해결 가능
   @JsonProperty("timestamp")
@@ -96,8 +87,9 @@ public class BaseResponse<T> {
   }
 
   // 시간을 조회하는 정적 메서드
+  // UTC, 예: 2025-11-12T06:30:00Z
   private static String generateTimestamp() {
-    return KST_FORMATTER.format(Instant.now());
+    return ISO_INSTANT.format(java.time.Instant.now());
   }
 
 
