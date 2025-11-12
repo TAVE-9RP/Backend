@@ -18,6 +18,15 @@ public enum GlobalErrorCode implements ErrorCode {
   NOT_FOUND(HttpStatus.NOT_FOUND, "COMMON_404_NOT_FOUND", "리소스를 찾을 수 없습니다."),
   NO_HANDLER(HttpStatus.NOT_FOUND, "COMMON_404_NO_HANDLER", "요청하신 URL이 존재하지 않습니다."),
 
+  CONFLICT(HttpStatus.CONFLICT, "COMMON_409_CONFLICT",
+      "요청이 현재 리소스 상태와 충돌합니다."),
+  DUPLICATE_RESOURCE(HttpStatus.CONFLICT, "COMMON_409_DUPLICATE_RESOURCE",
+      "이미 존재하는 리소스입니다."),               // ex) 이메일/ID/게시글 중복 생성
+  STATE_CONFLICT(HttpStatus.CONFLICT, "COMMON_409_STATE_CONFLICT",
+      "리소스의 현재 상태와 모순되는 요청입니다."),
+  OPTIMISTIC_LOCK_CONFLICT(HttpStatus.CONFLICT, "COMMON_409_OPTIMISTIC_LOCK",
+      "동시 수정 충돌이 발생했습니다. 다시 시도해주세요."), // ex) 버전 충돌(낙관적 락)
+
   TOO_MANY_REQUESTS(HttpStatus.TOO_MANY_REQUESTS, "COMMON_429_TOO_MANY_REQUESTS",
       "요청이 너무 빈번합니다. 잠시 후 다시 시도하세요."),
 
