@@ -1,6 +1,11 @@
 package com.nexerp.domain.member.model.response;
 
+import com.nexerp.domain.member.model.enums.MemberDepartment;
+import com.nexerp.domain.member.model.enums.MemberPosition;
 import com.nexerp.domain.member.model.enums.MemberRole;
+import jakarta.persistence.Column;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -14,10 +19,9 @@ public class MemberAuthResponseDto {
     // JWT Refresh Token
     private String refreshToken;
 
-    // 즉시 필요한 정보들은 토큰 디코딩 없이 사용할 수 있도록 '로그인용 ID, 권한' 추가 반환
-    // 로그인용 ID
-    private String loginId;
+    // 부서
+    private MemberDepartment department;
 
-    // 권한
-    private MemberRole role;
+    // 직급
+    private MemberPosition position;
 }
