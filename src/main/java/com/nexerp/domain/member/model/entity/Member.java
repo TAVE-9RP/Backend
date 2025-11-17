@@ -77,11 +77,10 @@ public class Member {
         this.joinRequestDate = LocalDateTime.now();
     }
 
-    // 가입 승인이 되면, 가입 상태를 APPROVED로 변경하고, 가입일(joinDate) 기록
-    public void memberApprove(){
-        if(this.requestStatus != MemberRequestStatus.APPROVED){
-            this.requestStatus = MemberRequestStatus.APPROVED;
-            this.joinDate = LocalDateTime.now();
-        }
+    // 오너가 직원의 가입 요청 승인
+    public void approve() {
+        this.requestStatus = MemberRequestStatus.APPROVED;
+        this.joinDate = LocalDateTime.now();
     }
+
 }
