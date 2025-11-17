@@ -67,6 +67,7 @@ public class Member {
     @Column(name = "company_id", nullable = false)
     private Long companyId;
 
+   // logisticsRole, inventoryRole, managementRole 각각의 권한
     @Embedded
     private ServicePermissions permissions;
 
