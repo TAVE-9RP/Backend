@@ -1,5 +1,7 @@
 package com.nexerp.domain.member.model.entity;
 
+import com.nexerp.domain.member.model.embeddable.ServicePermissions;
+import com.nexerp.domain.member.model.enums.MemberDepartment;
 import com.nexerp.domain.member.model.enums.MemberPosition;
 import com.nexerp.domain.member.model.enums.MemberRequestStatus;
 import com.nexerp.domain.member.model.enums.MemberRole;
@@ -39,14 +41,6 @@ public class Member {
     @Column(name = "member_email", unique = true, length = 100)
     private String email;
 
-    // 전화번호
-    @Column(name = "member_phone_number", length = 20)
-    private String phoneNumber;
-
-    // 주소
-    @Column(name = "member_address")
-    private String address;
-
     // 신청일
     @Column(name = "member_join_request_date", updatable = false)
     private LocalDateTime joinRequestDate;
@@ -55,19 +49,14 @@ public class Member {
     @Column(name = "member_join_date")
     private LocalDateTime joinDate;
 
-    // 부서
+    // ENUM: 부서
     @Column(name = "member_department", length = 50)
-    private String department;
+    private MemberDepartment department;
 
     // ENUM: 직급
     @Enumerated(EnumType.STRING)
     @Column(name = "member_position", nullable = false)
     private MemberPosition position;
-
-    // ENUM: 권한
-    @Enumerated(EnumType.STRING)
-    @Column(name = "member_role", nullable = false)
-    private MemberRole role;
 
     // ENUM: 가입 상태
     @Enumerated(EnumType.STRING)
@@ -78,6 +67,8 @@ public class Member {
     @Column(name = "company_id", nullable = false)
     private Long companyId;
 
+    @Embedded
+    private ServicePermissions permissions;
 
     // @PrePersist: DB에 INSERT되기 직전에 호출됨 → 회원 신청일(joinRequestDate) 자동 기록
     @PrePersist
