@@ -1,5 +1,6 @@
 package com.nexerp.domain.member.model.enums;
 
+// Member 직급 ENUM
 public enum MemberPosition {
     INTERN("인턴"),
     ASSISTANT_MANAGER("주임"),
