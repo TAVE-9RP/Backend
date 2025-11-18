@@ -1,6 +1,9 @@
 package com.nexerp.domain.member.model.enums;
 
+import lombok.Getter;
+
 // Member 직급 ENUM
+@Getter
 public enum MemberPosition {
     INTERN("인턴"),
     ASSISTANT_MANAGER("주임"),
@@ -12,7 +15,7 @@ public enum MemberPosition {
     private final String description;
 
     MemberPosition(String description) {
-        this.description = MemberPosition.this.description;
+        this.description = description;
     }
 
     public String getKoreanName() {
