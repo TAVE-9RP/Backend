@@ -1,6 +1,9 @@
 package com.nexerp.domain.member.model.enums;
 
+import lombok.Getter;
+
 // Member 권한 ENUM
+@Getter
 public enum MemberRole {
     ALL("오너 권한"),
     WRITE("읽기, 쓰기 권한"),
@@ -9,7 +12,7 @@ public enum MemberRole {
     private final String description;
 
     MemberRole(String description) {
-        this.description = MemberRole.this.description;
+        this.description = description;
     }
 
     public String getKoreanName() {
