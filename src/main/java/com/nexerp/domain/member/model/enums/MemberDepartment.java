@@ -1,6 +1,9 @@
 package com.nexerp.domain.member.model.enums;
 
+import lombok.Getter;
+
 // Member 부서 ENUM
+@Getter
 public enum MemberDepartment {
     LOGISTICS("물류 부서"),
     INVENTORY("재고 부서"),
@@ -9,7 +12,7 @@ public enum MemberDepartment {
     private final String description;
 
     MemberDepartment(String description) {
-        this.description = MemberDepartment.this.description;
+        this.description = description;
     }
 
     public String getKoreanName() {
