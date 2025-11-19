@@ -6,6 +6,7 @@ import com.nexerp.domain.member.model.enums.MemberPosition;
 import com.nexerp.domain.member.model.enums.MemberRequestStatus;
 import com.nexerp.domain.member.model.enums.MemberRole;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,7 +16,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "member")
 @Getter
-@Setter
 @NoArgsConstructor
 public class Member {
 
@@ -70,6 +70,21 @@ public class Member {
    // logisticsRole, inventoryRole, managementRole 각각의 권한
     @Embedded
     private ServicePermissions permissions;
+
+
+    @Builder
+    public Member(String loginId, String password, String name, String email, MemberDepartment department, MemberPosition position, Long companyId){
+        this.loginId = loginId;
+        this.password = password;
+        this.name = name;
+        this.email = email;
+        this.department = department;
+        this.position = position;
+        this.companyId = companyId;
+
+        // 처음 가입 시 가입 상태 기본값 (요청대기)
+        this.requestStatus = MemberRequestStatus.PENDING;
+    }
 
     // @PrePersist: DB에 INSERT되기 직전에 호출됨 → 회원 신청일(joinRequestDate) 자동 기록
     @PrePersist
