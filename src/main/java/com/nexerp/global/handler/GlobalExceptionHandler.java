@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Hidden
 @Slf4j
-@RestControllerAdvice
+// @RestControllerAdvice
 public class GlobalExceptionHandler {
 
   /**
