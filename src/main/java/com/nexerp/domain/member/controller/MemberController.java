@@ -10,10 +10,7 @@ import com.nexerp.global.security.jwt.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/member")
@@ -65,5 +62,42 @@ public class MemberController {
                 .build();
 
         return BaseResponse.success(memberAuthResponseDto);
+    }
+
+    // AT, RT 재발급
+    @PostMapping("/reissue")
+    public BaseResponse<MemberAuthResponseDto> reissueToken(
+            @RequestHeader("Authorization") String authorizationHeader, // 만료된 AT
+            @CookieValue(value = "refresh_token") String refreshToken,  // RT
+            HttpServletResponse response // 새 RT를 쿠키로 설정
+    ) {
+        // Authorization 헤더에서 Bearer 제거
+        String expiredAccessToken = authorizationHeader.substring(7);
+
+        // 새 AT와 RT를 포함한 DTO를 반환
+        MemberAuthResponseDto newAuthResponse = memberService.reissueToken(expiredAccessToken, refreshToken);
+
+        // HTTP-Only Cookie 재설정 (새 RT로 업데이트)
+        String newRefreshToken = newAuthResponse.getRefreshToken();
+        long maxAgeSeconds = jwtTokenProvider.getRefreshTokenExpirationTime() / 1000;
+
+        String cookieHeader = String.format(
+                "%s=%s; Max-Age=%d; Path=/; Secure; HttpOnly; SameSite=Lax",
+                "refresh_token",
+                newRefreshToken,
+                maxAgeSeconds
+        );
+        response.addHeader("Set-Cookie", cookieHeader);
+
+
+        // RT를 제외한 정보 반환
+        MemberAuthResponseDto responseBody = MemberAuthResponseDto.builder()
+                .accessToken(newAuthResponse.getAccessToken())
+                .accessTokenExpirationTime(newAuthResponse.getAccessTokenExpirationTime())
+                .department(newAuthResponse.getDepartment())
+                .position(newAuthResponse.getPosition())
+                .build();
+
+        return BaseResponse.success(responseBody);
     }
 }
