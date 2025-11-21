@@ -10,6 +10,7 @@ import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
 import com.nexerp.global.security.details.CustomUserDetails;
 import com.nexerp.global.security.jwt.JwtTokenProvider;
+import io.jsonwebtoken.Claims;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -58,6 +59,7 @@ public class MemberService {
 
     }
 
+    // 로그인
     @Transactional
     public MemberAuthResponseDto login(MemberLoginRequestDto memberLoginRequestDto) {
 
@@ -89,5 +91,48 @@ public class MemberService {
                     "아이디 또는 비밀번호가 일치하지 않습니다."
             );
         }
+    }
+
+    // 새로운 AT와 RT를 발급
+    @Transactional
+    public MemberAuthResponseDto reissueToken(String expiredAccessToken, String refreshToken) {
+
+        // 만료되지 않은 AT가 들어온 경우 거부
+        if (!jwtTokenProvider.isTokenExpired(expiredAccessToken)) {
+            throw new BaseException(GlobalErrorCode.STATE_CONFLICT, "Access Token이 아직 유효하여 재발급할 수 없습니다.");
+        }
+
+        // RT 유효성 검사 (위변조 여부)
+        if (!jwtTokenProvider.validateToken(refreshToken)) {
+            throw new BaseException(GlobalErrorCode.UNAUTHORIZED, "유효하지 않은 Refresh Token입니다.");
+        }
+
+        // 만료된 AT에서 사용자 Id(PK) 추출
+        Claims claims = jwtTokenProvider.parseClaims(expiredAccessToken);
+        String memberId = claims.getSubject();
+
+        // 추출된 ID로 DB에서 사용자 정보를 로드 (ID가 유효한지 재확인)
+        Member member = memberRepository.findById(Long.valueOf(memberId))
+                .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "토큰에 해당하는 회원을 찾을 수 없습니다."));
+
+        // DB에서 가져온 Member 정보로 CustomUserDetails를 생성하여 Authentication 객체를 만듦
+        CustomUserDetails userDetails = new CustomUserDetails(member);
+
+        // CustomUserDetails의 권한 정보를 Authentication 객체에 담기
+        Authentication newAuthentication = new UsernamePasswordAuthenticationToken(
+                userDetails, null, userDetails.getAuthorities()
+        );
+
+        // 새 Access Token 및 Refresh Token 생성
+        MemberAuthResponseDto newTokens = jwtTokenProvider.generateToken(newAuthentication);
+
+        // 응답 DTO
+        return MemberAuthResponseDto.builder()
+                .accessToken(newTokens.getAccessToken())
+                .refreshToken(newTokens.getRefreshToken())
+                .accessTokenExpirationTime(newTokens.getAccessTokenExpirationTime())
+                .department(member.getDepartment())
+                .position(member.getPosition())
+                .build();
     }
 }
