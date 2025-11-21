@@ -134,11 +134,26 @@ public class JwtTokenProvider {     // 토큰 발급
     }
 
     // 토큰에서 클레임(Payload) 정보만 추출
-    private Claims parseClaims(String accessToken) {
+    public Claims parseClaims(String accessToken) {
         try {   // 정상 토큰
             return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(accessToken).getBody();
         } catch (ExpiredJwtException e) {   // 만료 토큰
             return e.getClaims();
+        }
+    }
+
+    /**
+     * Access Token이 만료되었는지 확인
+     */
+    public boolean isTokenExpired(String token) {
+        try {
+            // 토큰 검증 시 만료되지 않았으면 예외 없이 통과
+            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            return false; // 만료되지 않음
+        } catch (ExpiredJwtException e) {
+            return true; // 만료됨
+        } catch (Exception e) {
+            return false;
         }
     }
 }
