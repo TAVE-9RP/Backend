@@ -4,6 +4,8 @@ import com.nexerp.domain.member.model.entity.Member;
 import com.nexerp.domain.member.model.enums.MemberRequestStatus;
 import com.nexerp.domain.member.model.request.MemberSignupRequestDto;
 import com.nexerp.domain.member.repository.MemberRepository;
+import com.nexerp.global.common.exception.BaseException;
+import com.nexerp.global.common.exception.GlobalErrorCode;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,12 +22,12 @@ public class MemberService {
     public Long signUp(MemberSignupRequestDto memberSignupRequestDto){
         // 1. 중복 검사: 아이디
         if(memberRepository.findByLoginId(memberSignupRequestDto.getLoginId()).isPresent()){
-            throw new IllegalArgumentException("이미 존재하는 아이디입니다. ");
+            throw new BaseException(GlobalErrorCode.DUPLICATE_RESOURCE, "이미 존재하는 아이디입니다.");
         }
 
         // 2. 중복 검사: 이메일
         if(memberRepository.findByEmail(memberSignupRequestDto.getEmail()).isPresent()){
-            throw new IllegalArgumentException("이미 존재하는 이메일입니다. ");
+            throw new BaseException(GlobalErrorCode.DUPLICATE_RESOURCE, "이미 존재하는 이메일입니다.");
         }
 
         String encodedPassword = passwordEncoder.encode(memberSignupRequestDto.getPassword());
