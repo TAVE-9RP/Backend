@@ -97,14 +97,14 @@ public class MemberService {
     @Transactional
     public MemberAuthResponseDto reissueToken(String expiredAccessToken, String refreshToken) {
 
+        // RT 유효성 검사 (위변조 여부)
+        if (!jwtTokenProvider.validateToken(refreshToken)) {
+          throw new BaseException(GlobalErrorCode.UNAUTHORIZED, "유효하지 않은 Refresh Token입니다.");
+        }
+
         // 만료되지 않은 AT가 들어온 경우 거부
         if (!jwtTokenProvider.isTokenExpired(expiredAccessToken)) {
             throw new BaseException(GlobalErrorCode.STATE_CONFLICT, "Access Token이 아직 유효하여 재발급할 수 없습니다.");
-        }
-
-        // RT 유효성 검사 (위변조 여부)
-        if (!jwtTokenProvider.validateToken(refreshToken)) {
-            throw new BaseException(GlobalErrorCode.UNAUTHORIZED, "유효하지 않은 Refresh Token입니다.");
         }
 
         // 만료된 AT에서 사용자 Id(PK) 추출
