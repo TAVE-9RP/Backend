@@ -82,7 +82,6 @@ public class JwtTokenProvider {     // 토큰 발급
         return MemberAuthResponseDto.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
-                .accessTokenExpirationTime(accessTokenExpiresIn.getTime())
                 .build();
     }
 
@@ -156,4 +155,13 @@ public class JwtTokenProvider {     // 토큰 발급
             return false;
         }
     }
+
+    /**
+     * 만료된 AT에서 사용자 Id(PK) 추출
+     */
+    public String getMemberIdFromExpiredToken(String expiredToken) {
+      Claims claims = parseClaims(expiredToken);
+      return claims.getSubject();
+    }
+
 }
