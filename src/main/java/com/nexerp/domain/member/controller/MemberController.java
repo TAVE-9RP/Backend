@@ -7,6 +7,7 @@ import com.nexerp.domain.member.service.MemberService;
 import com.nexerp.global.common.exception.GlobalErrorCode;
 import com.nexerp.global.common.response.BaseResponse;
 import com.nexerp.global.security.jwt.JwtTokenProvider;
+import com.nexerp.global.security.util.JwtCookieHeaderUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ public class MemberController {
 
     private final MemberService memberService;
     private final JwtTokenProvider jwtTokenProvider;
+    private final JwtCookieHeaderUtil jwtCookieHeaderUtil;
 
     @PostMapping("/signup")
     public BaseResponse<Long> signUp(@RequestBody @Valid MemberSignupRequestDto memberSignupRequestDto){
@@ -37,31 +39,18 @@ public class MemberController {
             @RequestBody @Valid MemberLoginRequestDto memberLoginRequestDto,
             HttpServletResponse response) {     // RT를 HTTP Only Cookie에 저장하기 위해, HttpServletResponse 필요
 
-        MemberAuthResponseDto authResponse = memberService.login(memberLoginRequestDto);
 
-        String refreshToken = authResponse.getRefreshToken();
-        long maxAgeSeconds = jwtTokenProvider.getRefreshTokenExpirationTime() / 1000;   // 밀리초 (JWT) → 초 (Http 쿠키)
+            MemberAuthResponseDto authResponse = memberService.login(memberLoginRequestDto);
 
-        // Set-Cookie 헤더 생성
-        String cookieHeader = String.format(
-                "%s=%s; Max-Age=%d; Path=/; Secure; HttpOnly; SameSite=Lax",
-                "refresh_token",
-                refreshToken,
-                maxAgeSeconds
-        );
+            // 쿠키 처리
+            jwtCookieHeaderUtil.addRefreshTokenCookie(response, authResponse.getRefreshToken());
 
-        // RT를 HTTP-Only Cookie로 저장하도록 강제
-        response.addHeader("Set-Cookie", cookieHeader);
+            // AccessToken 반환
+            MemberAuthResponseDto responseDto = MemberAuthResponseDto.builder()
+              .accessToken(authResponse.getAccessToken())
+              .build();
 
-        // RT를 제외한 정보 반환
-        MemberAuthResponseDto memberAuthResponseDto = MemberAuthResponseDto.builder()
-                .accessToken(authResponse.getAccessToken())
-                .accessTokenExpirationTime(authResponse.getAccessTokenExpirationTime())
-                .department(authResponse.getDepartment())
-                .position(authResponse.getPosition())
-                .build();
-
-        return BaseResponse.success(memberAuthResponseDto);
+          return BaseResponse.success(responseDto);
     }
 
     // AT, RT 재발급
@@ -77,25 +66,13 @@ public class MemberController {
         // 새 AT와 RT를 포함한 DTO를 반환
         MemberAuthResponseDto newAuthResponse = memberService.reissueToken(expiredAccessToken, refreshToken);
 
-        // HTTP-Only Cookie 재설정 (새 RT로 업데이트)
-        String newRefreshToken = newAuthResponse.getRefreshToken();
-        long maxAgeSeconds = jwtTokenProvider.getRefreshTokenExpirationTime() / 1000;
-
-        String cookieHeader = String.format(
-                "%s=%s; Max-Age=%d; Path=/; Secure; HttpOnly; SameSite=Lax",
-                "refresh_token",
-                newRefreshToken,
-                maxAgeSeconds
-        );
-        response.addHeader("Set-Cookie", cookieHeader);
+        // 쿠키 처리
+        jwtCookieHeaderUtil.addRefreshTokenCookie(response, newAuthResponse.getRefreshToken());
 
 
-        // RT를 제외한 정보 반환
+        // AccessToken 반환
         MemberAuthResponseDto responseBody = MemberAuthResponseDto.builder()
                 .accessToken(newAuthResponse.getAccessToken())
-                .accessTokenExpirationTime(newAuthResponse.getAccessTokenExpirationTime())
-                .department(newAuthResponse.getDepartment())
-                .position(newAuthResponse.getPosition())
                 .build();
 
         return BaseResponse.success(responseBody);
