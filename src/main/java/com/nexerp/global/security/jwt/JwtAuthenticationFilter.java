@@ -1,5 +1,9 @@
 package com.nexerp.global.security.jwt;
 
+import com.nexerp.global.common.exception.GlobalErrorCode;
+import com.nexerp.global.security.util.JwtResponseUtil;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,16 +44,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 요청 헤더에서 토큰 추출
         String token = resolveToken(request);
 
-        // 토큰 유효성 검사
-        // 토큰이 존재하고, Provider가 검증했을 때 유효한 경우
-        if (token != null && jwtTokenProvider.validateToken(token)) {
+        try{
+          // 토큰이 존재하고, Provider가 검증했을 때 유효한 경우
+          if (token != null && jwtTokenProvider.validateToken(token)) {
             // 토큰이 유효하면 인증 정보(Authentication) 객체 생성
             Authentication authentication = jwtTokenProvider.getAuthentication(token);
 
             // SecurityContext에 인증 정보를 잠시 저장 (한 HTTP 요청 동안만 유지)
             SecurityContextHolder.getContext().setAuthentication(authentication);
+          }
+
+          filterChain.doFilter(request, response);
+        } catch (ExpiredJwtException e){
+          JwtResponseUtil.sendErrorResponse(response, GlobalErrorCode.UNAUTHORIZED, "토큰이 만료되었습니다.");
+        } catch (JwtException e){
+          JwtResponseUtil.sendErrorResponse(response, GlobalErrorCode.UNAUTHORIZED, "토큰이 유효하지 않습니다.");
+        } catch (Exception e){
+          JwtResponseUtil.sendErrorResponse(response, GlobalErrorCode.INTERNAL_SERVER_ERROR);
         }
 
-        filterChain.doFilter(request, response);
+
+
     }
 }
