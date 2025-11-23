@@ -5,18 +5,8 @@ import lombok.Getter;
 // Member 부서 ENUM
 @Getter
 public enum MemberDepartment {
-    LOGISTICS("물류 부서"),
-    INVENTORY("재고 부서"),
-    MANAGEMENT("관리 부서(오너)");
-
-    private final String description;
-
-    MemberDepartment(String description) {
-        this.description = description;
-    }
-
-    public String getKoreanName() {
-        return description;
-    }
+    LOGISTICS,
+    INVENTORY,
+    MANAGEMENT;
 
 }
