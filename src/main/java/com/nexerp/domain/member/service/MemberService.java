@@ -1,18 +1,25 @@
 package com.nexerp.domain.member.service;
 
 import com.nexerp.domain.member.model.entity.Member;
+import com.nexerp.domain.member.model.enums.MemberDepartment;
+import com.nexerp.domain.member.model.enums.MemberPosition;
 import com.nexerp.domain.member.model.enums.MemberRequestStatus;
 import com.nexerp.domain.member.model.request.MemberLoginRequestDto;
 import com.nexerp.domain.member.model.request.MemberSignupRequestDto;
 import com.nexerp.domain.member.model.response.MemberAuthResponseDto;
 import com.nexerp.domain.member.repository.MemberRepository;
+import com.nexerp.domain.member.util.EnumValidatorUtil;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
 import com.nexerp.global.security.details.CustomUserDetails;
+import com.nexerp.global.security.details.CustomUserDetailsService;
 import com.nexerp.global.security.jwt.JwtTokenProvider;
+import com.nexerp.global.security.util.JwtCookieHeaderUtil;
 import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -27,35 +34,35 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
+    private final CustomUserDetailsService customUserDetailsService;
 
     // 회원가입
     @Transactional
     public Long signUp(MemberSignupRequestDto memberSignupRequestDto){
-        // 1. 중복 검사: 아이디
-        if(memberRepository.findByLoginId(memberSignupRequestDto.getLoginId()).isPresent()){
-            throw new BaseException(GlobalErrorCode.DUPLICATE_RESOURCE, "이미 존재하는 아이디입니다.");
+        try{
+          String encodedPassword = passwordEncoder.encode(memberSignupRequestDto.getPassword());
+
+          MemberDepartment department = EnumValidatorUtil.validateDepartment(memberSignupRequestDto.getDepartment());
+          MemberPosition position = EnumValidatorUtil.validatePosition(memberSignupRequestDto.getPosition());
+
+
+          Member member = Member.builder()
+            .loginId(memberSignupRequestDto.getLoginId())
+            .password(encodedPassword)
+            .name(memberSignupRequestDto.getName())
+            .email(memberSignupRequestDto.getEmail())
+            .department(department)
+            .position(position)
+            .companyId(memberSignupRequestDto.getCompanyId())
+            .build();
+
+          Member savedMember = memberRepository.save(member);
+          return savedMember.getId();
+
+        }  catch (DataIntegrityViolationException e) {
+          throw new BaseException(GlobalErrorCode.DUPLICATE_RESOURCE, "이미 존재하는 아이디 또는 이메일입니다.");
         }
 
-        // 2. 중복 검사: 이메일
-        if(memberRepository.findByEmail(memberSignupRequestDto.getEmail()).isPresent()){
-            throw new BaseException(GlobalErrorCode.DUPLICATE_RESOURCE, "이미 존재하는 이메일입니다.");
-        }
-
-        String encodedPassword = passwordEncoder.encode(memberSignupRequestDto.getPassword());
-
-        Member member = Member.builder()
-                .loginId(memberSignupRequestDto.getLoginId())
-                .password(encodedPassword)
-                .name(memberSignupRequestDto.getName())
-                .email(memberSignupRequestDto.getEmail())
-                .department(memberSignupRequestDto.getDepartment())
-                .position(memberSignupRequestDto.getPosition())
-                .companyId(memberSignupRequestDto.getCompanyId())
-                .build();
-
-        Member savedMember = memberRepository.save(member);
-
-        return savedMember.getId();
 
     }
 
@@ -73,17 +80,15 @@ public class MemberService {
 
             // Access Token, Refresh Token 생성
             MemberAuthResponseDto tokenDto = jwtTokenProvider.generateToken(authentication);
+
             // 로그인된 사용자 정보 가져오기
             CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
-            // 응답용 Dto 반환
+            // 클라이언트에 반환할 DTO 생성 (RefreshToken 포함, 쿠키 처리는 컨트롤러에서)
             return MemberAuthResponseDto.builder()
-                    .accessToken(tokenDto.getAccessToken())
-                    .refreshToken(tokenDto.getRefreshToken())
-                    .accessTokenExpirationTime(tokenDto.getAccessTokenExpirationTime())
-                    .department(userDetails.getMember().getDepartment())
-                    .position(userDetails.getMember().getPosition())
-                    .build();
+              .accessToken(tokenDto.getAccessToken())
+              .refreshToken(tokenDto.getRefreshToken()) // 쿠키용으로 반환
+              .build();
 
         } catch (AuthenticationException e) {
             throw new BaseException(
@@ -107,32 +112,15 @@ public class MemberService {
             throw new BaseException(GlobalErrorCode.STATE_CONFLICT, "Access Token이 아직 유효하여 재발급할 수 없습니다.");
         }
 
-        // 만료된 AT에서 사용자 Id(PK) 추출
-        Claims claims = jwtTokenProvider.parseClaims(expiredAccessToken);
-        String memberId = claims.getSubject();
+        // 만료된 AT에서 memberId 추출
+        String memberId = jwtTokenProvider.getMemberIdFromExpiredToken(expiredAccessToken);
 
-        // 추출된 ID로 DB에서 사용자 정보를 로드 (ID가 유효한지 재확인)
-        Member member = memberRepository.findById(Long.valueOf(memberId))
-                .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "토큰에 해당하는 회원을 찾을 수 없습니다."));
+        // Authentication 객체 생성 (DB 조회 포함)
+        Authentication authentication = customUserDetailsService.createAuthenticationById(memberId);
 
-        // DB에서 가져온 Member 정보로 CustomUserDetails를 생성하여 Authentication 객체를 만듦
-        CustomUserDetails userDetails = new CustomUserDetails(member);
+        // 새 토큰 발급
+        MemberAuthResponseDto newTokens = jwtTokenProvider.generateToken(authentication);
 
-        // CustomUserDetails의 권한 정보를 Authentication 객체에 담기
-        Authentication newAuthentication = new UsernamePasswordAuthenticationToken(
-                userDetails, null, userDetails.getAuthorities()
-        );
-
-        // 새 Access Token 및 Refresh Token 생성
-        MemberAuthResponseDto newTokens = jwtTokenProvider.generateToken(newAuthentication);
-
-        // 응답 DTO
-        return MemberAuthResponseDto.builder()
-                .accessToken(newTokens.getAccessToken())
-                .refreshToken(newTokens.getRefreshToken())
-                .accessTokenExpirationTime(newTokens.getAccessTokenExpirationTime())
-                .department(member.getDepartment())
-                .position(member.getPosition())
-                .build();
+        return newTokens;
     }
 }
