@@ -13,8 +13,4 @@ spring:
         dialect: org.hibernate.dialect.MySQL8Dialect
 server:
   port: 3006
-  # JWT 설정 추가 (JwtTokenProvider에서 주입받는 속성)
-jwt:
-  secret: 비밀키
-  access-token-expiration-in-milliseconds: 3600000 # 1시간
-  refresh-token-expiration-in-milliseconds: 604800000 # 7일
+  forward-headers-strategy: native

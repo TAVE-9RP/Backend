@@ -5,13 +5,15 @@ import com.nexerp.global.common.exception.GlobalErrorCode;
 import com.nexerp.global.common.response.BaseResponse;
 import java.util.List;
 import java.util.Map;
+
+import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
+@Hidden
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -23,7 +25,7 @@ public class GlobalExceptionHandler {
   public ResponseEntity<BaseResponse<Void>> handleBaseException(BaseException ex) {
     //예외 발생 정보를 로그로 기록 (개발 용)
     log.warn("커스텀 exception: code={}, message={}",
-        ex.getErrorCode().getCode(), ex.getMessage(), ex);
+            ex.getErrorCode().getCode(), ex.getMessage(), ex);
 
     BaseResponse<Void> body;
 
@@ -43,16 +45,16 @@ public class GlobalExceptionHandler {
    */
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<BaseResponse<List<Map<String, String>>>> handleValidationException(
-      MethodArgumentNotValidException ex) {
+          MethodArgumentNotValidException ex) {
 
     //발생한 모든 필드 에러 정보를 추출하여 클라이언트에게 전달하기 쉬운 List<Map> 형태로 변환
     var errors = ex.getBindingResult().getFieldErrors().stream()
-        .map(fe -> Map.of(
-            "field", fe.getField(),                        // 오류가 발생한 필드 이름
-            "value", String.valueOf(fe.getRejectedValue()),    // 거부된(사용자가 입력한) 값
-            "reason", fe.getDefaultMessage()                   // 오류 메시지 (DTO에 정의된 메시지)
-        ))
-        .toList();
+            .map(fe -> Map.of(
+                    "field", fe.getField(),                        // 오류가 발생한 필드 이름
+                    "value", String.valueOf(fe.getRejectedValue()),    // 거부된(사용자가 입력한) 값
+                    "reason", fe.getDefaultMessage()                   // 오류 메시지 (DTO에 정의된 메시지)
+            ))
+            .toList();
 
     var body = BaseResponse.fail(GlobalErrorCode.VALIDATION_ERROR, errors);
 
