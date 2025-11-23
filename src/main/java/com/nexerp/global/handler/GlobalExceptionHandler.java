@@ -9,7 +9,6 @@ import java.util.Map;
 import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -74,21 +73,5 @@ public class GlobalExceptionHandler {
 
     return ResponseEntity.status(body.getStatus()).body(body);
   }
-
-    /**
-     * JSON/Request Body 처리 중 발생하는 오류 처리 (Enum 불일치, JSON 형식 오류 등)
-     */
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<BaseResponse<Void>> handleJsonReadingException(HttpMessageNotReadableException ex) {
-        // 로그 기록
-        log.warn("JSON/요청 본문 처리 오류 (Enum 불일치 등): message={}", ex.getMessage(), ex);
-
-        var body = BaseResponse.<Void>fail(
-                GlobalErrorCode.VALIDATION_ERROR,
-                "요청 본문의 형식이 올바르지 않거나, Enum 값이 유효하지 않습니다. 입력 값을 확인해주세요."
-        );
-
-        return ResponseEntity.status(body.getStatus()).body(body);
-    }
 
 }
