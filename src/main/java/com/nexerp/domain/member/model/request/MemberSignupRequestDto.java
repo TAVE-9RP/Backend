@@ -43,11 +43,15 @@ public class MemberSignupRequestDto {
 
     // ENUM: 부서
     @NotNull(message = "부서는 필수 입력 값입니다.")
-    private MemberDepartment department;
+    @Enumerated(EnumType.STRING)
+    private String department;
+//  private MemberDepartment department;
 
     // ENUM: 직급
     @NotNull(message = "직급은 필수 입력 값입니다.")
-    private MemberPosition position;
+    @Enumerated(EnumType.STRING)
+    private String position;
+//    private MemberPosition position;
 
     // FK: 회사 ID
     @NotNull(message = "회사 ID는 필수 입력 값입니다.")
