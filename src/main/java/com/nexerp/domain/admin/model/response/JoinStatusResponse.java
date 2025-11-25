@@ -9,7 +9,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class MemberJoinStatusResponse {
+public class JoinStatusResponse {
 
     private final Long memberId;
     private final String name;
@@ -18,8 +18,8 @@ public class MemberJoinStatusResponse {
     private final String email;
     private final MemberRequestStatus requestStatus;
 
-    public static MemberJoinStatusResponse from(Member member) {
-      return MemberJoinStatusResponse.builder()
+    public static JoinStatusResponse from(Member member) {
+      return JoinStatusResponse.builder()
         .memberId(member.getId())
         .name(member.getName())
         .department(member.getDepartment())
