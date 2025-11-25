@@ -46,6 +46,9 @@ public class SecurityConfig {
         // 회사 관련 도메인
         .requestMatchers("/companies/**").permitAll()
 
+        // 테스트 관련 도메인
+        .requestMatchers("/test/**").permitAll()
+
         .anyRequest().authenticated()
       );
 
