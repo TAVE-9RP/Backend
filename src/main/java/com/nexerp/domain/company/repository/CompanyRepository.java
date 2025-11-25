@@ -11,4 +11,5 @@ public interface CompanyRepository extends JpaRepository<Company, Long> {
   // 이름 필드의 특정 문자열을 포함하는 데이터 조회(대소문자 구분 X)
   List<Company> findByNameContainingIgnoreCaseOrderByNameAsc(String keyword);
 
+  boolean existsByName(String name);
 }

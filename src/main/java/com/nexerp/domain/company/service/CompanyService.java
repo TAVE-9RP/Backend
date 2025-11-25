@@ -24,6 +24,10 @@ public class CompanyService {
   public CompanyCreateResponse createCompany(
     CompanyCreateRequest companyCreateRequest) {
 
+    if (companyRepository.existsByName(companyCreateRequest.getName())) {
+      throw new BaseException(GlobalErrorCode.DUPLICATE_RESOURCE, "이미 존재하는 회사 이름입니다.");
+    }
+
     try {
       Company newCompany = Company.create(
         companyCreateRequest.getName(),
