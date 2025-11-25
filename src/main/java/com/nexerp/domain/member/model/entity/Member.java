@@ -93,10 +93,20 @@ public class Member {
         this.joinRequestDate = LocalDateTime.now();
     }
 
-    // 오너가 직원의 가입 요청 승인
-    public void approve() {
-        this.requestStatus = MemberRequestStatus.APPROVED;
+    // 가입 상태 변경 (PENDING/APPROVED/REJECTED 간 전환 허용)
+
+    public void changeRequestStatus(MemberRequestStatus newStatus) {
+      if(newStatus == null) {
+        return;
+      }
+
+      this.requestStatus = newStatus;
+
+      if (newStatus == MemberRequestStatus.APPROVED && this.joinDate == null) {
         this.joinDate = LocalDateTime.now();
+      }
+
+      // REJECTED로 바꾼다고 해서 joinDate를 지우지 않는 쪽으로 설계
     }
 
 }
