@@ -73,4 +73,5 @@ public class GlobalExceptionHandler {
 
     return ResponseEntity.status(body.getStatus()).body(body);
   }
+
 }

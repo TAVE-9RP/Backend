@@ -50,6 +50,7 @@ public class Member {
     private LocalDateTime joinDate;
 
     // ENUM: 부서
+    @Enumerated(EnumType.STRING)
     @Column(name = "member_department", length = 50)
     private MemberDepartment department;
 
