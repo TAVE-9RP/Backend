@@ -23,7 +23,7 @@ public class CompanyController {
   //hasRole 추가 예정
   private final CompanyService companyService;
 
-  @PostMapping("/create")
+  @PostMapping
   public BaseResponse<CompanyCreateResponse> createCompany(
     @Valid @RequestBody CompanyCreateRequest companyCreateRequest) {
     CompanyCreateResponse companyCreateResponse = companyService.createCompany(
@@ -31,7 +31,7 @@ public class CompanyController {
     return BaseResponse.success(companyCreateResponse);
   }
 
-  @GetMapping("/search")
+  @GetMapping
   public BaseResponse<List<CompanySearchResponse>> searchCompanies(
     @RequestParam("keyword") String keyword) {
 
