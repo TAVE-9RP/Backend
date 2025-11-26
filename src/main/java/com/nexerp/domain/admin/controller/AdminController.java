@@ -34,19 +34,14 @@ public class AdminController {
 
   @PreAuthorize("hasRole('ROLE_OWNER')")
   @PatchMapping("/{targetMemberId}/status")
-  public BaseResponse<JoinStatusResponse> changeMemberRequestStatus(
+  public BaseResponse<List<JoinStatusResponse>> changeMemberRequestStatus(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @PathVariable("targetMemberId") Long targetMemberId,
-    @Valid @RequestBody JoinStatusUpdateRequest newStatus
+    @Valid @RequestBody JoinStatusUpdateRequest request
     ) {
       Long ownerId = userDetails.getMemberId();
 
-      JoinStatusResponse updated =
-        adminService.changeMemberRequestStatus(
-          ownerId,
-          targetMemberId,
-          newStatus
-        );
+      List<JoinStatusResponse> updated = adminService.changeMemberRequestStatus(ownerId, request);
 
       return BaseResponse.success(updated);
   }
