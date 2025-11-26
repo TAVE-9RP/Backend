@@ -11,5 +11,5 @@ public interface AdminRepository extends JpaRepository<Member, Long> {
   List<Member> findByCompanyIdAndIdNotOrderByJoinRequestDateAsc(Long companyId, Long excludeMemberId);
 
   // 같은 회사 소속의 특정 직원 검증 (권한 체크까지 포함)
-  List<Member> findByIdAndCompanyId(List<Long> ids, Long companyId);
+  List<Member> findByIdInAndCompanyId(List<Long> ids, Long companyId);
 }

@@ -33,10 +33,9 @@ public class AdminController {
   }
 
   @PreAuthorize("hasRole('ROLE_OWNER')")
-  @PatchMapping("/{targetMemberId}/status")
+  @PatchMapping("members/status")
   public BaseResponse<List<JoinStatusResponse>> changeMemberRequestStatus(
     @AuthenticationPrincipal CustomUserDetails userDetails,
-    @PathVariable("targetMemberId") Long targetMemberId,
     @Valid @RequestBody JoinStatusUpdateRequest request
     ) {
       Long ownerId = userDetails.getMemberId();

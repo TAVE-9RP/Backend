@@ -67,7 +67,7 @@ public class AdminService {
       .toList();
 
     // 같은 회사 소속 직원들만
-    List<Member> members = adminRepository.findByIdAndCompanyId(targetIds, companyId);
+    List<Member> members = adminRepository.findByIdInAndCompanyId(targetIds, companyId);
 
     if (members.size() != targetIds.size()) {
       throw new BaseException(
