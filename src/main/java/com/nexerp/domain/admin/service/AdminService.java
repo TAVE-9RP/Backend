@@ -4,8 +4,10 @@ import com.nexerp.domain.admin.model.request.JoinStatusUpdateRequest;
 import com.nexerp.domain.admin.model.response.JoinStatusResponse;
 import com.nexerp.domain.admin.repository.AdminRepository;
 import com.nexerp.domain.member.model.entity.Member;
+import com.nexerp.domain.member.model.enums.MemberDepartment;
 import com.nexerp.domain.member.model.enums.MemberPosition;
 import com.nexerp.domain.member.model.enums.MemberRequestStatus;
+import com.nexerp.domain.member.util.EnumValidatorUtil;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +31,7 @@ public class AdminService {
 
     Long companyId = owner.getCompanyId();
 
-    List<Member> members = adminRepository.findByCompanyIdOrderByJoinRequestDateAsc(companyId);
+    List<Member> members = adminRepository.findByCompanyIdAndIdNotOrderByJoinRequestDateAsc(companyId, ownerId);
 
     return members.stream()
       .map(JoinStatusResponse::from)
@@ -56,7 +58,7 @@ public class AdminService {
       .findByIdAndCompanyId(targetMemberId, companyId)
       .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "해당 회사에 속한 직원을 찾을 수 없습니다."));
 
-    MemberRequestStatus newStatus = request.getNewStatus();
+    MemberRequestStatus newStatus = EnumValidatorUtil.validateRequestStatus(request.getNewStatus());
     member.changeRequestStatus(newStatus);
 
     return JoinStatusResponse.from(member);
