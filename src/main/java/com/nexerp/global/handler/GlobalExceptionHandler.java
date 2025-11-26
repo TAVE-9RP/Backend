@@ -9,6 +9,7 @@ import java.util.Map;
 import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -70,6 +71,16 @@ public class GlobalExceptionHandler {
     log.error("Unexpected exception occurred", ex);
 
     var body = BaseResponse.<Void>fail(GlobalErrorCode.INTERNAL_SERVER_ERROR);
+
+    return ResponseEntity.status(body.getStatus()).body(body);
+  }
+
+  // 접근 권한 AccessDenied 예외 처리
+  @ExceptionHandler(AccessDeniedException.class)
+  public ResponseEntity<BaseResponse<Void>> handleAccessDenied(AccessDeniedException ex) {
+
+    BaseResponse<Void> body =
+      BaseResponse.fail(GlobalErrorCode.UNAUTHORIZED, "접근 권한이 없습니다.");
 
     return ResponseEntity.status(body.getStatus()).body(body);
   }
