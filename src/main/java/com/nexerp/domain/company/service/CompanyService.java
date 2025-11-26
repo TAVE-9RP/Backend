@@ -10,7 +10,6 @@ import com.nexerp.global.common.exception.GlobalErrorCode;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,25 +27,20 @@ public class CompanyService {
       throw new BaseException(GlobalErrorCode.DUPLICATE_RESOURCE, "이미 존재하는 회사 이름입니다.");
     }
 
-    try {
-      Company newCompany = Company.create(
-        companyCreateRequest.getName(),
-        companyCreateRequest.getIndustryType(),
-        companyCreateRequest.getDescription(),
-        companyCreateRequest.getImagePath()
-      );
+    Company newCompany = Company.create(
+      companyCreateRequest.getName(),
+      companyCreateRequest.getIndustryType(),
+      companyCreateRequest.getDescription(),
+      companyCreateRequest.getImagePath()
+    );
 
-      //관리자와 연결 필요
-      Company savedCompany = companyRepository.save(newCompany);
+    //관리자와 연결 필요
+    Company savedCompany = companyRepository.save(newCompany);
 
-      CompanyCreateResponse companyCreateResponse = CompanyCreateResponse.from(
-        savedCompany.getId());
+    CompanyCreateResponse companyCreateResponse = CompanyCreateResponse.from(
+      savedCompany.getId());
 
-      return companyCreateResponse;
-      // name unique 위반
-    } catch (DataIntegrityViolationException e) {
-      throw new BaseException(GlobalErrorCode.DUPLICATE_RESOURCE, "이미 존재하는 회사 이름입니다.");
-    }
+    return companyCreateResponse;
   }
 
   // keyword=""의 경우 전체 리스트 / 없는 키워드는 빈 배열
