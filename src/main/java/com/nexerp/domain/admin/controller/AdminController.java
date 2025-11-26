@@ -21,7 +21,7 @@ public class AdminController {
   private final AdminService adminService;
 
   @PreAuthorize("hasRole('ROLE_OWNER')")
-  @GetMapping("/join-status")
+  @GetMapping("/members/statuses")
   public BaseResponse<List<JoinStatusResponse>> getMemberJoinStatusList(
     @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
@@ -33,7 +33,7 @@ public class AdminController {
   }
 
   @PreAuthorize("hasRole('ROLE_OWNER')")
-  @PatchMapping("/{targetMemberId}/request-status")
+  @PatchMapping("/{targetMemberId}/status")
   public BaseResponse<JoinStatusResponse> changeMemberRequestStatus(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @PathVariable("targetMemberId") Long targetMemberId,
