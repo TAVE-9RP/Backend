@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "Test API", description = "Test")
+@Tag(name = "Test API", description = "비지니스 로직에 영향을 주지 않음")
 @RestController
 @RequestMapping("/test")
 public class TestController {
