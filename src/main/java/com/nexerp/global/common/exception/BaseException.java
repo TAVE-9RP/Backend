@@ -13,7 +13,7 @@ public class BaseException extends RuntimeException {
   }
 
   public BaseException(ErrorCode errorCode, String message) {
-    super(message);
+    super(errorCode.getMessage() + " -> " + message);
     this.errorCode = errorCode;
   }
 }
