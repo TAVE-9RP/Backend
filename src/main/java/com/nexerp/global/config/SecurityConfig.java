@@ -42,7 +42,16 @@ public class SecurityConfig {
                         .requestMatchers("/member/reissue").permitAll()
                         .requestMatchers("/swagger-ui/").permitAll()
                         .requestMatchers("/v3/api-docs/").permitAll()
+
+
+                        // 인사 관리 도메인
                         .requestMatchers("/admin/**").authenticated()
+
+                        // 회사 도메인
+                        .requestMatchers("/companies/**").permitAll()
+
+                        // 테스트 도메인
+                        .requestMatchers("/test/**").permitAll()
                         .anyRequest().authenticated()
                 );
 
