@@ -84,7 +84,9 @@ public class MemberService {
             // 로그인된 사용자 정보 가져오기
             CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
-            if (userDetails.getMember().getRequestStatus() != MemberRequestStatus.APPROVED) {
+            // 오너는 승인 검증 생략
+            if (userDetails.getMember().getPosition() != MemberPosition.OWNER &&
+              userDetails.getMember().getRequestStatus() != MemberRequestStatus.APPROVED) {
               throw new BaseException(
                 GlobalErrorCode.UNAUTHORIZED,
                 "가입 요청이 승인되지 않은 계정입니다."
