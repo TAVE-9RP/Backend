@@ -26,7 +26,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(BaseException.class)
   public ResponseEntity<BaseResponse<Void>> handleBaseException(BaseException e) {
     //예외 발생 정보를 로그로 기록 (개발 용)
-    log.warn("커스텀 eception: code={}, message={}",
+    log.info("커스텀 Exception: code={}, message={}",
       e.getErrorCode().getCode(), e.getMessage(), e);
 
     BaseResponse<Void> body;
@@ -64,7 +64,7 @@ public class GlobalExceptionHandler {
   }
 
   /**
-   * 예상치 못한 서버 내부 예외 처리 (최상위 eception)
+   * 예상치 못한 서버 내부 예외 처리 (최상위 Exception)
    */
   @ExceptionHandler(Exception.class)
   public ResponseEntity<BaseResponse<Void>> handleException(Exception e,
