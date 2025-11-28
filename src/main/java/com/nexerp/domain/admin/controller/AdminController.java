@@ -40,8 +40,8 @@ public class AdminController {
     ) {
       Long ownerId = userDetails.getMemberId();
 
-      List<JoinStatusResponse> updated = adminService.changeMemberRequestStatus(ownerId, request);
+      adminService.changeMemberRequestStatus(ownerId, request);
 
-      return BaseResponse.success(updated);
+      return BaseResponse.success();
   }
 }

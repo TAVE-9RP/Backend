@@ -10,11 +10,9 @@ import com.nexerp.domain.member.util.EnumValidatorUtil;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.mapping.Join;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.nexerp.domain.admin.model.request.JoinStatusUpdateRequest.StatusUpdateUnit;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +42,7 @@ public class AdminService {
 
   // 직원 가입 상태 변경 (PENDING / APPROVED / REJECTED 간 전환)
   @Transactional
-  public List<JoinStatusResponse> changeMemberRequestStatus (
+  public void changeMemberRequestStatus (
     Long ownerId,
     JoinStatusUpdateRequest requests
   ) {
@@ -80,8 +78,7 @@ public class AdminService {
     Map<Long, Member> memberMap = members.stream()
       .collect(Collectors.toMap(Member::getId, m -> m));
 
-    // 각각 상태 변경 + 응답 DTO 생성
-    List<JoinStatusResponse> responses = new ArrayList<>();
+    // 각각 상태 변경
 
     for (StatusUpdateUnit unit : updates) {
       Member member = memberMap.get(unit.getMemberId());
@@ -95,12 +92,7 @@ public class AdminService {
 
       MemberRequestStatus newStatus = EnumValidatorUtil.validateRequestStatus(unit.getNewStatus());
       member.changeRequestStatus(newStatus);
-
-      responses.add(JoinStatusResponse.from(member));
     }
 
-
-
-    return responses;
   }
 }
