@@ -7,35 +7,25 @@ import org.springframework.http.HttpStatus;
 public enum GlobalErrorCode implements ErrorCode {
 
   // ===== 4xx: Client Errors =====
-  BAD_REQUEST(HttpStatus.BAD_REQUEST, "COMMON_400_BAD_REQUEST", "잘못된 요청입니다."),
-  VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "COMMON_400_VALIDATION", "요청 값이 유효하지 않습니다."),
-  INVALID_JSON(HttpStatus.BAD_REQUEST, "COMMON_400_INVALID_JSON", "요청 본문을 읽을 수 없습니다."),
+  BAD_REQUEST(HttpStatus.BAD_REQUEST, "COMMON_400_BAD_REQUEST", "클라이언트 요청 오류"),
+  VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "COMMON_400_VALIDATION", "요청 데이터 검증 실패"),
+  INVALID_JSON(HttpStatus.BAD_REQUEST, "COMMON_400_INVALID_JSON", "요청 본문 형식이 올바르지 않음"),
 
 
-  UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "COMMON_401_UNAUTHORIZED", "인증이 필요합니다."),
-  FORBIDDEN(HttpStatus.FORBIDDEN, "COMMON_403_FORBIDDEN", "권한이 없습니다."),
+  UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "COMMON_401_UNAUTHORIZED", "인증 필요"),
+  FORBIDDEN(HttpStatus.FORBIDDEN, "COMMON_403_FORBIDDEN", "접근 권한 없음"),
 
-  NOT_FOUND(HttpStatus.NOT_FOUND, "COMMON_404_NOT_FOUND", "리소스를 찾을 수 없습니다."),
-  NO_HANDLER(HttpStatus.NOT_FOUND, "COMMON_404_NO_HANDLER", "요청하신 URL이 존재하지 않습니다."),
+  NOT_FOUND(HttpStatus.NOT_FOUND, "COMMON_404_NOT_FOUND", "리소스를 찾을 수 없음"),
+  NO_HANDLER(HttpStatus.NOT_FOUND, "COMMON_404_NO_HANDLER", "요청 경로(URL) 오류"),
 
-  CONFLICT(HttpStatus.CONFLICT, "COMMON_409_CONFLICT",
-      "요청이 현재 리소스 상태와 충돌합니다."),
-  DUPLICATE_RESOURCE(HttpStatus.CONFLICT, "COMMON_409_DUPLICATE_RESOURCE",
-      "이미 존재하는 리소스입니다."),               // ex) 이메일/ID/게시글 중복 생성
-  STATE_CONFLICT(HttpStatus.CONFLICT, "COMMON_409_STATE_CONFLICT",
-      "리소스의 현재 상태와 모순되는 요청입니다."),
-  OPTIMISTIC_LOCK_CONFLICT(HttpStatus.CONFLICT, "COMMON_409_OPTIMISTIC_LOCK",
-      "동시 수정 충돌이 발생했습니다. 다시 시도해주세요."), // ex) 버전 충돌(낙관적 락)
-
-  TOO_MANY_REQUESTS(HttpStatus.TOO_MANY_REQUESTS, "COMMON_429_TOO_MANY_REQUESTS",
-      "요청이 너무 빈번합니다. 잠시 후 다시 시도하세요."),
+  CONFLICT(HttpStatus.CONFLICT, "COMMON_409_CONFLICT", "일반적인 상태 충돌"),
+  DUPLICATE_RESOURCE(HttpStatus.CONFLICT, "COMMON_409_DUPLICATE_RESOURCE", "데이터 중복 오류"),
+  STATE_CONFLICT(HttpStatus.CONFLICT, "COMMON_409_STATE_CONFLICT", "리소스 상태 모순 오류"),
+  TOO_MANY_REQUESTS(HttpStatus.TOO_MANY_REQUESTS, "COMMON_429_TOO_MANY_REQUESTS", "요청 횟수 제한 초과"),
 
   // ===== 5xx: Server Errors =====
   INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON_500_INTERNAL_SERVER_ERROR",
-      "서버 내부의 오류가 발생했습니다."),
-  BAD_GATEWAY(HttpStatus.BAD_GATEWAY, "COMMON_502_BAD_GATEWAY", "게이트웨이 오류가 발생했습니다."),
-  SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "COMMON_503_SERVICE_UNAVAILABLE",
-      "서비스를 일시적으로 사용할 수 없습니다.");
+    "서버 내부 오류");
 
 
   private final HttpStatus httpStatus;
