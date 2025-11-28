@@ -40,8 +40,8 @@ public class SecurityConfig {
         .requestMatchers("/member/signup").permitAll()
         .requestMatchers("/member/login").permitAll()
         .requestMatchers("/member/reissue").permitAll()
-        .requestMatchers("/swagger-ui/").permitAll()
-        .requestMatchers("/v3/api-docs/").permitAll()
+        .requestMatchers("/swagger-ui/**").permitAll()
+        .requestMatchers("/v3/api-docs/**").permitAll()
 
 
         // 인사 관리 도메인
