@@ -9,6 +9,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -59,6 +60,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
           JwtResponseUtil.sendErrorResponse(response, GlobalErrorCode.UNAUTHORIZED, "토큰이 만료되었습니다.");
         } catch (JwtException e){
           JwtResponseUtil.sendErrorResponse(response, GlobalErrorCode.UNAUTHORIZED, "토큰이 유효하지 않습니다.");
+        } catch(AuthenticationServiceException e) {
+          JwtResponseUtil.sendErrorResponse(response, GlobalErrorCode.UNAUTHORIZED, e.getMessage());
         } catch (Exception e){
           JwtResponseUtil.sendErrorResponse(response, GlobalErrorCode.INTERNAL_SERVER_ERROR);
         }
