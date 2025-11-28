@@ -42,7 +42,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        // 요청 헤더에서 토큰 추출
+        String path = request.getServletPath();
+
+        if (path.startsWith("/member/signup") ||
+          path.startsWith("/member/login") ||
+          path.startsWith("/member/reissue") ||
+          path.startsWith("/swagger-ui") ||
+          path.startsWith("/v3/api-docs")) {
+          filterChain.doFilter(request, response);
+          return;
+        }
+          // 요청 헤더에서 토큰 추출
         String token = resolveToken(request);
 
         try{
