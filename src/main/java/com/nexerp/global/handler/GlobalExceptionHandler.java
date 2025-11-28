@@ -12,6 +12,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -106,6 +107,15 @@ public class GlobalExceptionHandler {
     );
 
     var body = BaseResponse.<Void>fail(GlobalErrorCode.INTERNAL_SERVER_ERROR);
+
+    return ResponseEntity.status(body.getStatus()).body(body);
+  }
+
+  @ExceptionHandler(AccessDeniedException.class)
+  public ResponseEntity<BaseResponse<Void>> handleAccessDenied(AccessDeniedException ex) {
+
+    BaseResponse<Void> body =
+      BaseResponse.fail(GlobalErrorCode.UNAUTHORIZED, "접근 권한이 없습니다.");
 
     return ResponseEntity.status(body.getStatus()).body(body);
   }
