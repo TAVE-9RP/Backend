@@ -32,5 +32,5 @@ ssh -i $KEY_PATH $USER@$HOST <<EOF
   docker rmi nexerp || true
 
   docker build -t nexerp .
-  docker run -d --name nexerp-container -p 3006:3006 --env-file .env nexerp
+  docker run -d --name nexerp-container -p 3006:3006 --env SPRING_PROFILES_ACTIVE=prod --env-file .env nexerp
 EOF

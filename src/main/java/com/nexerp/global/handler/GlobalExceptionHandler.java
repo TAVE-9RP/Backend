@@ -5,11 +5,14 @@ import com.nexerp.global.common.exception.GlobalErrorCode;
 import com.nexerp.global.common.response.BaseResponse;
 import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Map;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -68,7 +71,7 @@ public class GlobalExceptionHandler {
    */
   @ExceptionHandler(Exception.class)
   public ResponseEntity<BaseResponse<Void>> handleException(Exception e,
-    HttpServletRequest request, Authentication authentication) {
+                                                            HttpServletRequest request, Authentication authentication) {
 
     // 1) 요청 정보 추출
     String method = request.getMethod();
@@ -104,6 +107,15 @@ public class GlobalExceptionHandler {
     );
 
     var body = BaseResponse.<Void>fail(GlobalErrorCode.INTERNAL_SERVER_ERROR);
+
+    return ResponseEntity.status(body.getStatus()).body(body);
+  }
+
+  @ExceptionHandler(AccessDeniedException.class)
+  public ResponseEntity<BaseResponse<Void>> handleAccessDenied(AccessDeniedException ex) {
+
+    BaseResponse<Void> body =
+      BaseResponse.fail(GlobalErrorCode.UNAUTHORIZED, "접근 권한이 없습니다.");
 
     return ResponseEntity.status(body.getStatus()).body(body);
   }

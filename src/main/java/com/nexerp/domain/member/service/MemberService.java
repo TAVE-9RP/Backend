@@ -84,6 +84,15 @@ public class MemberService {
             // 로그인된 사용자 정보 가져오기
             CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
+            // 오너는 승인 검증 생략
+            if (userDetails.getMember().getPosition() != MemberPosition.OWNER &&
+              userDetails.getMember().getRequestStatus() != MemberRequestStatus.APPROVED) {
+              throw new BaseException(
+                GlobalErrorCode.UNAUTHORIZED,
+                "가입 요청이 승인되지 않은 계정입니다."
+              );
+            }
+
             // 클라이언트에 반환할 DTO 생성 (RefreshToken 포함, 쿠키 처리는 컨트롤러에서)
             return MemberAuthResponseDto.builder()
               .accessToken(tokenDto.getAccessToken())

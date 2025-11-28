@@ -1,12 +1,17 @@
 package com.nexerp.global.security.jwt;
 
+import com.nexerp.domain.member.model.entity.Member;
 import com.nexerp.domain.member.model.response.MemberAuthResponseDto;
+import com.nexerp.domain.member.repository.MemberRepository;
+import com.nexerp.global.common.exception.BaseException;
+import com.nexerp.global.common.exception.GlobalErrorCode;
 import com.nexerp.global.security.details.CustomUserDetails;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -26,16 +31,20 @@ import java.util.stream.Collectors;
 @Component
 public class JwtTokenProvider {     // 토큰 발급
 
+    private final MemberRepository memberRepository;
+
     private final Key key;      // JWT 서명에 사용
     private final long accessTokenExpirationTime;
     private final long refreshTokenExpirationTime;
 
     // application-prod.yml의 설정 값을 주입받아 사용
     public JwtTokenProvider(
+            MemberRepository memberRepository,
             @Value("${jwt.secret}") String secretKey,
             @Value("${jwt.access-token-expiration-in-milliseconds}") long accessTokenExpirationTime,
             @Value("${jwt.refresh-token-expiration-in-milliseconds}") long refreshTokenExpirationTime
     ) {
+        this.memberRepository = memberRepository;
         // Base64 디코딩하여 key 생성
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
@@ -102,15 +111,19 @@ public class JwtTokenProvider {     // 토큰 발급
                         .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList());
 
-        // Spring Security의 기본 User 객체를 사용하여 Principal 생성 (PK와 권한 포함)
-        UserDetails principal = new User(
-                claims.getSubject(), // User ID
-                "",                  // 비밀번호는 사용하지 않음
-                authorities
+        Long memberId = Long.valueOf(claims.getSubject());
+
+        Member member = memberRepository.findById(memberId)
+          .orElseThrow(() -> new AuthenticationServiceException("토큰에 해당하는 회원이 존재하지 않습니다."));
+
+        CustomUserDetails principal = new CustomUserDetails(member);
+
+        return new UsernamePasswordAuthenticationToken(
+          principal,
+          null,
+          principal.getAuthorities()
         );
 
-        // UsernamePasswordAuthenticationToken을 사용하여 Authentication 객체 반환
-        return new UsernamePasswordAuthenticationToken(principal, "", authorities);
     }
 
     /**

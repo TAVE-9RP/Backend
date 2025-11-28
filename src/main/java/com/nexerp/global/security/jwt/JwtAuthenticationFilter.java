@@ -9,6 +9,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -41,7 +42,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        // 요청 헤더에서 토큰 추출
+        String path = request.getServletPath();
+
+        if (path.startsWith("/member/signup") ||
+          path.startsWith("/member/login") ||
+          path.startsWith("/member/reissue") ||
+          path.startsWith("/swagger-ui") ||
+          path.startsWith("/v3/api-docs")) {
+          filterChain.doFilter(request, response);
+          return;
+        }
+          // 요청 헤더에서 토큰 추출
         String token = resolveToken(request);
 
         try{
@@ -59,6 +70,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
           JwtResponseUtil.sendErrorResponse(response, GlobalErrorCode.UNAUTHORIZED, "토큰이 만료되었습니다.");
         } catch (JwtException e){
           JwtResponseUtil.sendErrorResponse(response, GlobalErrorCode.UNAUTHORIZED, "토큰이 유효하지 않습니다.");
+        } catch(AuthenticationServiceException e) {
+          JwtResponseUtil.sendErrorResponse(response, GlobalErrorCode.UNAUTHORIZED, e.getMessage());
         } catch (Exception e){
           JwtResponseUtil.sendErrorResponse(response, GlobalErrorCode.INTERNAL_SERVER_ERROR);
         }
