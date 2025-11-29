@@ -5,49 +5,50 @@ import com.nexerp.domain.member.model.enums.MemberPosition;
 import com.nexerp.domain.member.model.enums.MemberRequestStatus;
 import com.nexerp.domain.member.model.enums.MemberRole;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Getter
-@NoArgsConstructor
+@Builder
 // 회원 정보 조회 시 반환 DTO
 public class MemberInfoResponseDto {
 
     // PK: 회원ID
-    private Long id;
+    private final Long id;
 
     // 로그인용 ID
-    private String loginId;
+    private final String loginId;
 
     // 회원 이름
-    private String name;
+    private final String name;
 
     // 이메일
-    private String email;
+    private final String email;
 
     // 신청일
-    private LocalDateTime joinRequestDate;
+    private final LocalDateTime joinRequestDate;
 
     // 가입일
-    private LocalDateTime joinDate;
+    private final LocalDateTime joinDate;
 
     // ENUM: 부서
-    private MemberDepartment department;
+    private final MemberDepartment department;
 
     // ENUM: 직급
-    private MemberPosition position;
+    private final MemberPosition position;
 
     // ENUM: 가입 상태
-    private MemberRequestStatus requestStatus;
+    private final MemberRequestStatus requestStatus;
 
     // Member Entity의 permissions를 프론트에 보낼때는 나눠서 반환.
-    private MemberRole logisticsRole;
-    private MemberRole inventoryRole;
-    private MemberRole managementRole;
+    private final MemberRole logisticsRole;
+    private final MemberRole inventoryRole;
+    private final MemberRole managementRole;
 
 
     // FK: 회사 ID
-    private Long companyId;
+    private final Long companyId;
 }

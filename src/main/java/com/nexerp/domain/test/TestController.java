@@ -5,6 +5,7 @@ import com.nexerp.global.common.exception.GlobalErrorCode;
 import com.nexerp.global.common.response.BaseResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "Test API", description = "Test")
+@Tag(name = "Test API", description = "비지니스 로직에 영향을 주지 않음")
 @RestController
 @RequestMapping("/test")
 public class TestController {
@@ -59,5 +60,16 @@ public class TestController {
     String str = null;
     str.length();
     return BaseResponse.success();
+  }
+
+  @GetMapping("/auth")
+  @PreAuthorize("hasRole('OWNER')")
+  public void throwExceptionWithAuth() {
+    System.out.println("호출");
+  }
+
+  @GetMapping("/runtime")
+  public String throwRuntimeException(@RequestParam(required = false) String cause) {
+    throw new RuntimeException("강제 RuntimeException 발생 (cause=" + cause + ")");
   }
 }

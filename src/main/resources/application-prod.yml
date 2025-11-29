@@ -11,6 +11,3 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQL8Dialect
-server:
-  port: 3006
-  forward-headers-strategy: native
