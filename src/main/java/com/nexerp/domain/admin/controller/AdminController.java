@@ -1,7 +1,9 @@
 package com.nexerp.domain.admin.controller;
 
 import com.nexerp.domain.admin.model.request.JoinStatusUpdateRequest;
+import com.nexerp.domain.admin.model.request.PermissionUpdateRequest;
 import com.nexerp.domain.admin.model.response.JoinStatusResponse;
+import com.nexerp.domain.admin.model.response.PermissionResponse;
 import com.nexerp.domain.admin.service.AdminService;
 import com.nexerp.global.common.response.BaseResponse;
 import com.nexerp.global.security.details.CustomUserDetails;
@@ -48,5 +50,27 @@ public class AdminController {
       adminService.changeMemberRequestStatus(ownerId, request);
 
       return BaseResponse.success();
+  }
+
+  @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
+  @GetMapping("/members/permissions")
+  public BaseResponse<List<PermissionResponse>> getMemberPermissions (
+    @AuthenticationPrincipal CustomUserDetails userDetails
+  ) {
+    Long ownerId = userDetails.getMemberId();
+    List<PermissionResponse> result = adminService.getMemberPermission(ownerId);
+    return BaseResponse.success(result);
+  }
+
+  // 직원 권한 변경
+  @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
+  @PatchMapping("/members/permissions")
+  public BaseResponse<Void> updateMemberPermissions(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @Valid @RequestBody PermissionUpdateRequest request
+  ) {
+    Long ownerId = userDetails.getMemberId();
+    adminService.updateMemberPermissions(ownerId, request);
+    return BaseResponse.success();
   }
 }
