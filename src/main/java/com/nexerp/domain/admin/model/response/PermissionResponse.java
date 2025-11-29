@@ -10,11 +10,11 @@ import lombok.Getter;
 @Getter
 @Builder
 public class PermissionResponse {
-  private long memberId;
-  private String name;
-  private MemberDepartment department;
-  private MemberPosition position;
-  private MemberRole currentRole;
+  private final long memberId;
+  private final String name;
+  private final MemberDepartment department;
+  private final MemberPosition position;
+  private final MemberRole currentRole;
 
   public static PermissionResponse from(Member m) {
     MemberRole role = switch (m.getDepartment()) {

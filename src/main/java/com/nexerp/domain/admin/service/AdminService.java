@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.nexerp.domain.admin.model.request.JoinStatusUpdateRequest.StatusUpdateUnit;
+import com.nexerp.domain.admin.model.request.PermissionUpdateRequest.PermissionUpdateUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -131,11 +132,11 @@ public class AdminService {
     Long companyId = owner.getCompanyId();
 
     // 업데이트 대상 리스트
-    List<PermissionUpdateRequest.PermissionUpdateUnit> updates = request.getUpdates();
+    List<PermissionUpdateUnit> updates = request.getUpdates();
 
     // 대상 id 리스트
     List<Long> targetIds = updates.stream()
-      .map(PermissionUpdateRequest.PermissionUpdateUnit::getMemberId)
+      .map(PermissionUpdateUnit::getMemberId)
       .toList();
 
     // 회사 소속 직원 조회
@@ -157,7 +158,7 @@ public class AdminService {
     // 결과 리스트
     List<PermissionResponse> responses = new ArrayList<>();
 
-    for (PermissionUpdateRequest.PermissionUpdateUnit unit : updates) {
+    for (PermissionUpdateUnit unit : updates) {
 
       Member member = memberMap.get(unit.getMemberId());
 
