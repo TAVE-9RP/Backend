@@ -1,9 +1,12 @@
 package com.nexerp.global.config;
 
 import com.nexerp.global.security.jwt.JwtAuthenticationFilter;
+import com.nexerp.global.security.permission.CustomPermissionEvaluator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
+import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -67,6 +70,13 @@ public class SecurityConfig {
   @Bean
   public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
     return authenticationConfiguration.getAuthenticationManager();
+  }
+
+  @Bean
+  public MethodSecurityExpressionHandler expressionHandler(CustomPermissionEvaluator evaluator) {
+    DefaultMethodSecurityExpressionHandler handler = new DefaultMethodSecurityExpressionHandler();
+    handler.setPermissionEvaluator(evaluator);
+    return handler;
   }
 
 }

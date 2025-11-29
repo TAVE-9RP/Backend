@@ -3,6 +3,7 @@ package com.nexerp.domain.member.util;
 import com.nexerp.domain.member.model.enums.MemberDepartment;
 import com.nexerp.domain.member.model.enums.MemberPosition;
 import com.nexerp.domain.member.model.enums.MemberRequestStatus;
+import com.nexerp.domain.member.model.enums.MemberRole;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
 
@@ -32,6 +33,14 @@ public class EnumValidatorUtil {
       return MemberRequestStatus.valueOf(status);
     } catch (IllegalArgumentException | NullPointerException e) {
       throw new BaseException(GlobalErrorCode.VALIDATION_ERROR, "유효하지 않은 가입 상태입니다: " + status);
+    }
+  }
+
+  public static MemberRole validateRole(String role) {
+    try {
+      return MemberRole.valueOf(role);
+    } catch (IllegalArgumentException | NullPointerException e) {
+      throw new BaseException(GlobalErrorCode.VALIDATION_ERROR, "유효하지 않은 상태 값입니다: " + role);
     }
   }
 }

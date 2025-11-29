@@ -1,5 +1,6 @@
 package com.nexerp.domain.member.service;
 
+import com.nexerp.domain.member.model.embeddable.ServicePermissions;
 import com.nexerp.domain.member.model.entity.Member;
 import com.nexerp.domain.member.model.enums.MemberDepartment;
 import com.nexerp.domain.member.model.enums.MemberPosition;
@@ -56,6 +57,11 @@ public class MemberService {
             .companyId(memberSignupRequestDto.getCompanyId())
             .build();
 
+          if (position == MemberPosition.OWNER) {
+            member.setPermissions(ServicePermissions.createForOwner());
+          } else {
+            member.setPermissions(ServicePermissions.createForEmployee(department));
+          }
           Member savedMember = memberRepository.save(member);
           return savedMember.getId();
 
