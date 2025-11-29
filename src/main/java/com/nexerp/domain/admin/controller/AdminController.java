@@ -52,6 +52,7 @@ public class AdminController {
       return BaseResponse.success();
   }
 
+  @Operation(summary = "직원 권한 상태 리스트 조회 API", description = "모든 직원의 기본 컬럼을 포함한 권한 상태를 조회합니다.")
   @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
   @GetMapping("/members/permissions")
   public BaseResponse<List<PermissionResponse>> getMemberPermissions (
@@ -63,6 +64,7 @@ public class AdminController {
   }
 
   // 직원 권한 변경
+  @Operation(summary = "직원 권한 상태 변경 API", description = "직원들의 권한 상태를 변경합니다. (리스트로 받기에 여러명 변경 가능)")
   @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
   @PatchMapping("/members/permissions")
   public BaseResponse<Void> updateMemberPermissions(
