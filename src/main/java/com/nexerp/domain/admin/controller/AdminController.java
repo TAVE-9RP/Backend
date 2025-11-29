@@ -26,7 +26,7 @@ public class AdminController {
   private final AdminService adminService;
 
   @Operation(summary = "직원 가입 상태 리스트 조회 API", description = "승인 대기 / 승인 / 거절 상태를 포함한 모든 직원의 가입 상태를 조회합니다.")
-  @PreAuthorize("hasRole('ROLE_OWNER')")
+  @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
   @GetMapping("/members/statuses")
   public BaseResponse<List<JoinStatusResponse>> getMemberJoinStatusList(
     @AuthenticationPrincipal CustomUserDetails userDetails
@@ -39,7 +39,7 @@ public class AdminController {
   }
 
   @Operation(summary = "직원 가입 상태 변경 API", description = "직원들의 가입 상태를 변경합니다. (리스트로 받기에 여러명 변경 가능)")
-  @PreAuthorize("hasRole('ROLE_OWNER')")
+  @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
   @PatchMapping("members/status")
   public BaseResponse<List<JoinStatusResponse>> changeMemberRequestStatus(
     @AuthenticationPrincipal CustomUserDetails userDetails,
