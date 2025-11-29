@@ -14,7 +14,6 @@ public class PermissionResponse {
   private String name;
   private MemberDepartment department;
   private MemberPosition position;
-  private String email;
   private MemberRole currentRole;
 
   public static PermissionResponse from(Member m) {
@@ -29,7 +28,6 @@ public class PermissionResponse {
       .name(m.getName())
       .department(m.getDepartment())
       .position(m.getPosition())
-      .email(m.getEmail())
       .currentRole(role)
       .build();
   }
