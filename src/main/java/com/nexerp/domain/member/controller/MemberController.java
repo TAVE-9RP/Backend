@@ -1,5 +1,6 @@
 package com.nexerp.domain.member.controller;
 
+import com.nexerp.domain.company.model.request.CompanyCreateRequest;
 import com.nexerp.domain.member.model.request.MemberLoginRequestDto;
 import com.nexerp.domain.member.model.request.MemberSignupRequestDto;
 import com.nexerp.domain.member.model.response.MemberAuthResponseDto;
@@ -8,6 +9,11 @@ import com.nexerp.global.common.exception.GlobalErrorCode;
 import com.nexerp.global.common.response.BaseResponse;
 import com.nexerp.global.security.jwt.JwtTokenProvider;
 import com.nexerp.global.security.util.JwtCookieHeaderUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/member")
 @RequiredArgsConstructor
+@Tag(name = "회원 관련 API", description = "회원가입, 로그인, 토큰 재발급")
 public class MemberController {
 
     private final MemberService memberService;
@@ -23,6 +30,31 @@ public class MemberController {
     private final JwtCookieHeaderUtil jwtCookieHeaderUtil;
 
     @PostMapping("/signup")
+    @Operation(
+      summary = "회원가입 api",
+      description = "모든 필드는 필수 입력해야합니다. 비밀번호는 최소 8자 이상이어야합니다. 이메일은 이메일 형식이어야합니다. ",
+      requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+        required = true,
+        content = @Content(
+          mediaType = "application/json",
+          schema = @Schema(implementation = MemberSignupRequestDto.class),
+          examples = @ExampleObject(
+            name = "회원가입 예시",
+            value = """
+            {
+              "loginId": "user100",
+              "password": "pw1234567",
+              "name": "유저100이름",
+              "email": "user100@gmail.com",
+              "department": "LOGISTICS",
+              "position": "INTERN",
+              "companyId": "1"
+            }
+            """
+          )
+        )
+      )
+    )
     public BaseResponse<Long> signUp(@RequestBody @Valid MemberSignupRequestDto memberSignupRequestDto){
 
         Long memberId = memberService.signUp(memberSignupRequestDto);
@@ -35,6 +67,26 @@ public class MemberController {
     // Refresh Token: HTTP Only Cookie 저장 + SameSite=Lax 속성 (GET일때만, 브라우저가 서버로 쿠키를 전송)
 
     @PostMapping("/login")
+    @Operation(
+      summary = "로그인 api",
+      description = "아이디와 비밀번호는 필수 입력해야합니다.",
+      requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+        required = true,
+        content = @Content(
+          mediaType = "application/json",
+          schema = @Schema(implementation = MemberLoginRequestDto.class),
+          examples = @ExampleObject(
+            name = "로그인 예시",
+            value = """
+            {
+              "loginId": "user100",
+              "password": "pw1234567"
+            }
+            """
+          )
+        )
+      )
+    )
     public BaseResponse<MemberAuthResponseDto> login(
             @RequestBody @Valid MemberLoginRequestDto memberLoginRequestDto,
             HttpServletResponse response) {     // RT를 HTTP Only Cookie에 저장하기 위해, HttpServletResponse 필요
@@ -55,6 +107,10 @@ public class MemberController {
 
     // AT, RT 재발급
     @PostMapping("/reissue")
+    @Operation(
+      summary = "토큰 재발급 api",
+      description = "헤더 Authorization에 만료된 AT를 입력해야합니다."
+    )
     public BaseResponse<MemberAuthResponseDto> reissueToken(
             @RequestHeader("Authorization") String authorizationHeader, // 만료된 AT
             @CookieValue(value = "refresh_token") String refreshToken,  // RT
