@@ -1,7 +1,9 @@
 package com.nexerp.domain.admin.controller;
 
 import com.nexerp.domain.admin.model.request.JoinStatusUpdateRequest;
+import com.nexerp.domain.admin.model.request.PermissionUpdateRequest;
 import com.nexerp.domain.admin.model.response.JoinStatusResponse;
+import com.nexerp.domain.admin.model.response.PermissionResponse;
 import com.nexerp.domain.admin.service.AdminService;
 import com.nexerp.global.common.response.BaseResponse;
 import com.nexerp.global.security.details.CustomUserDetails;
@@ -24,7 +26,7 @@ public class AdminController {
   private final AdminService adminService;
 
   @Operation(summary = "직원 가입 상태 리스트 조회 API", description = "승인 대기 / 승인 / 거절 상태를 포함한 모든 직원의 가입 상태를 조회합니다.")
-  @PreAuthorize("hasRole('ROLE_OWNER')")
+  @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
   @GetMapping("/members/statuses")
   public BaseResponse<List<JoinStatusResponse>> getMemberJoinStatusList(
     @AuthenticationPrincipal CustomUserDetails userDetails
@@ -37,7 +39,7 @@ public class AdminController {
   }
 
   @Operation(summary = "직원 가입 상태 변경 API", description = "직원들의 가입 상태를 변경합니다. (리스트로 받기에 여러명 변경 가능)")
-  @PreAuthorize("hasRole('ROLE_OWNER')")
+  @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
   @PatchMapping("members/status")
   public BaseResponse<List<JoinStatusResponse>> changeMemberRequestStatus(
     @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -48,5 +50,29 @@ public class AdminController {
       adminService.changeMemberRequestStatus(ownerId, request);
 
       return BaseResponse.success();
+  }
+
+  @Operation(summary = "직원 권한 상태 리스트 조회 API", description = "모든 직원의 기본 컬럼을 포함한 권한 상태를 조회합니다.")
+  @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
+  @GetMapping("/members/permissions")
+  public BaseResponse<List<PermissionResponse>> getMemberPermissions (
+    @AuthenticationPrincipal CustomUserDetails userDetails
+  ) {
+    Long ownerId = userDetails.getMemberId();
+    List<PermissionResponse> result = adminService.getMemberPermission(ownerId);
+    return BaseResponse.success(result);
+  }
+
+  // 직원 권한 변경
+  @Operation(summary = "직원 권한 상태 변경 API", description = "직원들의 권한 상태를 변경합니다. (리스트로 받기에 여러명 변경 가능)")
+  @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
+  @PatchMapping("/members/permissions")
+  public BaseResponse<Void> updateMemberPermissions(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @Valid @RequestBody PermissionUpdateRequest request
+  ) {
+    Long ownerId = userDetails.getMemberId();
+    adminService.updateMemberPermissions(ownerId, request);
+    return BaseResponse.success();
   }
 }

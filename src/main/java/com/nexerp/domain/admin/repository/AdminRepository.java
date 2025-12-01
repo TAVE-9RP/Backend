@@ -12,4 +12,7 @@ public interface AdminRepository extends JpaRepository<Member, Long> {
 
   // 같은 회사 소속의 특정 직원 검증 (권한 체크까지 포함)
   List<Member> findByIdInAndCompanyId(List<Long> ids, Long companyId);
+
+  // 같은 회사 직원 전체 조회 (권한 관리 화면)
+  List<Member> findByCompanyId(Long companyId);
 }
