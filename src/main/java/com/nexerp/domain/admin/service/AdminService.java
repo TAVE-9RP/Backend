@@ -191,7 +191,7 @@ public class AdminService {
 
   // 오너인지 검증 후 오너인 경우 오너 반환
   @Transactional(readOnly = true)
-  public Member validateOwer(Long ownerId) {
+  public Member validateOwner(Long ownerId) {
     Member owner = adminRepository.findById(ownerId)
       .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "로그인한 회원 정보를 찾을 수 없습니다."));
 

@@ -28,23 +28,23 @@ public class ProjectService {
 
   @Transactional
   public ProjectCreateResponse createProject(Long ownerId,
-      ProjectCreateRequest request) {
+    ProjectCreateRequest request) {
 
     // 회사 생성 요청 검증
     Company targetCompany = validateCreateProject(ownerId, request);
 
     Project newProject = Project.create(
-        targetCompany,
-        request.getProjectNumber(),
-        request.getProjectName(),
-        request.getProjectDescription(),
-        request.getProjectCustomer(),
-        request.getProjectExpectedEndDate()
+      targetCompany,
+      request.getProjectNumber(),
+      request.getProjectName(),
+      request.getProjectDescription(),
+      request.getProjectCustomer(),
+      request.getProjectExpectedEndDate()
     );
 
     Project savedProject = projectRepository.save(newProject);
     ProjectCreateResponse projectCreateResponse = ProjectCreateResponse.from(
-        savedProject.getId());
+      savedProject.getId());
 
     return projectCreateResponse;
 
@@ -53,25 +53,25 @@ public class ProjectService {
   @Transactional(readOnly = true)
   public Company validateCreateProject(Long ownerId, ProjectCreateRequest request) {
     // 오너 검증
-    Member owner = adminService.validateOwer(ownerId);
+    Member owner = adminService.validateOwner(ownerId);
 
     // 오너의 회사 정보 조회
     Long ownerCompanyId = owner.getCompanyId();
-    Company owerCompany = companyService.getCompanyEntity(ownerCompanyId);
+    Company ownerCompany = companyService.getCompanyEntity(ownerCompanyId);
 
     // 프로젝트 생성 필드 검증
     if (projectRepository.existsByNumber(request.getProjectNumber())) {
       throw new BaseException(GlobalErrorCode.DUPLICATE_RESOURCE, "이미 존재하는 프로젝트 번호입니다.");
     }
 
-    return owerCompany;
+    return ownerCompany;
   }
 
   public List<ProjectSearchResponse> searchProjectByName(Long memberId, String keyword) {
     Long memberCompanyId = memberService.getCompanyIdByMemberId(memberId);
 
     List<Project> projects = projectRepository
-        .searchByCompanyIdAndNameOrNumber(memberCompanyId, keyword);
+      .searchByCompanyIdAndNameOrNumber(memberCompanyId, keyword);
 
     return ProjectSearchResponse.fromList(projects);
   }
