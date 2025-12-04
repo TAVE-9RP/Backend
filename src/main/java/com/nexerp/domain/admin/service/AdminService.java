@@ -201,4 +201,27 @@ public class AdminService {
 
     return owner;
   }
+
+  // 담당자 검증용 메서드
+  @Transactional(readOnly = true)
+  public List<Member> getMembersByIdsAndCompany(List<Long> memberIds, Long companyId) {
+
+    if(memberIds == null || memberIds.isEmpty()) {
+      throw new BaseException(
+        GlobalErrorCode.VALIDATION_ERROR,
+        "담당자는 최소 1명 이상 지정해야 합니다."
+      );
+    }
+
+    List<Member> members = adminRepository.findByIdInAndCompanyId(memberIds, companyId);
+    // 요청한 모든 직원이 같은 회사 소속인지 검증
+    if (members.size() != memberIds.size()) {
+      throw new BaseException(
+        GlobalErrorCode.BAD_REQUEST,
+        "요청한 담당자 중 회사 소속이 아닌 직원이 포함되어 있습니다."
+      );
+    }
+
+    return members;
+  }
 }
