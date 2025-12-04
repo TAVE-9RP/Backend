@@ -4,7 +4,7 @@ import com.nexerp.domain.member.model.embeddable.ServicePermissions;
 import com.nexerp.domain.member.model.enums.MemberDepartment;
 import com.nexerp.domain.member.model.enums.MemberPosition;
 import com.nexerp.domain.member.model.enums.MemberRequestStatus;
-import com.nexerp.domain.projectmember.ProjectMember;
+import com.nexerp.domain.projectmember.model.entity.ProjectMember;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;

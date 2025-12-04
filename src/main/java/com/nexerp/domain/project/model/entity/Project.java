@@ -2,7 +2,7 @@ package com.nexerp.domain.project.model.entity;
 
 import com.nexerp.domain.company.model.entity.Company;
 import com.nexerp.domain.project.model.enums.ProjectStatus;
-import com.nexerp.domain.projectmember.ProjectMember;
+import com.nexerp.domain.projectmember.model.entity.ProjectMember;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
