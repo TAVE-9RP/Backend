@@ -1,13 +1,19 @@
 package com.nexerp.domain.company.model.entity;
 
+import com.nexerp.domain.project.model.entity.Project;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,6 +36,14 @@ public class Company {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "company_id")
   private Long id;
+
+  // 연결된 프로젝트
+  @OneToMany(
+    mappedBy = "company", fetch = FetchType.LAZY,
+    cascade = CascadeType.ALL, orphanRemoval = true
+  )
+  @Builder.Default
+  private List<Project> projects = new ArrayList<>();
 
   @Column(name = "company_name", nullable = false, unique = true)
   private String name;
@@ -58,12 +72,12 @@ public class Company {
 
   // 회사 생성에 사용
   public static Company create(String name, String industryType, String description,
-      String imagePath) {
+    String imagePath) {
     return Company.builder()
-        .name(name)
-        .industryType(industryType)
-        .description(description)
-        .imagePath(imagePath)
-        .build();
+      .name(name)
+      .industryType(industryType)
+      .description(description)
+      .imagePath(imagePath)
+      .build();
   }
 }

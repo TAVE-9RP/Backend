@@ -1,7 +1,9 @@
 package com.nexerp.domain.admin.service;
 
 import com.nexerp.domain.admin.model.request.JoinStatusUpdateRequest;
+import com.nexerp.domain.admin.model.request.JoinStatusUpdateRequest.StatusUpdateUnit;
 import com.nexerp.domain.admin.model.request.PermissionUpdateRequest;
+import com.nexerp.domain.admin.model.request.PermissionUpdateRequest.PermissionUpdateUnit;
 import com.nexerp.domain.admin.model.response.JoinStatusResponse;
 import com.nexerp.domain.admin.model.response.PermissionResponse;
 import com.nexerp.domain.admin.repository.AdminRepository;
@@ -13,15 +15,13 @@ import com.nexerp.domain.member.model.enums.MemberRole;
 import com.nexerp.domain.member.util.EnumValidatorUtil;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import com.nexerp.domain.admin.model.request.JoinStatusUpdateRequest.StatusUpdateUnit;
-import com.nexerp.domain.admin.model.request.PermissionUpdateRequest.PermissionUpdateUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -38,7 +38,8 @@ public class AdminService {
 
     Long companyId = owner.getCompanyId();
 
-    List<Member> members = adminRepository.findByCompanyIdAndIdNotOrderByJoinRequestDateAsc(companyId, ownerId);
+    List<Member> members = adminRepository.findByCompanyIdAndIdNotOrderByJoinRequestDateAsc(
+      companyId, ownerId);
 
     return members.stream()
       .map(JoinStatusResponse::from)
@@ -47,7 +48,7 @@ public class AdminService {
 
   // 직원 가입 상태 변경 (PENDING / APPROVED / REJECTED 간 전환)
   @Transactional
-  public void changeMemberRequestStatus (
+  public void changeMemberRequestStatus(
     Long ownerId,
     JoinStatusUpdateRequest requests
   ) {
@@ -109,7 +110,7 @@ public class AdminService {
 
     Long companyId = owner.getCompanyId();
 
-    List <Member> members = adminRepository.findByCompanyId(companyId)
+    List<Member> members = adminRepository.findByCompanyId(companyId)
       .stream()
       .filter(m -> m.getPosition() != MemberPosition.OWNER)
       .toList();
@@ -154,7 +155,6 @@ public class AdminService {
     Map<Long, Member> memberMap = members.stream()
       .collect(Collectors.toMap(Member::getId, m -> m));
 
-
     // 결과 리스트
     List<PermissionResponse> responses = new ArrayList<>();
 
@@ -187,5 +187,18 @@ public class AdminService {
 
       responses.add(PermissionResponse.from(member));
     }
+  }
+
+  // 오너인지 검증 후 오너인 경우 오너 반환
+  @Transactional(readOnly = true)
+  public Member validateOwner(Long ownerId) {
+    Member owner = adminRepository.findById(ownerId)
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "로그인한 회원 정보를 찾을 수 없습니다."));
+
+    if (owner.getPosition() != MemberPosition.OWNER) {
+      throw new BaseException(GlobalErrorCode.FORBIDDEN, "해당 기능은 회사 오너만 사용할 수 있습니다.");
+    }
+
+    return owner;
   }
 }
