@@ -38,7 +38,8 @@ public class ProjectController {
       description = "**오너 로그인이 되어 있어야 합니다.** "
           + "프로젝트 번호는 중복 불가합니다. "
           + "`프로젝트 번호, 이름, 설명, 목표 종료일`은 필수입니다."
-          + "날짜의 형식은 yyyy-mm-dd입니다.",
+          + "날짜의 형식은 yyyy-mm-dd입니다."
+          + "담당자는 반드시 1명 이상 지정해야 합니다.",
       requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
           description = "추가 입력 정보",
           required = true,
@@ -54,6 +55,7 @@ public class ProjectController {
                         "projectDescription":"이원진의 간절한 프로젝트입니다.",
                         "projectCustomer":"wonjin",
                         "projectExpectedEndDate":"2025-01-02"
+                        "assignIds": [1, 2, 3]
                       }
                       """
               )
