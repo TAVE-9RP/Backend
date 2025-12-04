@@ -10,6 +10,7 @@ import com.nexerp.domain.project.model.request.ProjectCreateRequest;
 import com.nexerp.domain.project.model.response.ProjectCreateResponse;
 import com.nexerp.domain.project.model.response.ProjectSearchResponse;
 import com.nexerp.domain.project.repository.ProjectRepository;
+import com.nexerp.domain.projectmember.model.entity.ProjectMember;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
 import java.util.List;
@@ -43,11 +44,20 @@ public class ProjectService {
     );
 
     Project savedProject = projectRepository.save(newProject);
-    ProjectCreateResponse projectCreateResponse = ProjectCreateResponse.from(
-      savedProject.getId());
 
-    return projectCreateResponse;
+    // 담당자 지정 추가
+    if (request.getAssigneeIds() != null && !request.getAssigneeIds().isEmpty()) {
 
+      List<Member> assignees = adminService.getMembersByIdsAndCompany(request.getAssigneeIds(), targetCompany.getId());
+
+      // ProjectMember 생성
+      for (Member m : assignees) {
+        ProjectMember pm = ProjectMember.create(savedProject, m);
+        savedProject.getProjectMembers().add(pm);
+      }
+    }
+
+    return ProjectCreateResponse.from(savedProject.getId());
   }
 
   @Transactional(readOnly = true)
