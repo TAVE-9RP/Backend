@@ -185,4 +185,29 @@ public class ProjectService {
       .collect(Collectors.toList());
 
   }
+
+  // 신규 프로젝트 번호 생성
+  @Transactional(readOnly = true)
+  public String createNewProjectNum(Long memberId) {
+
+    // 회원 정보 조회 (회원의 company_id를 얻고자)
+    Member currentMember = memberRepository.findById(memberId)
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "회원이 존재하지 않습니다."));
+
+    Long companyId = currentMember.getCompanyId();
+
+    String companyName = projectRepository.findCompanyNameById(companyId)
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "회사명이 존재하지 않습니다."));
+
+    Optional<String> serialNum = projectRepository.findMaxProjectSerialNumber(companyId, companyName);
+
+    String nextSerial = serialNum
+      .map(num -> String.valueOf(Integer.parseInt(num) + 1)) // 기존 시리얼이 있으면 1 증가
+      .orElse("1"); // 없으면 1로 시작
+    // 새 프로젝트 번호 생성
+    String newProjectNumber = companyName + nextSerial;
+
+    return newProjectNumber;
+
+  }
 }
