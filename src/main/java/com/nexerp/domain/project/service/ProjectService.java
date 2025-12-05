@@ -4,17 +4,24 @@ import com.nexerp.domain.admin.service.AdminService;
 import com.nexerp.domain.company.model.entity.Company;
 import com.nexerp.domain.company.service.CompanyService;
 import com.nexerp.domain.member.model.entity.Member;
+import com.nexerp.domain.member.repository.MemberRepository;
 import com.nexerp.domain.member.service.MemberService;
 import com.nexerp.domain.project.model.entity.Project;
 import com.nexerp.domain.project.model.request.ProjectCreateRequest;
 import com.nexerp.domain.project.model.response.AssignListResponse;
 import com.nexerp.domain.project.model.response.ProjectCreateResponse;
+import com.nexerp.domain.project.model.response.ProjectDetailResponse;
 import com.nexerp.domain.project.model.response.ProjectSearchResponse;
 import com.nexerp.domain.project.repository.ProjectRepository;
 import com.nexerp.domain.projectmember.model.entity.ProjectMember;
+import com.nexerp.domain.projectmember.model.response.MemberIdNameResponseDto;
+import com.nexerp.domain.projectmember.repository.ProjectMemberRepository;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +34,8 @@ public class ProjectService {
   private final MemberService memberService;
   private final CompanyService companyService;
   private final ProjectRepository projectRepository;
+  private final ProjectMemberRepository projectMemberRepository;
+  private final MemberRepository memberRepository;
 
   @Transactional
   public ProjectCreateResponse createProject(Long ownerId,
@@ -81,9 +90,17 @@ public class ProjectService {
   public List<ProjectSearchResponse> searchProjectByName(Long memberId, String keyword) {
     Long memberCompanyId = memberService.getCompanyIdByMemberId(memberId);
 
-    List<Project> projects = projectRepository
-      .searchByCompanyIdAndNameOrNumber(memberCompanyId, keyword);
+//    List<Project> projects = projectRepository
+//      .searchByCompanyIdAndNameOrNumber(memberCompanyId, keyword);
 
+    // 소속된 회사 없을때
+    if(memberCompanyId == null){
+      throw new BaseException(GlobalErrorCode.FORBIDDEN, "소속된 회사가 없어 프로젝트 검색 권한이 없습니다.");
+    }
+
+    List<Project> projects = projectRepository
+      .searchByCompanyIdAndNameOrNumber2(memberCompanyId, keyword);
+    
     return ProjectSearchResponse.fromList(projects);
   }
 
@@ -97,5 +114,82 @@ public class ProjectService {
     return approvedMembers.stream()
       .map(AssignListResponse::from)
       .toList();
+  }
+
+  // 프로젝트 상세 조회
+  @Transactional(readOnly = true)
+  public ProjectDetailResponse viewProjectDetails(Long projectId, Long memberId) {
+
+    // 회원 정보 조회 (회원의 company_id를 얻고자)
+    Member currentMember = memberRepository.findById(memberId)
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "회원이 존재하지 않습니다."));
+
+    // 프로젝트 조회
+    Optional<Project> projectOptional = projectRepository.findProjectDetailsById(projectId);
+
+    // 프로젝트가 존재하지 않을 경우 예외 처리
+    if (projectOptional.isEmpty()) {
+      throw new BaseException(GlobalErrorCode.NOT_FOUND, "프로젝트가 존재하지 않습니다.");
+    }
+
+    Project project = projectOptional.get();
+
+    // 프로젝트가 속한 회사의 직원이 아닐 경우 예외 처리
+    if(!project.getCompany().getId().equals(currentMember.getCompanyId())){
+      throw new BaseException(GlobalErrorCode.FORBIDDEN, "해당 프로젝트의 회사 직원이 아닙니다.");
+    }
+
+    return ProjectDetailResponse.builder()
+      .companyId(project.getCompany().getId())
+      .number(project.getNumber())
+      .name(project.getName())
+      .description(project.getDescription())
+      .customer(project.getCustomer())
+      .expectedEndDate(project.getExpectedEndDate())
+      .endDate(project.getEndDate())
+      .createDate(project.getCreateDate())
+      .projectMembers(project.getProjectMembers().stream()
+        // ProjectMember (pm)에서 Member 엔티티를 가져옵니다.
+        .map(pm -> pm.getMember())
+        .map(member -> MemberIdNameResponseDto.builder()
+          .memberId(member.getId())
+          .name(member.getName())
+          .build())
+        .collect(Collectors.toList()))
+      .build();
+
+  }
+
+  // 담당자 본인의 프로젝트 리스트 조회
+  @Transactional(readOnly = true)
+  public List<ProjectDetailResponse> findProjectsByMemberId(Long memberId) {
+
+    // 회원 정보 조회 (회원의 company_id를 얻고자)
+    Member currentMember = memberRepository.findById(memberId)
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "회원이 존재하지 않습니다."));
+
+    Long companyId = currentMember.getCompanyId();
+
+    List<Project> projectList = projectRepository.findProjectsByMemberId(memberId, companyId);
+
+    return projectList.stream()
+      .map(project -> ProjectDetailResponse.builder()
+        .companyId(project.getCompany().getId())
+        .number(project.getNumber())
+        .name(project.getName())
+        .description(project.getDescription())
+        .customer(project.getCustomer())
+        .expectedEndDate(project.getExpectedEndDate())
+        .endDate(project.getEndDate())
+        .createDate(project.getCreateDate())
+        .projectMembers(project.getProjectMembers().stream()
+          .map(pm -> MemberIdNameResponseDto.builder()
+            .memberId(pm.getMember().getId())
+            .name(pm.getMember().getName())
+            .build())
+          .collect(Collectors.toList()))
+        .build())
+      .collect(Collectors.toList());
+
   }
 }
