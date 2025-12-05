@@ -24,6 +24,21 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
       Long companyId,
       String keyword);
 
+  @Query("""
+    SELECT p
+    FROM Project p
+    JOIN FETCH p.company c
+    LEFT JOIN FETCH p.projectMembers pm
+    LEFT JOIN FETCH pm.member m
+    WHERE p.company.id = :companyId
+      AND (p.name LIKE CONCAT('%', :keyword, '%')
+           OR p.number LIKE CONCAT('%', :keyword, '%'))
+    ORDER BY p.createDate DESC
+    """)
+  List<Project> searchByCompanyIdAndNameOrNumber2(
+    Long companyId,
+    String keyword);
+
   @Query("SELECT p FROM Project p "
     + "JOIN FETCH p.company c "
     + "LEFT JOIN FETCH p.projectMembers pm "
