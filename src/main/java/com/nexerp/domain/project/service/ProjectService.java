@@ -90,9 +90,17 @@ public class ProjectService {
   public List<ProjectSearchResponse> searchProjectByName(Long memberId, String keyword) {
     Long memberCompanyId = memberService.getCompanyIdByMemberId(memberId);
 
-    List<Project> projects = projectRepository
-      .searchByCompanyIdAndNameOrNumber(memberCompanyId, keyword);
+//    List<Project> projects = projectRepository
+//      .searchByCompanyIdAndNameOrNumber(memberCompanyId, keyword);
 
+    // 소속된 회사 없을때
+    if(memberCompanyId == null){
+      throw new BaseException(GlobalErrorCode.FORBIDDEN, "소속된 회사가 없어 프로젝트 검색 권한이 없습니다.");
+    }
+
+    List<Project> projects = projectRepository
+      .searchByCompanyIdAndNameOrNumber2(memberCompanyId, keyword);
+    
     return ProjectSearchResponse.fromList(projects);
   }
 
