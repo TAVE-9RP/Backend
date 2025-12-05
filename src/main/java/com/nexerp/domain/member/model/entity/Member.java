@@ -83,7 +83,8 @@ public class Member {
   // ENUM: 가입 상태
   @Enumerated(EnumType.STRING)
   @Column(name = "member_request_status", nullable = false)
-  private MemberRequestStatus requestStatus;
+  @Builder.Default
+  private MemberRequestStatus requestStatus = MemberRequestStatus.PENDING;
 
   // FK: 회사 ID
   @Column(name = "company_id", nullable = false)
