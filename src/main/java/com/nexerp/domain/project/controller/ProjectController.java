@@ -1,6 +1,7 @@
 package com.nexerp.domain.project.controller;
 
 import com.nexerp.domain.project.model.request.ProjectCreateRequest;
+import com.nexerp.domain.project.model.response.AssignListResponse;
 import com.nexerp.domain.project.model.response.ProjectCreateResponse;
 import com.nexerp.domain.project.model.response.ProjectSearchResponse;
 import com.nexerp.domain.project.service.ProjectService;
@@ -83,6 +84,18 @@ public class ProjectController {
       @RequestParam("keyword") String keyword) {
     Long userId = userDetails.getMemberId();
     List<ProjectSearchResponse> result = projectService.searchProjectByName(userId, keyword);
+    return BaseResponse.success(result);
+  }
+
+  @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
+  @GetMapping("/assign-members")
+  @Operation(summary = "담당자 할당을 위한 직원 조회 API", description = "프로젝트 생성 시 담당자 할당을 위해 승인 완료된 직원의 부서명과 이름을 리턴합니다. " +
+    "")
+  public BaseResponse<List<AssignListResponse>> getApprovedMembers (
+    @AuthenticationPrincipal CustomUserDetails userDetails
+  ) {
+    Long ownerId = userDetails.getMemberId();
+    List<AssignListResponse> result = projectService.getAssignListMembers(ownerId);
     return BaseResponse.success(result);
   }
 }
