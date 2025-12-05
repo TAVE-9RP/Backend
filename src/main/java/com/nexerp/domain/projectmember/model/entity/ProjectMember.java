@@ -1,4 +1,4 @@
-package com.nexerp.domain.projectmember;
+package com.nexerp.domain.projectmember.model.entity;
 
 import com.nexerp.domain.member.model.entity.Member;
 import com.nexerp.domain.project.model.entity.Project;
@@ -37,4 +37,10 @@ public class ProjectMember {
   @JoinColumn(name = "project_id", nullable = false)
   private Project project;
 
+  public static ProjectMember create(Project project, Member member) {
+    ProjectMember pm = new ProjectMember();
+    pm.project = project;
+    pm.member = member;
+    return pm;
+  }
 }
