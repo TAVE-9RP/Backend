@@ -1,8 +1,10 @@
 package com.nexerp.domain.project.controller;
 
+import com.nexerp.domain.project.model.entity.Project;
 import com.nexerp.domain.project.model.request.ProjectCreateRequest;
 import com.nexerp.domain.project.model.response.AssignListResponse;
 import com.nexerp.domain.project.model.response.ProjectCreateResponse;
+import com.nexerp.domain.project.model.response.ProjectDetailResponse;
 import com.nexerp.domain.project.model.response.ProjectSearchResponse;
 import com.nexerp.domain.project.service.ProjectService;
 import com.nexerp.global.common.response.BaseResponse;
@@ -14,15 +16,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Optional;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/projects")
@@ -87,6 +86,21 @@ public class ProjectController {
     return BaseResponse.success(result);
   }
 
+
+  @GetMapping("/{projectId}")
+  @Operation(summary = "프로젝트 상세 조회 api",
+    description = "프로젝트 번호, 회원 정보 필수"
+  )
+  public BaseResponse<ProjectDetailResponse> viewProjectDetails(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @PathVariable Long projectId) {
+    Long memberId = userDetails.getMemberId();
+
+    ProjectDetailResponse result = projectService.viewProjectDetails(projectId, memberId);
+
+    return BaseResponse.success(result);
+  }
+
   @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
   @GetMapping("/assign-members")
   @Operation(summary = "담당자 할당을 위한 직원 조회 API", description = "프로젝트 생성 시 담당자 할당을 위해 승인 완료된 직원의 부서명과 이름을 리턴합니다. " +
@@ -98,4 +112,30 @@ public class ProjectController {
     List<AssignListResponse> result = projectService.getAssignListMembers(ownerId);
     return BaseResponse.success(result);
   }
+
+  @GetMapping("/assigned")
+  @Operation(summary = "담당자 본인에게 할당된 프로젝트 리스트 조회 api"
+  )
+  public BaseResponse<List<ProjectDetailResponse>> findProjectsByMemberId(
+    @AuthenticationPrincipal CustomUserDetails userDetails){
+    Long memberId = userDetails.getMemberId();
+
+    List<ProjectDetailResponse> result = projectService.findProjectsByMemberId(memberId);
+
+    return BaseResponse.success(result);
+  }
+
+  @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
+  @GetMapping("/serial-num")
+  @Operation(summary = "신규 프로젝트 번호 생성 api"
+  )
+  public BaseResponse<String> createNewProjectNum(
+    @AuthenticationPrincipal CustomUserDetails userDetails){
+    Long memberId = userDetails.getMemberId();
+
+    String result = projectService.createNewProjectNum(memberId);
+
+    return BaseResponse.success(result);
+  }
+
 }
