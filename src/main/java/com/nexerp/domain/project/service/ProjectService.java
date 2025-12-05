@@ -7,6 +7,7 @@ import com.nexerp.domain.member.model.entity.Member;
 import com.nexerp.domain.member.service.MemberService;
 import com.nexerp.domain.project.model.entity.Project;
 import com.nexerp.domain.project.model.request.ProjectCreateRequest;
+import com.nexerp.domain.project.model.response.AssignListResponse;
 import com.nexerp.domain.project.model.response.ProjectCreateResponse;
 import com.nexerp.domain.project.model.response.ProjectDetailResponse;
 import com.nexerp.domain.project.model.response.ProjectSearchResponse;
@@ -91,6 +92,18 @@ public class ProjectService {
       .searchByCompanyIdAndNameOrNumber(memberCompanyId, keyword);
 
     return ProjectSearchResponse.fromList(projects);
+  }
+
+  @Transactional(readOnly = true)
+  public List<AssignListResponse> getAssignListMembers(Long ownerId) {
+    Member owner = adminService.validateOwner(ownerId);
+    Long companyId = owner.getCompanyId();
+
+    List<Member> approvedMembers = adminService.getApprovedMembers(companyId);
+
+    return approvedMembers.stream()
+      .map(AssignListResponse::from)
+      .toList();
   }
 
   // 프로젝트 상세 조회
