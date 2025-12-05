@@ -224,4 +224,9 @@ public class AdminService {
 
     return members;
   }
+ // 승인된 직원만 리턴
+  @Transactional(readOnly = true)
+  public List<Member> getApprovedMembers(Long companyId) {
+    return adminRepository.findByCompanyIdAndRequestStatusAndPositionNot(companyId, MemberRequestStatus.APPROVED, MemberPosition.OWNER);
+  }
 }
