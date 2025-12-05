@@ -29,4 +29,18 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     + "LEFT JOIN FETCH pm.member m "
     + "WHERE p.id = :projectId")
   Optional<Project> findProjectDetailsById(Long projectId);
+
+
+  @Query("""
+    SELECT p
+    FROM Project p
+    JOIN FETCH p.company c
+    LEFT JOIN FETCH p.projectMembers pm
+    LEFT JOIN FETCH pm.member m
+    WHERE m.id = :memberId
+      AND p.company.id = :companyId
+    ORDER BY p.createDate DESC
+    """)
+  List<Project> findProjectsByMemberId(@Param("memberId") Long memberId, Long companyId);
+
 }
