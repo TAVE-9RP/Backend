@@ -55,7 +55,7 @@ public class ProjectController {
                         "projectDescription":"이원진의 간절한 프로젝트입니다.",
                         "projectCustomer":"wonjin",
                         "projectExpectedEndDate":"2025-01-02"
-                        "assignIds": [1, 2, 3]
+                        "assigneeIds": [1, 2, 3]
                       }
                       """
               )
