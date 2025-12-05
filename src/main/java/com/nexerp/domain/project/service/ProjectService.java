@@ -149,4 +149,37 @@ public class ProjectService {
 
   }
 
+  // 담당자 본인의 프로젝트 리스트 조회
+  // 프로젝트 상세 조회
+  @Transactional(readOnly = true)
+  public List<ProjectDetailResponse> findProjectsByMemberId(Long memberId) {
+
+    // 회원 정보 조회 (회원의 company_id를 얻고자)
+    Member currentMember = memberRepository.findById(memberId)
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "회원이 존재하지 않습니다."));
+
+    Long companyId = currentMember.getCompanyId();
+
+    List<Project> projectList = projectRepository.findProjectsByMemberId(memberId, companyId);
+
+    return projectList.stream()
+      .map(project -> ProjectDetailResponse.builder()
+        .companyId(project.getCompany().getId())
+        .number(project.getNumber())
+        .name(project.getName())
+        .description(project.getDescription())
+        .customer(project.getCustomer())
+        .expectedEndDate(project.getExpectedEndDate())
+        .endDate(project.getEndDate())
+        .createDate(project.getCreateDate())
+        .projectMembers(project.getProjectMembers().stream()
+          .map(pm -> MemberIdNameResponseDto.builder()
+            .memberId(pm.getMember().getId())
+            .name(pm.getMember().getName())
+            .build())
+          .collect(Collectors.toList()))
+        .build())
+      .collect(Collectors.toList());
+
+  }
 }
