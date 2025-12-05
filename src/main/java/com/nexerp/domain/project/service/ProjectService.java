@@ -150,7 +150,6 @@ public class ProjectService {
   }
 
   // 담당자 본인의 프로젝트 리스트 조회
-  // 프로젝트 상세 조회
   @Transactional(readOnly = true)
   public List<ProjectDetailResponse> findProjectsByMemberId(Long memberId) {
 
