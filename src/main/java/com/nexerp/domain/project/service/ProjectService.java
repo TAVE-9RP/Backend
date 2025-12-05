@@ -8,12 +8,18 @@ import com.nexerp.domain.member.service.MemberService;
 import com.nexerp.domain.project.model.entity.Project;
 import com.nexerp.domain.project.model.request.ProjectCreateRequest;
 import com.nexerp.domain.project.model.response.ProjectCreateResponse;
+import com.nexerp.domain.project.model.response.ProjectDetailResponse;
 import com.nexerp.domain.project.model.response.ProjectSearchResponse;
 import com.nexerp.domain.project.repository.ProjectRepository;
 import com.nexerp.domain.projectmember.model.entity.ProjectMember;
+import com.nexerp.domain.projectmember.model.response.MemberIdNameResponseDto;
+import com.nexerp.domain.projectmember.repository.ProjectMemberRepository;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +32,7 @@ public class ProjectService {
   private final MemberService memberService;
   private final CompanyService companyService;
   private final ProjectRepository projectRepository;
+  private final ProjectMemberRepository projectMemberRepository;
 
   @Transactional
   public ProjectCreateResponse createProject(Long ownerId,
@@ -85,4 +92,46 @@ public class ProjectService {
 
     return ProjectSearchResponse.fromList(projects);
   }
+
+  // 프로젝트 상세 조회
+  @Transactional(readOnly = true)
+  public ProjectDetailResponse viewProjectDetails(Long projectId, Long memberId) {
+
+    // 오너가 지정한 프로젝트의 담당자가 맞는지 확인
+    boolean isMemberAssigned = projectMemberRepository.existsByProjectIdAndMemberId(projectId, memberId);
+
+    if(!isMemberAssigned){
+      throw new BaseException(GlobalErrorCode.FORBIDDEN, "프로젝트 담당자가 아니므로 조회할 수 없습니다.");
+    }
+
+    Optional<Project> projectOptional = projectRepository.findProjectDetailsById(projectId);
+
+    if (projectOptional.isEmpty()) {
+      // 프로젝트가 존재하지 않을 경우 예외 처리
+      throw new BaseException(GlobalErrorCode.NOT_FOUND, "프로젝트가 존재하지 않습니다.");
+    }
+
+    Project project = projectOptional.get();
+
+    return ProjectDetailResponse.builder()
+      .companyId(project.getCompany().getId())
+      .number(project.getNumber())
+      .name(project.getName())
+      .description(project.getDescription())
+      .customer(project.getCustomer())
+      .expectedEndDate(project.getExpectedEndDate())
+      .endDate(project.getEndDate())
+      .createDate(project.getCreateDate())
+      .projectMembers(project.getProjectMembers().stream()
+        // ProjectMember (pm)에서 Member 엔티티를 가져옵니다.
+        .map(pm -> pm.getMember())
+        .map(member -> MemberIdNameResponseDto.builder()
+          .memberId(member.getId())
+          .name(member.getName())
+          .build())
+        .collect(Collectors.toList()))
+      .build();
+
+  }
+
 }
