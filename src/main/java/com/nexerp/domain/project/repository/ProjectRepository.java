@@ -30,17 +30,33 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     + "WHERE p.id = :projectId")
   Optional<Project> findProjectDetailsById(Long projectId);
 
+//  @Query("""
+//    SELECT DISTINCT p
+//    FROM Project p
+//    JOIN FETCH p.company c
+//    LEFT JOIN FETCH p.projectMembers pm
+//    LEFT JOIN FETCH pm.member m
+//    WHERE p.company.id = :companyId
+//    ORDER BY p.createDate DESC
+//    """)
+//  List<Project> findProjectsByCompanyId(@Param("companyId") Long companyId);
 
   @Query("""
-    SELECT p
+    SELECT DISTINCT p
     FROM Project p
     JOIN FETCH p.company c
     LEFT JOIN FETCH p.projectMembers pm
     LEFT JOIN FETCH pm.member m
-    WHERE m.id = :memberId
-      AND p.company.id = :companyId
+    WHERE p.company.id = :companyId
+      AND EXISTS (
+          SELECT 1
+          FROM ProjectMember pm2
+          WHERE pm2.project = p
+            AND pm2.member.id = :memberId
+      )
     ORDER BY p.createDate DESC
-    """)
+""")
   List<Project> findProjectsByMemberId(@Param("memberId") Long memberId, Long companyId);
+
 
 }
