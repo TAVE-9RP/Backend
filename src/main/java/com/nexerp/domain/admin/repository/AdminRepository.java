@@ -1,6 +1,8 @@
 package com.nexerp.domain.admin.repository;
 
 import com.nexerp.domain.member.model.entity.Member;
+import com.nexerp.domain.member.model.enums.MemberPosition;
+import com.nexerp.domain.member.model.enums.MemberRequestStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -15,4 +17,11 @@ public interface AdminRepository extends JpaRepository<Member, Long> {
 
   // 같은 회사 직원 전체 조회 (권한 관리 화면)
   List<Member> findByCompanyId(Long companyId);
+
+  // 같은 회사 승인된 소속 직원만 조회
+  List<Member> findByCompanyIdAndRequestStatusAndPositionNot(
+    Long companyId,
+    MemberRequestStatus status,
+    MemberPosition excludedPosition
+  );
 }
