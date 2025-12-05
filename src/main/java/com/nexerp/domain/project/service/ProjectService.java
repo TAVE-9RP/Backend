@@ -4,6 +4,7 @@ import com.nexerp.domain.admin.service.AdminService;
 import com.nexerp.domain.company.model.entity.Company;
 import com.nexerp.domain.company.service.CompanyService;
 import com.nexerp.domain.member.model.entity.Member;
+import com.nexerp.domain.member.repository.MemberRepository;
 import com.nexerp.domain.member.service.MemberService;
 import com.nexerp.domain.project.model.entity.Project;
 import com.nexerp.domain.project.model.request.ProjectCreateRequest;
@@ -34,6 +35,7 @@ public class ProjectService {
   private final CompanyService companyService;
   private final ProjectRepository projectRepository;
   private final ProjectMemberRepository projectMemberRepository;
+  private final MemberRepository memberRepository;
 
   @Transactional
   public ProjectCreateResponse createProject(Long ownerId,
@@ -110,21 +112,24 @@ public class ProjectService {
   @Transactional(readOnly = true)
   public ProjectDetailResponse viewProjectDetails(Long projectId, Long memberId) {
 
-    // 오너가 지정한 프로젝트의 담당자가 맞는지 확인
-    boolean isMemberAssigned = projectMemberRepository.existsByProjectIdAndMemberId(projectId, memberId);
+    // 회원 정보 조회 (회원의 company_id를 얻고자)
+    Member currentMember = memberRepository.findById(memberId)
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "회원이 존재하지 않습니다."));
 
-    if(!isMemberAssigned){
-      throw new BaseException(GlobalErrorCode.FORBIDDEN, "프로젝트 담당자가 아니므로 조회할 수 없습니다.");
-    }
-
+    // 프로젝트 조회
     Optional<Project> projectOptional = projectRepository.findProjectDetailsById(projectId);
 
+    // 프로젝트가 존재하지 않을 경우 예외 처리
     if (projectOptional.isEmpty()) {
-      // 프로젝트가 존재하지 않을 경우 예외 처리
       throw new BaseException(GlobalErrorCode.NOT_FOUND, "프로젝트가 존재하지 않습니다.");
     }
 
     Project project = projectOptional.get();
+
+    // 프로젝트가 속한 회사의 직원이 아닐 경우 예외 처리
+    if(!project.getCompany().getId().equals(currentMember.getCompanyId())){
+      throw new BaseException(GlobalErrorCode.FORBIDDEN, "해당 프로젝트의 회사 직원이 아닙니다.");
+    }
 
     return ProjectDetailResponse.builder()
       .companyId(project.getCompany().getId())
