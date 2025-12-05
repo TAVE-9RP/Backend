@@ -1,7 +1,9 @@
 package com.nexerp.domain.project.controller;
 
+import com.nexerp.domain.project.model.entity.Project;
 import com.nexerp.domain.project.model.request.ProjectCreateRequest;
 import com.nexerp.domain.project.model.response.ProjectCreateResponse;
+import com.nexerp.domain.project.model.response.ProjectDetailResponse;
 import com.nexerp.domain.project.model.response.ProjectSearchResponse;
 import com.nexerp.domain.project.service.ProjectService;
 import com.nexerp.global.common.response.BaseResponse;
@@ -13,15 +15,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Optional;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/projects")
@@ -83,6 +82,21 @@ public class ProjectController {
       @RequestParam("keyword") String keyword) {
     Long userId = userDetails.getMemberId();
     List<ProjectSearchResponse> result = projectService.searchProjectByName(userId, keyword);
+    return BaseResponse.success(result);
+  }
+
+
+  @GetMapping("/{projectId}")
+  @Operation(summary = "프로젝트 상세 조회 api",
+    description = "프로젝트 번호, 회원 정보 필수"
+  )
+  public BaseResponse<ProjectDetailResponse> viewProjectDetails(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @PathVariable Long projectId) {
+    Long memberId = userDetails.getMemberId();
+
+    ProjectDetailResponse result = projectService.viewProjectDetails(projectId, memberId);
+
     return BaseResponse.success(result);
   }
 }
