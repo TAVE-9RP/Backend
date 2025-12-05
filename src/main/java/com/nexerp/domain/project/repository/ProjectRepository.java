@@ -7,6 +7,7 @@ import java.util.Optional;
 import lombok.NonNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface ProjectRepository extends JpaRepository<Project, Long> {
 
@@ -37,7 +38,7 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     """)
   List<Project> searchByCompanyIdAndNameOrNumber2(
     Long companyId,
-    String keyword);
+    @Param("keyword") String keyword);
 
   @Query("SELECT p FROM Project p "
     + "JOIN FETCH p.company c "
