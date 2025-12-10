@@ -91,7 +91,7 @@ public class ProjectService {
     Long memberCompanyId = memberService.getCompanyIdByMemberId(memberId);
 
     List<Project> projects = projectRepository
-      .searchByCompanyIdAndNameOrNumber(memberCompanyId, keyword);
+      .searchByCompanyIdAndTitleOrNumber(memberCompanyId, keyword);
 
     return ProjectSearchResponse.fromList(projects);
   }
@@ -110,7 +110,7 @@ public class ProjectService {
 
   // 프로젝트 상세 조회
   @Transactional(readOnly = true)
-  public ProjectDetailResponse viewProjectDetails(Long projectId, Long memberId) {
+  public ProjectDetailResponse getProjectDetails(Long projectId, Long memberId) {
 
     // 회원 정보 조회 (회원의 company_id를 얻고자)
     Member currentMember = memberRepository.findById(memberId)
@@ -132,9 +132,8 @@ public class ProjectService {
     }
 
     return ProjectDetailResponse.builder()
-      .companyId(project.getCompany().getId())
-      .number(project.getNumber())
-      .name(project.getName())
+      .projectNumber(project.getNumber())
+      .projectTitle(project.getTitle())
       .description(project.getDescription())
       .customer(project.getCustomer())
       .expectedEndDate(project.getExpectedEndDate())
