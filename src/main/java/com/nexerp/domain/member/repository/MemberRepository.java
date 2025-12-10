@@ -1,6 +1,7 @@
 package com.nexerp.domain.member.repository;
 
 import com.nexerp.domain.member.model.entity.Member;
+import lombok.NonNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
