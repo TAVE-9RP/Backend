@@ -1,18 +1,15 @@
 package com.nexerp.domain.project.model.response;
 
-import com.nexerp.domain.projectmember.model.entity.ProjectMember;
 import com.nexerp.domain.projectmember.model.response.MemberIdNameResponseDto;
-import lombok.Builder;
-import lombok.Getter;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import lombok.Builder;
+import lombok.Getter;
 
 @Getter
 @Builder
 public class ProjectDetailResponse {
-
 
   private final String projectNumber;
 
