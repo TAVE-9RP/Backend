@@ -91,12 +91,12 @@ public class ProjectController {
   @Operation(summary = "프로젝트 상세 조회 api",
     description = "프로젝트 번호, 회원 정보 필수"
   )
-  public BaseResponse<ProjectDetailResponse> viewProjectDetails(
+  public BaseResponse<ProjectDetailResponse> getProjectDetails(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @PathVariable Long projectId) {
     Long memberId = userDetails.getMemberId();
 
-    ProjectDetailResponse result = projectService.viewProjectDetails(projectId, memberId);
+    ProjectDetailResponse result = projectService.getProjectDetails(projectId, memberId);
 
     return BaseResponse.success(result);
   }

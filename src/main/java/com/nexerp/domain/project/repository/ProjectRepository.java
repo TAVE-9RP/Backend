@@ -14,31 +14,29 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
   boolean existsByNumber(String number);
 
   @Query("""
-      select p
-      from Project p
-      where p.company.id = :companyId
-        and (p.name like concat('%', :keyword, '%')
-             or p.number like concat('%', :keyword, '%'))
-      order by p.createDate desc
-      """)
-  List<Project> searchByCompanyIdAndNameOrNumber(
-      Long companyId,
-      String keyword);
+    SELECT p.id
+    FROM Project p
+    WHERE p.company.id = :companyId
+      AND (p.title LIKE CONCAT('%', :keyword, '%')
+           OR p.number LIKE CONCAT('%', :keyword, '%'))
+    ORDER BY p.createDate DESC
+    """)
+  List<Long> findProjectIds(
+    @Param("companyId") Long companyId,
+    @Param("keyword") String keyword
+  );
 
   @Query("""
-    SELECT p
+    SELECT DISTINCT p
     FROM Project p
     JOIN FETCH p.company c
     LEFT JOIN FETCH p.projectMembers pm
     LEFT JOIN FETCH pm.member m
-    WHERE p.company.id = :companyId
-      AND (p.name LIKE CONCAT('%', :keyword, '%')
-           OR p.number LIKE CONCAT('%', :keyword, '%'))
+    WHERE p.id IN :ids
     ORDER BY p.createDate DESC
     """)
-  List<Project> searchByCompanyIdAndNameOrNumber2(
-    Long companyId,
-    @Param("keyword") String keyword);
+  List<Project> findProjectsWithMembers(@Param("ids") List<Long> ids);
+
 
   @Query("SELECT p FROM Project p "
     + "JOIN FETCH p.company c "

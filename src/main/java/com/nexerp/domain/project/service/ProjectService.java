@@ -18,10 +18,14 @@ import com.nexerp.domain.projectmember.model.response.MemberIdNameResponseDto;
 import com.nexerp.domain.projectmember.repository.ProjectMemberRepository;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
+
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -87,20 +91,18 @@ public class ProjectService {
     return ownerCompany;
   }
 
+  @Transactional(readOnly = true)
   public List<ProjectSearchResponse> searchProjectByName(Long memberId, String keyword) {
     Long memberCompanyId = memberService.getCompanyIdByMemberId(memberId);
+    List<Long> ids = projectRepository.findProjectIds(memberCompanyId, keyword);
 
-//    List<Project> projects = projectRepository
-//      .searchByCompanyIdAndNameOrNumber(memberCompanyId, keyword);
 
-    // 소속된 회사 없을때
-    if(memberCompanyId == null){
-      throw new BaseException(GlobalErrorCode.FORBIDDEN, "소속된 회사가 없어 프로젝트 검색 권한이 없습니다.");
+    if (ids.isEmpty()) {
+      return Collections.emptyList();
     }
 
-    List<Project> projects = projectRepository
-      .searchByCompanyIdAndNameOrNumber2(memberCompanyId, keyword);
-    
+    List<Project> projects = projectRepository.findProjectsWithMembers(ids);
+
     return ProjectSearchResponse.fromList(projects);
   }
 
@@ -118,7 +120,7 @@ public class ProjectService {
 
   // 프로젝트 상세 조회
   @Transactional(readOnly = true)
-  public ProjectDetailResponse viewProjectDetails(Long projectId, Long memberId) {
+  public ProjectDetailResponse getProjectDetails(Long projectId, Long memberId) {
 
     // 회원 정보 조회 (회원의 company_id를 얻고자)
     Member currentMember = memberRepository.findById(memberId)
@@ -140,9 +142,8 @@ public class ProjectService {
     }
 
     return ProjectDetailResponse.builder()
-      .companyId(project.getCompany().getId())
-      .number(project.getNumber())
-      .name(project.getName())
+      .projectNumber(project.getNumber())
+      .projectTitle(project.getTitle())
       .description(project.getDescription())
       .customer(project.getCustomer())
       .expectedEndDate(project.getExpectedEndDate())
