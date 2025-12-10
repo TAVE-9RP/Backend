@@ -163,9 +163,8 @@ public class ProjectService {
 
     return projectList.stream()
       .map(project -> ProjectDetailResponse.builder()
-        .companyId(project.getCompany().getId())
-        .number(project.getNumber())
-        .name(project.getName())
+        .projectNumber(project.getNumber())
+        .projectTitle(project.getTitle())
         .description(project.getDescription())
         .customer(project.getCustomer())
         .expectedEndDate(project.getExpectedEndDate())
