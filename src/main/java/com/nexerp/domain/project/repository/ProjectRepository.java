@@ -16,11 +16,11 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
       select p
       from Project p
       where p.company.id = :companyId
-        and (p.name like concat('%', :keyword, '%')
+        and (p.title like concat('%', :keyword, '%')
              or p.number like concat('%', :keyword, '%'))
       order by p.createDate desc
       """)
-  List<Project> searchByCompanyIdAndNameOrNumber(
+  List<Project> searchByCompanyIdAndTitleOrNumber(
       Long companyId,
       String keyword);
 
