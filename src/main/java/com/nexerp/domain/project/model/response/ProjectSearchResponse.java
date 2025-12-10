@@ -26,7 +26,6 @@ public class ProjectSearchResponse {
 
   private final LocalDateTime projectCreateDate;
 
-  // 담장자를 보여줘야 하지만 지금은 관계 표현이 없음으로 추후 추가
   private final List<MemberIdNameResponseDto> projectMembers;
 
   private final ProjectStatus status;
