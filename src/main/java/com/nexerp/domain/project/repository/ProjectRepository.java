@@ -32,11 +32,11 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     LEFT JOIN FETCH p.projectMembers pm
     LEFT JOIN FETCH pm.member m
     WHERE p.company.id = :companyId
-      AND (p.name LIKE CONCAT('%', :keyword, '%')
+      AND (p.title LIKE CONCAT('%', :keyword, '%')
            OR p.number LIKE CONCAT('%', :keyword, '%'))
     ORDER BY p.createDate DESC
     """)
-  List<Project> searchByCompanyIdAndNameOrNumber2(
+  List<Project> searchByCompanyIdAndTitleOrNumber2(
     Long companyId,
     @Param("keyword") String keyword);
 
