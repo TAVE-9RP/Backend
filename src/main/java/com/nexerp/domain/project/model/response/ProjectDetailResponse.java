@@ -13,11 +13,9 @@ import java.util.List;
 @Builder
 public class ProjectDetailResponse {
 
-  private final Long companyId;
+  private final String projectNumber;
 
-  private final String number;
-
-  private final String name;
+  private final String projectTitle;
 
   private final String description;
 
