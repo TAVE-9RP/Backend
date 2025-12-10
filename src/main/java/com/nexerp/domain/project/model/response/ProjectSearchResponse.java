@@ -18,7 +18,7 @@ public class ProjectSearchResponse {
 
   private final String projectNumber;
 
-  private final String projectName;
+  private final String projectTitle;
 
   private String projectDescription;
 
@@ -44,7 +44,7 @@ public class ProjectSearchResponse {
     return ProjectSearchResponse.builder()
       .projectId(project.getId())
       .projectNumber(project.getNumber())
-      .projectName(project.getName())
+      .projectTitle(project.getTitle())
       .projectDescription(project.getDescription())
       .projectCustomer(project.getCustomer())
       .projectCreateDate(project.getCreateDate())
