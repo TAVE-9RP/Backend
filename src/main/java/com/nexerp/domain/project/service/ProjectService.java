@@ -93,14 +93,9 @@ public class ProjectService {
 
   @Transactional(readOnly = true)
   public List<ProjectSearchResponse> searchProjectByName(Long memberId, String keyword) {
-
-    System.out.println("******** 서비스 keyword 디버깅: " + keyword);
-
     Long memberCompanyId = memberService.getCompanyIdByMemberId(memberId);
-
     List<Long> ids = projectRepository.findProjectIds(memberCompanyId, keyword);
 
-    System.out.println("******** 키워드에 해당하는 프로젝트 id 디버깅: " + ids);
 
     if (ids.isEmpty()) {
       return Collections.emptyList();
