@@ -60,7 +60,7 @@ public class Project {
 
   //오너가 지정하는 프로젝트 이름
   @Column(name = "project_name", nullable = false)
-  private String name;
+  private String title;
 
   //오너가 지정하는 텍스트
   @Column(name = "project_description", nullable = false)
@@ -88,12 +88,12 @@ public class Project {
   @Column(name = "project_create_date", updatable = false)
   private LocalDateTime createDate;
 
-  public static Project create(Company company, String number, String name, String description,
+  public static Project create(Company company, String number, String title, String description,
     String customer, LocalDate expectedEndDate) {
     return Project.builder()
       .company(company)
       .number(number)
-      .name(name)
+      .title(title)
       .description(description)
       .customer(customer)
       .status(ProjectStatus.NOT_STARTED)
