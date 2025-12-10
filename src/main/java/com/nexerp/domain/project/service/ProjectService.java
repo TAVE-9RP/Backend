@@ -18,10 +18,15 @@ import com.nexerp.domain.projectmember.model.response.MemberIdNameResponseDto;
 import com.nexerp.domain.projectmember.repository.ProjectMemberRepository;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
+
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -87,11 +92,19 @@ public class ProjectService {
     return ownerCompany;
   }
 
+  @Transactional(readOnly = true)
   public List<ProjectSearchResponse> searchProjectByName(Long memberId, String keyword) {
     Long memberCompanyId = memberService.getCompanyIdByMemberId(memberId);
 
-    List<Project> projects = projectRepository
-      .searchByCompanyIdAndTitleOrNumber(memberCompanyId, keyword);
+    List<Long> ids = projectRepository.findProjectIds(memberCompanyId, keyword);
+
+    System.out.println("******** 키워드에 해당하는 프로젝트 id 디버깅: " + ids);
+
+    if (ids.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    List<Project> projects = projectRepository.findProjectsWithMembers(ids);
 
     return ProjectSearchResponse.fromList(projects);
   }
