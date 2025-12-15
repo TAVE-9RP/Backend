@@ -15,10 +15,8 @@ import com.nexerp.domain.project.model.response.ProjectSearchResponse;
 import com.nexerp.domain.project.repository.ProjectRepository;
 import com.nexerp.domain.projectmember.model.entity.ProjectMember;
 import com.nexerp.domain.projectmember.model.response.MemberIdNameResponseDto;
-import com.nexerp.domain.projectmember.repository.ProjectMemberRepository;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -34,7 +32,6 @@ public class ProjectService {
   private final MemberService memberService;
   private final CompanyService companyService;
   private final ProjectRepository projectRepository;
-  private final ProjectMemberRepository projectMemberRepository;
   private final MemberRepository memberRepository;
 
   @Transactional
@@ -90,13 +87,9 @@ public class ProjectService {
   @Transactional(readOnly = true)
   public List<ProjectSearchResponse> searchProjectByName(Long memberId, String keyword) {
     Long memberCompanyId = memberService.getCompanyIdByMemberId(memberId);
-    List<Long> ids = projectRepository.findProjectIds(memberCompanyId, keyword);
 
-    if (ids.isEmpty()) {
-      return Collections.emptyList();
-    }
-
-    List<Project> projects = projectRepository.findProjectsWithMembers(ids);
+    List<Project> projects = projectRepository
+      .searchByCompanyIdAndTitleOrNumber(memberCompanyId, keyword);
 
     return ProjectSearchResponse.fromList(projects);
   }
