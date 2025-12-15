@@ -85,4 +85,6 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
   Optional<String> findMaxProjectSerialNumber(
     @Param("companyId") Long companyId,
     @Param("codePrefix") String codePrefix);
+
+  Optional<Project> findFirstByCompanyIdOrderByCreateDateDesc(Long companyId);
 }
