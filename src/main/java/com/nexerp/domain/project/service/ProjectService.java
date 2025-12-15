@@ -18,15 +18,11 @@ import com.nexerp.domain.projectmember.model.response.MemberIdNameResponseDto;
 import com.nexerp.domain.projectmember.repository.ProjectMemberRepository;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,7 +60,6 @@ public class ProjectService {
 
       List<Member> assignees = adminService.getMembersByIdsAndCompany(request.getAssigneeIds(),
         targetCompany.getId());
-
       // ProjectMember 생성
       for (Member m : assignees) {
         ProjectMember pm = ProjectMember.create(savedProject, m);
@@ -96,7 +91,6 @@ public class ProjectService {
   public List<ProjectSearchResponse> searchProjectByName(Long memberId, String keyword) {
     Long memberCompanyId = memberService.getCompanyIdByMemberId(memberId);
     List<Long> ids = projectRepository.findProjectIds(memberCompanyId, keyword);
-
 
     if (ids.isEmpty()) {
       return Collections.emptyList();
