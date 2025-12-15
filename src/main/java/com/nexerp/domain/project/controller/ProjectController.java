@@ -116,4 +116,17 @@ public class ProjectController {
     List<AssignListResponse> result = projectService.getAssignListMembers(ownerId);
     return BaseResponse.success(result);
   }
+
+  @GetMapping("/assigned")
+  @Operation(summary = "담당자 본인에게 할당된 프로젝트 리스트 조회 api"
+  )
+  public BaseResponse<List<ProjectDetailResponse>> findProjectsByMemberId(
+    @AuthenticationPrincipal CustomUserDetails userDetails){
+    Long memberId = userDetails.getMemberId();
+
+    List<ProjectDetailResponse> result = projectService.findProjectsByMemberId(memberId);
+
+    return BaseResponse.success(result);
+  }
+
 }
