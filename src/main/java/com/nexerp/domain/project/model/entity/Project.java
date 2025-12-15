@@ -60,7 +60,6 @@ public class Project {
 
   //오너가 지정하는 프로젝트 이름
   @Column(name = "project_name", nullable = false)
-//  private String name;
   private String title;
 
   //오너가 지정하는 텍스트

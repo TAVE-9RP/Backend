@@ -15,13 +15,11 @@ import com.nexerp.domain.project.model.response.ProjectSearchResponse;
 import com.nexerp.domain.project.repository.ProjectRepository;
 import com.nexerp.domain.projectmember.model.entity.ProjectMember;
 import com.nexerp.domain.projectmember.model.response.MemberIdNameResponseDto;
-import com.nexerp.domain.projectmember.repository.ProjectMemberRepository;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,7 +32,6 @@ public class ProjectService {
   private final MemberService memberService;
   private final CompanyService companyService;
   private final ProjectRepository projectRepository;
-  private final ProjectMemberRepository projectMemberRepository;
   private final MemberRepository memberRepository;
 
   @Transactional
@@ -58,8 +55,8 @@ public class ProjectService {
     // 담당자 지정 추가
     if (request.getAssigneeIds() != null && !request.getAssigneeIds().isEmpty()) {
 
-      List<Member> assignees = adminService.getMembersByIdsAndCompany(request.getAssigneeIds(), targetCompany.getId());
-
+      List<Member> assignees = adminService.getMembersByIdsAndCompany(request.getAssigneeIds(),
+        targetCompany.getId());
       // ProjectMember 생성
       for (Member m : assignees) {
         ProjectMember pm = ProjectMember.create(savedProject, m);
@@ -87,6 +84,7 @@ public class ProjectService {
     return ownerCompany;
   }
 
+  @Transactional(readOnly = true)
   public List<ProjectSearchResponse> searchProjectByName(Long memberId, String keyword) {
     Long memberCompanyId = memberService.getCompanyIdByMemberId(memberId);
 
@@ -127,7 +125,7 @@ public class ProjectService {
     Project project = projectOptional.get();
 
     // 프로젝트가 속한 회사의 직원이 아닐 경우 예외 처리
-    if(!project.getCompany().getId().equals(currentMember.getCompanyId())){
+    if (!project.getCompany().getId().equals(currentMember.getCompanyId())) {
       throw new BaseException(GlobalErrorCode.FORBIDDEN, "해당 프로젝트의 회사 직원이 아닙니다.");
     }
 
