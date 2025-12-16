@@ -71,20 +71,6 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     """)
   List<Project> findProjectsByMemberId(@Param("memberId") Long memberId, Long companyId);
 
-  // 회사 ID로 회사 이름 조회
-  @Query("SELECT c.name FROM Company c WHERE c.id = :companyId")
-  Optional<String> findCompanyNameById(@Param("companyId") Long companyId);
-
-
-  // 신규 프로젝트 번호 생성 시 마지막 숫자 확인용
-//  @Lock(LockModeType.PESSIMISTIC_WRITE)
-  @Query("SELECT SUBSTRING(p.number, LENGTH(:codePrefix) + 1) " // 숫자 부분만 추출
-    + "FROM Project p "
-    + "WHERE p.company.id = :companyId AND p.number LIKE CONCAT(:codePrefix, '%') "
-    + "ORDER BY p.number DESC LIMIT 1")
-  Optional<String> findMaxProjectSerialNumber(
-    @Param("companyId") Long companyId,
-    @Param("codePrefix") String codePrefix);
-
+  // 회사 id를 통한 프로젝트 조회 (생성일 기준 마지막 프로젝트)
   Optional<Project> findFirstByCompanyIdOrderByCreateDateDesc(Long companyId);
 }
