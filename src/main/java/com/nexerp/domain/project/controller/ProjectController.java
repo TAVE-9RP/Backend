@@ -129,4 +129,17 @@ public class ProjectController {
     return BaseResponse.success(result);
   }
 
+  @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
+  @GetMapping("/serial-num")
+  @Operation(summary = "신규 프로젝트 번호 생성 api"
+  )
+  public BaseResponse<String> createNewProjectNum(
+    @AuthenticationPrincipal CustomUserDetails userDetails){
+    Long memberId = userDetails.getMemberId();
+
+    String result = projectService.createNewProjectNum(memberId);
+
+    return BaseResponse.success(result);
+  }
+
 }

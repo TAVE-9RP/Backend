@@ -71,5 +71,6 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     """)
   List<Project> findProjectsByMemberId(@Param("memberId") Long memberId, Long companyId);
 
-
+  // 회사 id를 통한 프로젝트 조회 (생성일 기준 마지막 프로젝트)
+  Optional<Project> findFirstByCompanyIdOrderByCreateDateDesc(Long companyId);
 }

@@ -17,6 +17,7 @@ import com.nexerp.domain.projectmember.model.entity.ProjectMember;
 import com.nexerp.domain.projectmember.model.response.MemberIdNameResponseDto;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -185,4 +186,68 @@ public class ProjectService {
       .collect(Collectors.toList());
 
   }
+
+  // 신규 프로젝트 번호 생성
+  @Transactional(readOnly = true)
+  public String createNewProjectNum(Long memberId) {
+
+    // 회원 정보 조회 (회원의 company_id를 얻고자)
+    Member currentMember = memberRepository.findById(memberId)
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "회원이 존재하지 않습니다."));
+
+    Long companyId = currentMember.getCompanyId();
+    String formattedCompanyId = String.format("%02d", companyId);
+
+    // 년도(시스템 타임존) 추출
+    LocalDate today = LocalDate.now();
+    String formattedYear = String.valueOf(today.getYear()).substring(2);
+
+    Optional<Project> latestProject = projectRepository.findFirstByCompanyIdOrderByCreateDateDesc(
+      companyId);
+
+    boolean isProjectEmpty = !latestProject.isPresent();
+
+    String newProjectNumber = "";
+
+    if (isProjectEmpty) {
+
+      // 새로운 번호
+      newProjectNumber = String.format("C%s-%s-001", formattedCompanyId, formattedYear);
+
+    } else {
+
+      // 기존 번호가 있는 경우
+      String latestProjectNumber = latestProject.get().getNumber();
+      newProjectNumber = getNextProjectNumber(formattedCompanyId, formattedYear,
+        latestProjectNumber);
+    }
+
+    return newProjectNumber;
+  }
+
+  private String getNextProjectNumber(String companyId, String year, String latestProjectNumber) {
+
+    // 접두사 부분 (C01-25)
+    String prefix = String.format("C%s-%s-", companyId, year);
+
+    // 오늘과 latestNumber의 년도 비교 후 다르면 1로 초기화
+    if (latestProjectNumber == null || !latestProjectNumber.startsWith(prefix)) {
+      return prefix + "001";
+    }
+
+    // 일련번호 부분 (001) 추출
+    int lastHyphenIndex = latestProjectNumber.lastIndexOf('-');
+    String serialNumStr = latestProjectNumber.substring(lastHyphenIndex + 1);
+
+    // 일련번호를 정수로 변환하여 1 증가
+    int currentSerialNum = Integer.parseInt(serialNumStr);
+    int nextSerialNum = currentSerialNum + 1;
+
+    // 증가된 번호를 다시 3자리 문자열로 포맷
+    String formattedNextSerialNum = String.format("%03d", nextSerialNum);
+
+    // 접두사와 새로운 일련번호 반환
+    return prefix + formattedNextSerialNum;
+  }
+
 }
