@@ -4,5 +4,6 @@ import com.nexerp.domain.projectmember.model.entity.ProjectMember;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ProjectMemberRepository extends JpaRepository<ProjectMember, Long> {
-
+  // 담당자 검증
+  boolean existsByProjectIdAndMemberId(Long projectId, Long memberId);
 }
