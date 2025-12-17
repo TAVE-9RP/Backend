@@ -34,6 +34,7 @@ public class Inventory {
   @Column(name = "inventory_description")
   private String description;
 
+  // 출하를 요너에게 요청한 일
   @Column(name = "inventory_requested_at")
   private LocalDateTime requestedAt;
 
@@ -44,8 +45,9 @@ public class Inventory {
   @Column(name = "inventory_status", nullable = false)
   private InventoryStatus status;
 
-//  @Column(name = "inventory_created_at")
-//  private LocalDateTime createdAt;
+  // 업무 생성일
+  @Column(name = "inventory_created_at")
+  private LocalDateTime createdAt;
 
   @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<InventoryItem> inventoryItems = new ArrayList<>();
@@ -56,13 +58,15 @@ public class Inventory {
                    String description,
                    LocalDateTime requestedAt,
                    LocalDateTime endAt,
-                   InventoryStatus status) {
+                   InventoryStatus status,
+                   LocalDateTime createdAt) {
     this.project = project;
     this.title = title;
     this.description = description;
     this.requestedAt = requestedAt;
     this.endAt = endAt;
     this.status = status;
+    this.createdAt = createdAt;
   }
 
   // 프로젝트 생성 시 자동 상태 ASSIGNED
@@ -70,7 +74,13 @@ public class Inventory {
     return Inventory.builder()
       .project(project)
       .status(InventoryStatus.ASSIGNED)
-      .requestedAt(LocalDateTime.now())
+      .createdAt(LocalDateTime.now())
       .build();
+  }
+
+  public void updateCommonInfo(String title, String description, LocalDateTime requestedAt) {
+    this.title = title;
+    this.description = description;
+    this.requestedAt = requestedAt;
   }
 }
