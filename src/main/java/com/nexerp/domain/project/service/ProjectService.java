@@ -3,7 +3,10 @@ package com.nexerp.domain.project.service;
 import com.nexerp.domain.admin.service.AdminService;
 import com.nexerp.domain.company.model.entity.Company;
 import com.nexerp.domain.company.service.CompanyService;
+import com.nexerp.domain.inventory.model.entity.Inventory;
+import com.nexerp.domain.inventory.model.repository.InventoryRepository;
 import com.nexerp.domain.member.model.entity.Member;
+import com.nexerp.domain.member.model.enums.MemberDepartment;
 import com.nexerp.domain.member.repository.MemberRepository;
 import com.nexerp.domain.member.service.MemberService;
 import com.nexerp.domain.project.model.entity.Project;
@@ -35,6 +38,7 @@ public class ProjectService {
   private final CompanyService companyService;
   private final ProjectRepository projectRepository;
   private final MemberRepository memberRepository;
+  private final InventoryRepository inventoryRepository;
 
   @Transactional
   public ProjectCreateResponse createProject(Long ownerId,
@@ -63,6 +67,14 @@ public class ProjectService {
       for (Member m : assignees) {
         ProjectMember pm = ProjectMember.create(savedProject, m);
         savedProject.getProjectMembers().add(pm);
+      }
+
+      boolean hasInventoryAssignee = assignees.stream()
+        .anyMatch(a -> a.getDepartment() == MemberDepartment.INVENTORY);
+
+      if (hasInventoryAssignee) {
+        Inventory inventory = Inventory.assign(savedProject);
+        inventoryRepository.save(inventory);
       }
     }
 
