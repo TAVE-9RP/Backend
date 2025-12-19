@@ -5,6 +5,7 @@ import com.nexerp.domain.item.repository.ItemRepository;
 import com.nexerp.domain.logistics.model.entity.Logistics;
 import com.nexerp.domain.logistics.model.request.LogisticsItemsCreateRequest.LogisticsItemDetail;
 import com.nexerp.domain.logistics.model.request.LogisticsUpdateRequest;
+import com.nexerp.domain.logistics.model.response.LogisticsItemResponse;
 import com.nexerp.domain.logistics.model.response.LogisticsSearchResponse;
 import com.nexerp.domain.logistics.repository.LogisticsRepository;
 import com.nexerp.domain.logisticsItem.model.entity.LogisticsItem;
@@ -153,5 +154,32 @@ public class LogisticsService {
 
     logisticsItemRepository.saveAll(logisticsItems);
   }
-  
+
+  @Transactional(readOnly = true)
+  public List<LogisticsItemResponse> getLogisticsItems(Long memberId, Long logisticsId) {
+    Logistics logistics = logisticsRepository.findWithItemsById(logisticsId)
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "출하 업무를 찾을 수 없습니다."));
+
+    // 회사 검증
+    Long memberCompanyId = memberService.getCompanyIdByMemberId(memberId);
+    if (!memberCompanyId.equals(logistics.getProject().getCompany().getId())) {
+      throw new BaseException(GlobalErrorCode.FORBIDDEN, "다른 회사의 출하 업무에는 접근할 수 없습니다.");
+    }
+
+    return logistics.getLogisticsItems().stream()
+      .map(li -> {
+        Item item = li.getItem();
+        return LogisticsItemResponse.builder()
+          .itemId(item.getId())
+          .itemCode(item.getCode())
+          .itemName(item.getName())
+          .processedQuantity(li.getProcessedQuantity())
+          .targetedQuantity(li.getTargetedQuantity())
+          .itemPrice(item.getPrice())
+          .unitOfMeasure(item.getUnitOfMeasure())
+          .build();
+      })
+      .toList();
+
+  }
 }

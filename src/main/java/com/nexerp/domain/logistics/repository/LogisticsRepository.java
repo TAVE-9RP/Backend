@@ -16,4 +16,11 @@ public interface LogisticsRepository extends JpaRepository<Logistics, Long> {
     """)
   Optional<Logistics> findWithProjectAndCompanyById(Long logisticsId);
 
+  @Query("""
+        SELECT DISTINCT l FROM Logistics l
+        JOIN FETCH l.logisticsItems li
+        JOIN FETCH li.item i
+        WHERE l.id = :logisticsId
+    """)
+  Optional<Logistics> findWithItemsById(Long logisticsId);
 }
