@@ -73,4 +73,9 @@ public class LogisticsItem {
   public void changeStatus(LogisticsProcessingStatus status) {
     this.processingStatus = status;
   }
+
+  public void changeProcessedQuantity(Long processedQuantity) {
+    this.processedQuantity = processedQuantity;
+  }
+
 }
