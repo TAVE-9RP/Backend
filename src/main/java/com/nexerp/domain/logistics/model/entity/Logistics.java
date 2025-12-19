@@ -92,4 +92,22 @@ public class Logistics {
       .build();
 
   }
+
+  public void update(String logisticsTitle, String logisticsCarrier,
+    String logisticsCarrierCompany, String logisticsDescription) {
+    if (logisticsTitle != null) {
+      this.title = logisticsTitle;
+    }
+    if (logisticsCarrier != null) {
+      this.carrier = logisticsCarrier;
+    }
+    if (logisticsCarrierCompany != null) {
+      this.carrierCompany = logisticsCarrierCompany;
+    }
+    if (logisticsDescription != null) {
+      this.description = logisticsDescription;
+    }
+  }
+
+
 }
