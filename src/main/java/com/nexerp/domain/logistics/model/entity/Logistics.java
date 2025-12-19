@@ -2,6 +2,7 @@ package com.nexerp.domain.logistics.model.entity;
 
 import com.nexerp.domain.logistics.model.enums.LogisticsSatus;
 import com.nexerp.domain.logisticsItem.model.entity.LogisticsItem;
+import com.nexerp.domain.logisticsItem.model.enums.LogisticsProcessingStatus;
 import com.nexerp.domain.project.model.entity.Project;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
@@ -123,5 +124,15 @@ public class Logistics {
 
     this.requestedAt = LocalDate.now();
     changeStatus(LogisticsSatus.APPROVAL_PENDING);
+  }
+
+  public void approve() {
+    if (this.status != LogisticsSatus.APPROVAL_PENDING) {
+      throw new BaseException(GlobalErrorCode.STATE_CONFLICT, "승인 대기에서만 승인 가능합니다.");
+    }
+
+    changeStatus(LogisticsSatus.IN_PROGRESS);
+
+    this.logisticsItems.forEach(item -> item.changeStatus(LogisticsProcessingStatus.IN_PROGRESS));
   }
 }

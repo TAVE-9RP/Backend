@@ -70,4 +70,7 @@ public class LogisticsItem {
       .build();
   }
 
+  public void changeStatus(LogisticsProcessingStatus status) {
+    this.processingStatus = status;
+  }
 }
