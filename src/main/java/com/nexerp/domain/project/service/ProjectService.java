@@ -271,4 +271,11 @@ public class ProjectService {
     return prefix + formattedNextSerialNum;
   }
 
+  // 회사 id를 통해 모든 프로젝트와 연관 정보 한번에 가져오기
+  @Transactional(readOnly = true)
+  public List<Project> getProjectsWithLogisticsByCompanyId(Long companyId) {
+    List<Project> projects = projectRepository.findAllWithLogisticsAndMembersByCompanyId(companyId);
+    return projects;
+  }
+
 }
