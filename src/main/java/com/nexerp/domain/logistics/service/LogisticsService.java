@@ -100,6 +100,20 @@ public class LogisticsService {
   }
 
   @Transactional
+  public void approveLogistics(Long ownerId, Long logisticsId) {
+    Logistics logistics = logisticsRepository.findWithProjectAndCompanyById(logisticsId)
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "출하 업무를 찾을 수 없습니다."));
+
+    // 회사 검증
+    Long memberCompanyId = memberService.getCompanyIdByMemberId(ownerId);
+    if (!memberCompanyId.equals(logistics.getProject().getCompany().getId())) {
+      throw new BaseException(GlobalErrorCode.FORBIDDEN, "다른 회사의 출하 업무에는 접근할 수 없습니다.");
+    }
+
+    logistics.approve();
+  }
+
+  @Transactional
   public void addItems(Long memberId, Long logisticsId, List<LogisticsItemDetail> itemRequests) {
     Logistics logistics = logisticsRepository.findWithProjectAndCompanyById(logisticsId)
       .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "출하 업무를 찾을 수 없습니다."));
@@ -139,5 +153,5 @@ public class LogisticsService {
 
     logisticsItemRepository.saveAll(logisticsItems);
   }
-
+  
 }
