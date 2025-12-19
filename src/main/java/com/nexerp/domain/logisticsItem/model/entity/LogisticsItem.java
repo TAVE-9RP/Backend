@@ -58,5 +58,16 @@ public class LogisticsItem {
   // 물품별 출하 완료일
   @Column(name = "logistics_shipout_date")
   private LocalDateTime shipoutDate;
-  
+
+  public static LogisticsItem create(Logistics logistics, Item item, Long targetedQuantity) {
+    return LogisticsItem.builder()
+      .logistics(logistics)
+      .item(item)
+      .processedQuantity(0L)
+      .targetedQuantity(targetedQuantity)
+      .processingStatus(LogisticsProcessingStatus.PENDING)
+      .shipoutDate(null)
+      .build();
+  }
+
 }

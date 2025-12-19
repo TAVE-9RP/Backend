@@ -1,5 +1,6 @@
 package com.nexerp.domain.logistics.controller;
 
+import com.nexerp.domain.logistics.model.request.LogisticsItemsCreateRequest;
 import com.nexerp.domain.logistics.model.request.LogisticsUpdateRequest;
 import com.nexerp.domain.logistics.model.response.LogisticsSearchResponse;
 import com.nexerp.domain.logistics.service.LogisticsService;
@@ -13,6 +14,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -56,6 +58,18 @@ public class LogisticsController {
   ) {
     Long memberId = userDetails.getMemberId();
     logisticsService.requestLogisticsApproval(memberId, logisticsId);
+    return BaseResponse.success();
+  }
+
+  @PostMapping("/{logisticsId}/items")
+  @PreAuthorize("hasPermission('LOGISTICS', 'WRITE')")
+  public BaseResponse<Void> createLogisticsItem(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @PathVariable Long logisticsId,
+    @Valid @RequestBody LogisticsItemsCreateRequest request
+  ) {
+    Long memberId = userDetails.getMemberId();
+    logisticsService.addItems(memberId, logisticsId, request.getItems());
     return BaseResponse.success();
   }
 
