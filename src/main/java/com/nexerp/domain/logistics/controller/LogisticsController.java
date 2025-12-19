@@ -1,6 +1,7 @@
 package com.nexerp.domain.logistics.controller;
 
 import com.nexerp.domain.logistics.model.request.LogisticsItemsCreateRequest;
+import com.nexerp.domain.logistics.model.request.LogisticsItemsUpdateRequest;
 import com.nexerp.domain.logistics.model.request.LogisticsUpdateRequest;
 import com.nexerp.domain.logistics.model.response.LogisticsItemResponse;
 import com.nexerp.domain.logistics.model.response.LogisticsSearchResponse;
@@ -84,6 +85,18 @@ public class LogisticsController {
     List<LogisticsItemResponse> responses = logisticsService.getLogisticsItems(memberId,
       logisticsId);
     return BaseResponse.success(responses);
+  }
+
+  @PatchMapping("/{logisticsId}/items")
+  @PreAuthorize("hasPermission('LOGISTICS', 'WRITE')")
+  public BaseResponse<Void> updateLogisticsItem(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @PathVariable Long logisticsId,
+    @Valid @RequestBody LogisticsItemsUpdateRequest request
+  ) {
+    Long memberId = userDetails.getMemberId();
+    logisticsService.updateLogisticsItems(memberId, logisticsId, request.getItems());
+    return BaseResponse.success();
   }
 
 }
