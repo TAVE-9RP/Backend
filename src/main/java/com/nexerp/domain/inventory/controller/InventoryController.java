@@ -2,6 +2,7 @@ package com.nexerp.domain.inventory.controller;
 
 import com.nexerp.domain.inventory.model.request.InventoryCommonUpdateRequest;
 import com.nexerp.domain.inventory.model.request.InventoryItemAddRequest;
+import com.nexerp.domain.inventory.model.request.InventoryTargetQuantityUpdateRequest;
 import com.nexerp.domain.inventory.model.response.InventoryItemAddResponse;
 import com.nexerp.domain.inventory.service.InventoryService;
 import com.nexerp.global.common.response.BaseResponse;
@@ -115,5 +116,46 @@ public class InventoryController {
     InventoryItemAddResponse response = inventoryService.addInventoryItems(memberId, inventoryId, request);
 
     return BaseResponse.success(response);
+  }
+
+  @PatchMapping("/{inventoryId}/items/quantities")
+  @PreAuthorize("hasPermission('INVENTORY', 'WRITE')")
+  @Operation(
+    summary = "입고 예정 품목의 목표 입고 수량 일괄 수정 API",
+    description = """
+        특정 입고 업무(inventoryId)에 등록된 여러 품목들의  
+        **목표 입고 수량(targetQuantity)** 을 한 번에 수정합니다.
+
+        승인 요청 전(ASSIGNED 상태)에서만 가능  
+        이미 존재하는 Inventory_Item의 quantity 필드만 변경  
+        processed_quantity(현재 입고 수량)에는 영향을 주지 않음  
+        담당자로 지정된 멤버만 수정 가능  
+        """
+  )
+  @io.swagger.v3.oas.annotations.parameters.RequestBody(
+    required = true,
+    description = """
+      요청 예시:
+        ```json
+        {
+          "quantities": [
+            { "inventoryItemId": 10, "targetQuantity": 50 },
+            { "inventoryItemId": 11, "targetQuantity": 120 }
+          ]
+        }
+        ```
+      """
+  )
+  public BaseResponse<Void> updateTargetQuantities(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @PathVariable Long inventoryId,
+    @Valid @RequestBody InventoryTargetQuantityUpdateRequest request
+    ) {
+
+    Long memberId = userDetails.getMemberId();
+
+    inventoryService.updateTargetQuantities(memberId, inventoryId, request);
+
+    return BaseResponse.success();
   }
 }

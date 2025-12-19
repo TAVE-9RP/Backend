@@ -52,4 +52,8 @@ public class InventoryItem {
     this.processed_quantity = processed_quantity; // 현재 입고된 수량
     this.status = status;
   }
+
+  public void updateTargetQuantity(Long quantity) {
+    this.quantity = quantity;
+  }
 }

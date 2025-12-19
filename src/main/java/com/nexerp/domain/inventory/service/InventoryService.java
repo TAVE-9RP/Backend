@@ -3,6 +3,7 @@ package com.nexerp.domain.inventory.service;
 import com.nexerp.domain.inventory.model.entity.Inventory;
 import com.nexerp.domain.inventory.model.enums.InventoryStatus;
 import com.nexerp.domain.inventory.model.request.InventoryItemAddRequest;
+import com.nexerp.domain.inventory.model.request.InventoryTargetQuantityUpdateRequest;
 import com.nexerp.domain.inventory.model.response.InventoryItemAddResponse;
 import com.nexerp.domain.inventory.repository.InventoryRepository;
 import com.nexerp.domain.inventory.model.request.InventoryCommonUpdateRequest;
@@ -91,6 +92,33 @@ public class InventoryService {
     }
 
     return InventoryItemAddResponse.from(createdIds);
+  }
+
+  @Transactional
+  public void updateTargetQuantities(
+    Long memberId,
+    Long inventoryId,
+    InventoryTargetQuantityUpdateRequest request
+  ) {
+    Inventory inventory = inventoryRepository.findById(inventoryId)
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "입고 업무를 찾을 수 없습니다."));
+
+    validateAssignee(inventoryId, memberId);
+
+    if (inventory.getStatus() != InventoryStatus.ASSIGNED) {
+      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "승인 요청 전까지만 설정 가능합니다.");
+    }
+
+    for (InventoryTargetQuantityUpdateRequest.QuantityUpdateUnit unit : request.getUpdates()) {
+      InventoryItem inventoryItem = inventoryItemRepository.findById(unit.getInventoryItemId())
+        .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "입고 예정 품목을 찾을 수 없습니다."));
+
+      if (!inventoryItem.getInventory().getId().equals(inventoryId)) {
+        throw new BaseException(GlobalErrorCode.FORBIDDEN, "잘못된 입고 품목입니다.");
+      }
+
+      inventoryItem.updateTargetQuantity(unit.getTargetQuantity());
+    }
   }
 
   // 담당자 검증
