@@ -2,8 +2,15 @@ package com.nexerp.domain.inventory.service;
 
 import com.nexerp.domain.inventory.model.entity.Inventory;
 import com.nexerp.domain.inventory.model.enums.InventoryStatus;
+import com.nexerp.domain.inventory.model.request.InventoryItemAddRequest;
+import com.nexerp.domain.inventory.model.response.InventoryItemAddResponse;
 import com.nexerp.domain.inventory.repository.InventoryRepository;
 import com.nexerp.domain.inventory.model.request.InventoryCommonUpdateRequest;
+import com.nexerp.domain.inventoryitem.model.entity.InventoryItem;
+import com.nexerp.domain.inventoryitem.model.enums.InventoryProcessingStatus;
+import com.nexerp.domain.inventoryitem.repository.InventoryItemRepository;
+import com.nexerp.domain.item.model.entity.Item;
+import com.nexerp.domain.item.repository.ItemRepository;
 import com.nexerp.domain.projectmember.repository.ProjectMemberRepository;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
@@ -12,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +29,8 @@ public class InventoryService {
 
   private final InventoryRepository inventoryRepository;
   private final ProjectMemberRepository projectMemberRepository;
+  private final ItemRepository itemRepository;
+  private final InventoryItemRepository inventoryItemRepository;
 
   public void updateInventoryCommonInfo(
     Long inventoryId,
@@ -42,6 +53,44 @@ public class InventoryService {
       request.getDescription(),
       LocalDateTime.now()
     );
+  }
+
+  @Transactional
+  public InventoryItemAddResponse addInventoryItems (
+    Long memberId,
+    Long inventoryId,
+    InventoryItemAddRequest request
+  ) {
+
+    Inventory inventory = inventoryRepository.findById(inventoryId)
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "입고 업무를 찾을 수 없습니다."));
+
+    validateAssignee(inventoryId, memberId);
+
+    List<Long> createdIds = new ArrayList<>();
+
+    for (Long itemId : request.getItemIds()) {
+
+      if(inventoryRepository.existsByInventoryIdAndItemId(inventoryId, itemId)) {
+        continue; // 이미 존재하는 물품이면 스킵
+      }
+
+      Item item = itemRepository.findById(itemId)
+        .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "해당 품목을 찾을 수 없습니다."));
+
+      InventoryItem inventoryItem = InventoryItem.builder()
+        .inventory(inventory)
+        .item(item)
+        .quantity(0L) // 목표 수량은 별도로 입력
+        .processed_quantity(0L)
+        .status(InventoryProcessingStatus.NOT_STARTED)
+        .build();
+
+      InventoryItem saved = inventoryItemRepository.save(inventoryItem);
+      createdIds.add(saved.getId());
+    }
+
+    return InventoryItemAddResponse.from(createdIds);
   }
 
   // 담당자 검증

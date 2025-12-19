@@ -4,7 +4,7 @@ import lombok.Getter;
 
 @Getter
 public enum InventoryProcessingStatus {
-  PENDING,
+  NOT_STARTED,
   IN_PROGRESS,
   COMPLETED
 }
