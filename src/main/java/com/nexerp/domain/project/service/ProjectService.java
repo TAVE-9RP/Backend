@@ -3,7 +3,10 @@ package com.nexerp.domain.project.service;
 import com.nexerp.domain.admin.service.AdminService;
 import com.nexerp.domain.company.model.entity.Company;
 import com.nexerp.domain.company.service.CompanyService;
+import com.nexerp.domain.logistics.model.entity.Logistics;
+import com.nexerp.domain.logistics.repository.LogisticsRepository;
 import com.nexerp.domain.member.model.entity.Member;
+import com.nexerp.domain.member.model.enums.MemberDepartment;
 import com.nexerp.domain.member.repository.MemberRepository;
 import com.nexerp.domain.member.service.MemberService;
 import com.nexerp.domain.project.model.entity.Project;
@@ -35,16 +38,17 @@ public class ProjectService {
   private final CompanyService companyService;
   private final ProjectRepository projectRepository;
   private final MemberRepository memberRepository;
+  private final LogisticsRepository logisticsRepository;
 
   @Transactional
   public ProjectCreateResponse createProject(Long ownerId,
     ProjectCreateRequest request) {
 
     // 회사 생성 요청 검증
-    Company targetCompany = validateCreateProject(ownerId, request);
+    Company company = validateCreateProject(ownerId, request);
 
     Project newProject = Project.create(
-      targetCompany,
+      company,
       request.getProjectNumber(),
       request.getProjectName(),
       request.getProjectDescription(),
@@ -54,16 +58,33 @@ public class ProjectService {
 
     Project savedProject = projectRepository.save(newProject);
 
-    // 담당자 지정 추가
-    if (request.getAssigneeIds() != null && !request.getAssigneeIds().isEmpty()) {
+    // 2. 담당자 지정
+    List<Member> assignees = adminService.getMembersByIdsAndCompany(
+      request.getAssigneeIds(), company.getId()
+    );
 
-      List<Member> assignees = adminService.getMembersByIdsAndCompany(request.getAssigneeIds(),
-        targetCompany.getId());
-      // ProjectMember 생성
-      for (Member m : assignees) {
-        ProjectMember pm = ProjectMember.create(savedProject, m);
-        savedProject.getProjectMembers().add(pm);
-      }
+    for (Member m : assignees) {
+      ProjectMember pm = ProjectMember.create(savedProject, m);
+      savedProject.getProjectMembers().add(pm);
+    }
+
+    // 3. 담당자의 부서를 기반으로 어떤 업무를 생성할지 판단
+    boolean hasInventoryAssignee = assignees.stream()
+      .anyMatch(a -> a.getDepartment() == MemberDepartment.INVENTORY);
+
+    boolean hasLogisticsAssignee = assignees.stream()
+      .anyMatch(a -> a.getDepartment() == MemberDepartment.LOGISTICS);
+
+    // 4. 입고업무 생성 (ASSIGNED)
+    if (hasInventoryAssignee) {
+      Inventory inventory = Inventory.assign(savedProject);
+      inventoryRepository.save(inventory);
+    }
+
+    // 5. 출하업무 생성 (ASSIGNED)
+    if (hasLogisticsAssignee) {
+      Logistics logistics = Logistics.assign(savedProject);
+      logisticsRepository.save(logistics);
     }
 
     return ProjectCreateResponse.from(savedProject.getId());
