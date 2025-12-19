@@ -3,20 +3,24 @@ package com.nexerp.domain.logistics.service;
 import com.nexerp.domain.item.model.entity.Item;
 import com.nexerp.domain.item.repository.ItemRepository;
 import com.nexerp.domain.logistics.model.entity.Logistics;
-import com.nexerp.domain.logistics.model.request.LogisticsItemsCreateRequest.LogisticsItemDetail;
+import com.nexerp.domain.logistics.model.request.LogisticsItemsCreateRequest.CreateLogisticsItemDetail;
+import com.nexerp.domain.logistics.model.request.LogisticsItemsUpdateRequest.UpdateLogisticsItemDetail;
 import com.nexerp.domain.logistics.model.request.LogisticsUpdateRequest;
 import com.nexerp.domain.logistics.model.response.LogisticsItemResponse;
 import com.nexerp.domain.logistics.model.response.LogisticsSearchResponse;
 import com.nexerp.domain.logistics.repository.LogisticsRepository;
 import com.nexerp.domain.logisticsItem.model.entity.LogisticsItem;
+import com.nexerp.domain.logisticsItem.model.enums.LogisticsProcessingStatus;
 import com.nexerp.domain.logisticsItem.repository.LogisticsItemRepository;
 import com.nexerp.domain.member.service.MemberService;
 import com.nexerp.domain.project.model.entity.Project;
 import com.nexerp.domain.project.service.ProjectService;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -115,7 +119,8 @@ public class LogisticsService {
   }
 
   @Transactional
-  public void addItems(Long memberId, Long logisticsId, List<LogisticsItemDetail> itemRequests) {
+  public void addItems(Long memberId, Long logisticsId,
+    List<CreateLogisticsItemDetail> itemRequests) {
     Logistics logistics = logisticsRepository.findWithProjectAndCompanyById(logisticsId)
       .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "출하 업무를 찾을 수 없습니다."));
 
@@ -125,12 +130,26 @@ public class LogisticsService {
       throw new BaseException(GlobalErrorCode.FORBIDDEN, "다른 회사의 출하 업무에는 접근할 수 없습니다.");
     }
 
-    // 요청의 물품 id 추출
-    List<Long> itemIds = itemRequests.stream()
-      .map(LogisticsItemDetail::getItemId)
+    // 이미 등록된 물품 ID 추출
+    Set<Long> existingItemIds = logistics.getLogisticsItems().stream()
+      .map(li -> li.getItem().getId())
+      .collect(Collectors.toSet());
+
+    // 요청 중 새로운 요청만 필터
+    List<CreateLogisticsItemDetail> newRequests = itemRequests.stream()
+      .filter(request -> !existingItemIds.contains(request.getItemId()))
       .toList();
 
-    List<Item> foundItems = itemRepository.findAllById(itemIds);
+    if (newRequests.isEmpty()) {
+      throw new BaseException(GlobalErrorCode.CONFLICT, "이미 존재하는 물품들입니다.");
+    }
+
+    // 새로운 요청에 대한 Item ID만 추출
+    List<Long> newItemIds = newRequests.stream()
+      .map(CreateLogisticsItemDetail::getItemId)
+      .toList();
+
+    List<Item> foundItems = itemRepository.findAllById(newItemIds);
 
     Map<Long, Item> itemMap = foundItems.stream()
       .collect(Collectors.toMap(Item::getId, Function.identity()));
@@ -153,6 +172,8 @@ public class LogisticsService {
       .toList();
 
     logisticsItemRepository.saveAll(logisticsItems);
+
+    // 업무의 총 비용 추가
   }
 
   @Transactional(readOnly = true)
@@ -177,9 +198,64 @@ public class LogisticsService {
           .targetedQuantity(li.getTargetedQuantity())
           .itemPrice(item.getPrice())
           .unitOfMeasure(item.getUnitOfMeasure())
+          .logisticsProcessingStatus(li.getProcessingStatus())
           .build();
       })
       .toList();
 
+  }
+
+  @Transactional
+  public void updateLogisticsItems(Long memberId, Long logisticsId,
+    List<UpdateLogisticsItemDetail> itemRequests) {
+
+    //진행 중인 물품인지 먼저 확인
+
+    Logistics logistics = logisticsRepository.findWithItemsById(logisticsId)
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "출하 업무를 찾을 수 없습니다."));
+
+    // 회사 검증
+    Long memberCompanyId = memberService.getCompanyIdByMemberId(memberId);
+    if (!memberCompanyId.equals(logistics.getProject().getCompany().getId())) {
+      throw new BaseException(GlobalErrorCode.FORBIDDEN, "다른 회사의 출하 업무에는 접근할 수 없습니다.");
+    }
+
+    // 요청 itemId 추출
+    List<Long> requestedIdsList = itemRequests.stream()
+      .map(UpdateLogisticsItemDetail::getItemId)
+      .toList();
+
+    // 요청 itemId 중복 검증
+    Set<Long> requestedIds = new HashSet<>(requestedIdsList);
+    if (requestedIds.size() != requestedIdsList.size()) {
+      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "요청에 중복된 itemId가 존재합니다.");
+    }
+
+    // 기존 logistics의 LogisticsItem을 itemId 기준으로 맵핑
+    Map<Long, LogisticsItem> existingByItemId = logistics.getLogisticsItems().stream()
+      .collect(Collectors.toMap(li -> li.getItem().getId(), Function.identity()));
+
+    // 관계가 없던 itemId 추출
+    List<Long> notExists = requestedIds.stream()
+      .filter(id -> !existingByItemId.containsKey(id))
+      .toList();
+
+    if (!notExists.isEmpty()) {
+      throw new BaseException(GlobalErrorCode.STATE_CONFLICT,
+        "출하 업무에 등록되지 않은 물품입니다. itemIds=" + notExists);
+    }
+
+    for (UpdateLogisticsItemDetail detail : itemRequests) {
+      LogisticsItem li = existingByItemId.get(detail.getItemId());
+
+      li.changeProcessedQuantity(detail.getProcessedQuantity());
+
+      // 목표 출하 기준 상태 변경
+      if (li.getTargetedQuantity() <= detail.getProcessedQuantity()) {
+        li.changeStatus(LogisticsProcessingStatus.COMPLETED);
+      } else if (li.getProcessingStatus() == LogisticsProcessingStatus.COMPLETED) {
+        li.changeStatus(LogisticsProcessingStatus.IN_PROGRESS);
+      }
+    }
   }
 }
