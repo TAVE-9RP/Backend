@@ -1,8 +1,8 @@
-package com.nexerp.domain.inventory.model.service;
+package com.nexerp.domain.inventory.service;
 
 import com.nexerp.domain.inventory.model.entity.Inventory;
 import com.nexerp.domain.inventory.model.enums.InventoryStatus;
-import com.nexerp.domain.inventory.model.repository.InventoryRepository;
+import com.nexerp.domain.inventory.repository.InventoryRepository;
 import com.nexerp.domain.inventory.model.request.InventoryCommonUpdateRequest;
 import com.nexerp.domain.projectmember.repository.ProjectMemberRepository;
 import com.nexerp.global.common.exception.BaseException;
@@ -47,7 +47,7 @@ public class InventoryService {
   // 담당자 검증
   private void validateAssignee(Long inventoryId, Long memberId) {
     Inventory inventory = inventoryRepository.findById(inventoryId)
-      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "입고 업물르 찾을 수 없습니다."));
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "입고 업무를 찾을 수 없습니다."));
 
     Long projectId = inventory.getProject().getId();
 

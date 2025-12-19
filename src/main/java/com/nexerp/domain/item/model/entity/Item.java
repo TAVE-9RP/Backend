@@ -31,9 +31,6 @@ public class Item {
   @Column(name = "item_price")
   private Long price;
 
-  @Column(name = "item_unit_of_measure")
-  private String unitOfMeasure;
-
   @Column(name = "item_quantity")
   private Long quantity;
 
@@ -69,7 +66,6 @@ public class Item {
     this.code = code;
     this.name = name;
     this.price = price;
-    this.unitOfMeasure = unitOfMeasure;
     this.quantity = quantity;
     this.receivedAt = receivedAt;
     this.location = location;

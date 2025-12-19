@@ -1,7 +1,7 @@
-package com.nexerp.domain.inventory.model.controller;
+package com.nexerp.domain.inventory.controller;
 
 import com.nexerp.domain.inventory.model.request.InventoryCommonUpdateRequest;
-import com.nexerp.domain.inventory.model.service.InventoryService;
+import com.nexerp.domain.inventory.service.InventoryService;
 import com.nexerp.global.common.response.BaseResponse;
 import com.nexerp.global.security.details.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;

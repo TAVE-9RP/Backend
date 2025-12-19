@@ -4,7 +4,7 @@ import com.nexerp.domain.admin.service.AdminService;
 import com.nexerp.domain.company.model.entity.Company;
 import com.nexerp.domain.company.service.CompanyService;
 import com.nexerp.domain.inventory.model.entity.Inventory;
-import com.nexerp.domain.inventory.model.repository.InventoryRepository;
+import com.nexerp.domain.inventory.repository.InventoryRepository;
 import com.nexerp.domain.member.model.entity.Member;
 import com.nexerp.domain.member.model.enums.MemberDepartment;
 import com.nexerp.domain.member.repository.MemberRepository;

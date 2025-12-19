@@ -1,4 +1,4 @@
-package com.nexerp.domain.inventory.model.repository;
+package com.nexerp.domain.inventory.repository;
 
 import com.nexerp.domain.inventory.model.entity.Inventory;
 import org.springframework.data.jpa.repository.JpaRepository;
