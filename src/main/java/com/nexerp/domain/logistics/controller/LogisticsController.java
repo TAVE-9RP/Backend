@@ -81,8 +81,9 @@ public class LogisticsController {
     @PathVariable Long logisticsId
   ) {
     Long memberId = userDetails.getMemberId();
-    logisticsService.getLogisticsItems(memberId, logisticsId);
-    return BaseResponse.success();
+    List<LogisticsItemResponse> responses = logisticsService.getLogisticsItems(memberId,
+      logisticsId);
+    return BaseResponse.success(responses);
   }
 
 }
