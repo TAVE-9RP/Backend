@@ -3,7 +3,10 @@ package com.nexerp.domain.item.service;
 import com.nexerp.domain.item.model.request.ItemCreateRequest;
 import com.nexerp.domain.item.model.response.ItemCreateResponse;
 import com.nexerp.domain.item.model.entity.Item;
+import com.nexerp.domain.item.model.response.ItemSearchResponse;
 import com.nexerp.domain.item.repository.ItemRepository;
+import com.nexerp.domain.member.model.entity.Member;
+import com.nexerp.domain.member.repository.MemberRepository;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -11,12 +14,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class ItemService {
 
   private final ItemRepository itemRepository;
+  private final MemberRepository memberRepository;
+
   @Transactional
   public ItemCreateResponse createItem(ItemCreateRequest request) {
 
@@ -40,5 +46,32 @@ public class ItemService {
     Item saved = itemRepository.save(item);
 
     return ItemCreateResponse.from(saved.getId());
+  }
+
+  @Transactional(readOnly = true)
+  public List<ItemSearchResponse> searchItems(Long memberId, String keyword) {
+
+    Member member = memberRepository.findById(memberId)
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "회원 정보를 찾을 수 없습니다."));
+
+    // 키워드 없는 경우는 전체 검색
+    List<Item> items;
+
+    if (keyword == null || keyword.isBlank()) {
+      items = itemRepository.findAll();
+    } else {
+      items = itemRepository.searchByKeyword(keyword);
+    }
+
+    return items.stream()
+      .map(i -> ItemSearchResponse.builder()
+        .itemId(i.getId())
+        .code(i.getCode())
+        .name(i.getName())
+        .quantity(i.getQuantity())
+        .location(i.getLocation())
+        .price(i.getPrice())
+        .build())
+      .toList();
   }
 }

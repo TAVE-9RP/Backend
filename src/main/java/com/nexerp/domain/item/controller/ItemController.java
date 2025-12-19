@@ -2,8 +2,10 @@ package com.nexerp.domain.item.controller;
 
 import com.nexerp.domain.item.model.request.ItemCreateRequest;
 import com.nexerp.domain.item.model.response.ItemCreateResponse;
+import com.nexerp.domain.item.model.response.ItemSearchResponse;
 import com.nexerp.domain.item.service.ItemService;
 import com.nexerp.global.common.response.BaseResponse;
+import com.nexerp.global.security.details.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -11,10 +13,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -53,5 +55,27 @@ public class ItemController {
   ) {
     ItemCreateResponse response = itemService.createItem(request);
     return BaseResponse.success(response);
+  }
+
+
+  @GetMapping
+  @Operation(
+    summary = "기존 재고 검색 API",
+    description = """
+      기존 재고(Item)를 키워드로 검색합니다.
+      ✔ 재고 번호(code), 품목명(name), 위치(location) 등을 부분 검색합니다.
+      ✔ keyword가 비어 있으면 전체 재고를 반환합니다.
+      ✔ INVENTORY READ 권한이 필요합니다.
+      """
+  )
+  public BaseResponse<List<ItemSearchResponse>> searchItems(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @RequestParam(required = false) String keyword
+    ) {
+    Long memberId = userDetails.getMemberId();
+
+    List<ItemSearchResponse> results = itemService.searchItems(memberId, keyword);
+
+    return BaseResponse.success(results);
   }
 }
