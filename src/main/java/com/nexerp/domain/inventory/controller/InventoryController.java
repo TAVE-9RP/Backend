@@ -4,6 +4,7 @@ import com.nexerp.domain.inventory.model.request.InventoryCommonUpdateRequest;
 import com.nexerp.domain.inventory.model.request.InventoryItemAddRequest;
 import com.nexerp.domain.inventory.model.request.InventoryTargetQuantityUpdateRequest;
 import com.nexerp.domain.inventory.model.response.InventoryItemAddResponse;
+import com.nexerp.domain.inventory.model.response.InventoryItemResponse;
 import com.nexerp.domain.inventory.service.InventoryService;
 import com.nexerp.global.common.response.BaseResponse;
 import com.nexerp.global.security.details.CustomUserDetails;
@@ -18,6 +19,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -157,5 +160,39 @@ public class InventoryController {
     inventoryService.updateTargetQuantities(memberId, inventoryId, request);
 
     return BaseResponse.success();
+  }
+
+  @GetMapping("/{inventoryId}/items")
+  @PreAuthorize("hasPermission('INVENTORY', 'READ')")
+  @Operation(
+    summary = "입고 품목 목록 조회 API",
+    description = """
+        특정 입고 업무(inventoryId)에 추가된 모든 **입고 품목(Inventory_Item)** 목록을 조회합니다.
+
+        승인 요청 전/후 모두 조회 가능
+        목표 입고 수량(quantity), 현재 입고 수량(processed_quantity), 상태(status) 등을 반환
+        반환 예시:
+        ```json
+        [
+          {
+            "inventoryItemId": 10,
+            "itemId": 3,
+            "itemCode": "A-100",
+            "itemName": "물품명",
+            "price": 2000,
+            "targetQuantity": 50,
+            "processedQuantity": 0,
+            "status": "NOT_STARTED"
+          }
+        ]
+        ```
+        """
+  )
+  public BaseResponse<List<InventoryItemResponse>> getInventoryItems(
+    @PathVariable Long inventoryId
+  ) {
+    List<InventoryItemResponse> result = inventoryService.getInventoryItems(inventoryId);
+
+    return BaseResponse.success(result);
   }
 }

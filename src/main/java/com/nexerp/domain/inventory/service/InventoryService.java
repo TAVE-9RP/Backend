@@ -5,6 +5,7 @@ import com.nexerp.domain.inventory.model.enums.InventoryStatus;
 import com.nexerp.domain.inventory.model.request.InventoryItemAddRequest;
 import com.nexerp.domain.inventory.model.request.InventoryTargetQuantityUpdateRequest;
 import com.nexerp.domain.inventory.model.response.InventoryItemAddResponse;
+import com.nexerp.domain.inventory.model.response.InventoryItemResponse;
 import com.nexerp.domain.inventory.repository.InventoryRepository;
 import com.nexerp.domain.inventory.model.request.InventoryCommonUpdateRequest;
 import com.nexerp.domain.inventoryitem.model.entity.InventoryItem;
@@ -119,6 +120,19 @@ public class InventoryService {
 
       inventoryItem.updateTargetQuantity(unit.getTargetQuantity());
     }
+  }
+
+  @Transactional(readOnly = true)
+  public List<InventoryItemResponse> getInventoryItems(Long inventoryId) {
+
+    Inventory inventory = inventoryRepository.findById(inventoryId)
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "입고 업무를 찾을 수 없습니다."));
+
+
+    return inventoryItemRepository.findAllByInventoryId(inventoryId)
+      .stream()
+      .map(InventoryItemResponse::from)
+      .toList();
   }
 
   // 담당자 검증
