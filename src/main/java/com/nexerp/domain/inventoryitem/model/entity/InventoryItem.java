@@ -28,11 +28,11 @@ public class InventoryItem {
   @JoinColumn(name = "item_id", nullable = false)
   private Item item;
 
-  // 목표 출하 수량
+  // 목표 입고 수량
   @Column(name = "inventory_targeted_quantity")
   private Long quantity;
 
-  // 현재까지 출하된 수량
+  // 현재까지 입고된 수량
   @Column(name = "inventory_processed_quantity")
   private Long processed_quantity;
 
@@ -48,8 +48,8 @@ public class InventoryItem {
                        InventoryProcessingStatus status) {
     this.inventory = inventory;
     this.item = item;
-    this.quantity = quantity;
-    this.processed_quantity = processed_quantity;
+    this.quantity = quantity; // 목표 입고 수량
+    this.processed_quantity = processed_quantity; // 현재 입고된 수량
     this.status = status;
   }
 }

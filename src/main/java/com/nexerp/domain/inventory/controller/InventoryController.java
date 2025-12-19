@@ -1,6 +1,8 @@
 package com.nexerp.domain.inventory.controller;
 
 import com.nexerp.domain.inventory.model.request.InventoryCommonUpdateRequest;
+import com.nexerp.domain.inventory.model.request.InventoryItemAddRequest;
+import com.nexerp.domain.inventory.model.response.InventoryItemAddResponse;
 import com.nexerp.domain.inventory.service.InventoryService;
 import com.nexerp.global.common.response.BaseResponse;
 import com.nexerp.global.security.details.CustomUserDetails;
@@ -68,5 +70,50 @@ public class InventoryController {
     inventoryService.updateInventoryCommonInfo(inventoryId, memberId, request);
 
     return BaseResponse.success();
+  }
+
+  @PostMapping("/{inventoryId}/items/batch")
+  @PreAuthorize("hasPermission('INVENTORY', 'WRITE')")
+  @Operation(summary = "입고 예정 품목 추가 API",
+    description = """
+        입고 업무에 여러 개의 품목 또는 한 개의 품목을 추가합니다.
+        기존 재고 검색을 통해서 추가할 때는 여러 개를 추가하겠지만,
+        새 물품 추가를 통해서 추가 시에는 한 개씩 추가 가능합니다.
+        
+        **입고 예정 품목(Inventory_Item) 생성 전용 API**  
+        품목의 목표 입고 수량은 이 API에서 입력하지 않으며,  
+        별도의 '목표 수량 설정 API'에서 진행합니다.  
+        이미 목록에 존재하는 품목은 자동으로 제외됩니다.  
+        품목은 '승인 요청' 이전 상태(ASSIGNED)에서만 추가가 가능합니다.  
+
+        주의  
+        - 실제 재고(Item.quantity) 수량에는 반영되지 않습니다.  
+        - 승인 후(IN_PROGRESS)에는 품목 추가가 불가능합니다.
+        """
+  )
+  @io.swagger.v3.oas.annotations.parameters.RequestBody(
+    description = """
+        **여러 개의 itemId를 받아 일괄 추가하는 요청 형식**
+
+        예시:
+        ```json
+        {
+          "itemIds": [1, 3, 5]
+        }
+        ```
+        """,
+    required = true
+  )
+  public BaseResponse<InventoryItemAddResponse> addInventoryItems(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @PathVariable Long inventoryId,
+    @Valid @RequestBody InventoryItemAddRequest request
+    ) {
+
+    Long memberId = userDetails.getMemberId();
+
+    InventoryItemAddResponse response = inventoryService.addInventoryItems(memberId, inventoryId, request);
+
+    return BaseResponse.success(response);
   }
 }
