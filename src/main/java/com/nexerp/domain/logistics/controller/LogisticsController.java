@@ -48,4 +48,15 @@ public class LogisticsController {
     return BaseResponse.success();
   }
 
+  @PatchMapping("/{logisticsId}/status")
+  @PreAuthorize("hasPermission('LOGISTICS', 'WRITE')")
+  public BaseResponse<Void> requestLogisticsApproval(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @PathVariable Long logisticsId
+  ) {
+    Long memberId = userDetails.getMemberId();
+    logisticsService.requestLogisticsApproval(memberId, logisticsId);
+    return BaseResponse.success();
+  }
+
 }

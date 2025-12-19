@@ -3,6 +3,8 @@ package com.nexerp.domain.logistics.model.entity;
 import com.nexerp.domain.logistics.model.enums.LogisticsSatus;
 import com.nexerp.domain.logisticsItem.model.entity.LogisticsItem;
 import com.nexerp.domain.project.model.entity.Project;
+import com.nexerp.global.common.exception.BaseException;
+import com.nexerp.global.common.exception.GlobalErrorCode;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -109,5 +111,17 @@ public class Logistics {
     }
   }
 
+  public void changeStatus(LogisticsSatus status) {
+    this.status = status;
+  }
 
+  public void requestApproval() {
+
+    if (this.status != LogisticsSatus.ASSIGNED) {
+      throw new BaseException(GlobalErrorCode.STATE_CONFLICT, "할당 단계에서만 승인 요청이 가능합니다.");
+    }
+
+    this.requestedAt = LocalDate.now();
+    changeStatus(LogisticsSatus.APPROVAL_PENDING);
+  }
 }

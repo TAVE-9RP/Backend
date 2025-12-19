@@ -22,7 +22,6 @@ public class LogisticsService {
   private final ProjectService projectService;
   private final LogisticsRepository logisticsRepository;
 
-
   @Transactional(readOnly = true)
   public List<LogisticsSearchResponse> searchLogisticsByMemberId(Long memberId) {
     //멈버 회사 추출
@@ -73,6 +72,21 @@ public class LogisticsService {
       request.getLogisticsDescription()
     );
 
+  }
+
+  @Transactional
+  public void requestLogisticsApproval(Long memberId, Long logisticsId) {
+
+    Logistics logistics = logisticsRepository.findWithProjectAndCompanyById(logisticsId)
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "출하 업무를 찾을 수 없습니다."));
+
+    // 회사 검증
+    Long memberCompanyId = memberService.getCompanyIdByMemberId(memberId);
+    if (!memberCompanyId.equals(logistics.getProject().getCompany().getId())) {
+      throw new BaseException(GlobalErrorCode.FORBIDDEN, "다른 회사의 출하 업무에는 접근할 수 없습니다.");
+    }
+
+    logistics.requestApproval();
   }
 
 }
