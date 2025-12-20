@@ -100,6 +100,7 @@ public class LogisticsController {
     return BaseResponse.success();
   }
 
+  // 출하 업무 상세 보기
   @GetMapping("/{logisticsId}")
   @PreAuthorize("hasPermission('LOGISTICS', 'READ')")
   public BaseResponse<LogisticsDetailsResponse> getLogisticsDetails(
@@ -109,6 +110,18 @@ public class LogisticsController {
     Long memberId = userDetails.getMemberId();
     LogisticsDetailsResponse response = logisticsService.getLogisticsDetails(memberId, logisticsId);
     return BaseResponse.success(response);
+  }
+
+  //업무 완료 처리
+  @PatchMapping("/{logisticsId}/status/complete")
+  @PreAuthorize("hasPermission('LOGISTICS', 'WRITE')")
+  public BaseResponse<Void> completeLogisticsStatus(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @PathVariable Long logisticsId
+  ) {
+    Long memberId = userDetails.getMemberId();
+    logisticsService.completeLogisticsStatus(memberId, logisticsId);
+    return BaseResponse.success();
   }
 
 }
