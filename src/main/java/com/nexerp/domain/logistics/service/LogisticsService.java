@@ -6,6 +6,7 @@ import com.nexerp.domain.logistics.model.entity.Logistics;
 import com.nexerp.domain.logistics.model.request.LogisticsItemsCreateRequest.CreateLogisticsItemDetail;
 import com.nexerp.domain.logistics.model.request.LogisticsItemsUpdateRequest.UpdateLogisticsItemDetail;
 import com.nexerp.domain.logistics.model.request.LogisticsUpdateRequest;
+import com.nexerp.domain.logistics.model.response.LogisticsDetailsResponse;
 import com.nexerp.domain.logistics.model.response.LogisticsItemResponse;
 import com.nexerp.domain.logistics.model.response.LogisticsSearchResponse;
 import com.nexerp.domain.logistics.repository.LogisticsRepository;
@@ -17,6 +18,8 @@ import com.nexerp.domain.project.model.entity.Project;
 import com.nexerp.domain.project.service.ProjectService;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -141,7 +144,7 @@ public class LogisticsService {
       .toList();
 
     if (newRequests.isEmpty()) {
-      throw new BaseException(GlobalErrorCode.CONFLICT, "이미 존재하는 물품들입니다.");
+      throw new BaseException(GlobalErrorCode.CONFLICT, "추가할 수 있는 새로운 물품이 없습니다.");
     }
 
     // 새로운 요청에 대한 Item ID만 추출
@@ -154,26 +157,31 @@ public class LogisticsService {
     Map<Long, Item> itemMap = foundItems.stream()
       .collect(Collectors.toMap(Item::getId, Function.identity()));
 
-    List<LogisticsItem> logisticsItems = itemRequests.stream()
-      .map(detail -> {
-        Item item = itemMap.get(detail.getItemId());
+    BigDecimal addedAmount = BigDecimal.ZERO;
+    List<LogisticsItem> logisticsItems = new ArrayList<>();
 
-        if (item == null) {
-          throw new BaseException(GlobalErrorCode.NOT_FOUND,
-            "ID: " + detail.getItemId() + " 물품을 찾을 수 없습니다.");
-        }
-        return LogisticsItem.create(
-          logistics,
-          item,
-          detail.getLogisticsTargetedQuantity()
-        );
+    for (CreateLogisticsItemDetail detail : newRequests) {
+      Item item = itemMap.get(detail.getItemId());
 
-      })
-      .toList();
+      if (item == null) {
+        throw new BaseException(GlobalErrorCode.NOT_FOUND,
+          "ID: " + detail.getItemId() + " 물품을 찾을 수 없습니다.");
+      }
 
+      LogisticsItem newItem = LogisticsItem.create(logistics, item,
+        detail.getLogisticsTargetedQuantity());
+      logisticsItems.add(newItem);
+
+      if (item.getPrice() != null) {
+        BigDecimal itemTotal = BigDecimal.valueOf(item.getPrice())
+          .multiply(BigDecimal.valueOf(detail.getLogisticsTargetedQuantity()));
+        addedAmount = addedAmount.add(itemTotal);
+      }
+    }
+
+    logistics.addTotalPrice(addedAmount);
     logisticsItemRepository.saveAll(logisticsItems);
 
-    // 업무의 총 비용 추가
   }
 
   @Transactional(readOnly = true)
@@ -257,5 +265,29 @@ public class LogisticsService {
         li.changeStatus(LogisticsProcessingStatus.IN_PROGRESS);
       }
     }
+  }
+
+  @Transactional(readOnly = true)
+  public LogisticsDetailsResponse getLogisticsDetails(Long memberId, Long logisticsId) {
+    Logistics logistics = logisticsRepository.findWithProjectAndCompanyById(logisticsId)
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "출하 업무를 찾을 수 없습니다."));
+
+    // 회사 검증
+    Long memberCompanyId = memberService.getCompanyIdByMemberId(memberId);
+    if (!memberCompanyId.equals(logistics.getProject().getCompany().getId())) {
+      throw new BaseException(GlobalErrorCode.FORBIDDEN, "다른 회사의 출하 업무에는 접근할 수 없습니다.");
+    }
+
+    return LogisticsDetailsResponse.builder()
+      .projectNumber(logistics.getProject().getNumber())
+      .logisticsTitle(logistics.getTitle())
+      .logisticsDescription(logistics.getDescription())
+      .logisticsCarrier(logistics.getCarrier())
+      .logisticsCarrierCompany(logistics.getCarrierCompany())
+      .logisticsRequestedAt(logistics.getRequestedAt())
+      .localCompletedAt(logistics.getCompletedAt())
+      .logisticsSatus(logistics.getStatus())
+      .logisticsTotalPrice(logistics.getTotalPrice())
+      .build();
   }
 }
