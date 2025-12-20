@@ -135,4 +135,29 @@ public class Logistics {
 
     this.logisticsItems.forEach(item -> item.changeStatus(LogisticsProcessingStatus.IN_PROGRESS));
   }
+
+  public void addTotalPrice(BigDecimal additionalAmount) {
+
+    if (this.totalPrice == null) {
+      this.totalPrice = BigDecimal.ZERO;
+    }
+
+    this.totalPrice = this.totalPrice.add(additionalAmount);
+  }
+
+  public void complete() {
+    if (this.status != LogisticsSatus.IN_PROGRESS) {
+      throw new BaseException(GlobalErrorCode.STATE_CONFLICT, "진행 중에서만 완료 가능합니다.");
+    }
+
+    boolean allItemsCompleted = this.logisticsItems.stream()
+      .allMatch(item -> item.getProcessingStatus() == LogisticsProcessingStatus.COMPLETED);
+
+    if (!allItemsCompleted) {
+      throw new BaseException(GlobalErrorCode.STATE_CONFLICT, "모든 물품의 출하 처리가 완료되지 않았습니다.");
+    }
+
+    this.completedAt = LocalDateTime.now();
+    changeStatus(LogisticsSatus.COMPLETED);
+  }
 }
