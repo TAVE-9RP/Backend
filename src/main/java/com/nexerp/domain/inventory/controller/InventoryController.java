@@ -141,7 +141,7 @@ public class InventoryController {
       요청 예시:
         ```json
         {
-          "quantities": [
+          "updates": [
             { "inventoryItemId": 10, "targetQuantity": 50 },
             { "inventoryItemId": 11, "targetQuantity": 120 }
           ]
