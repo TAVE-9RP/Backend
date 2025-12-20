@@ -73,7 +73,7 @@ public class InventoryService {
 
     for (Long itemId : request.getItemIds()) {
 
-      if(inventoryRepository.existsByInventoryIdAndItemId(inventoryId, itemId)) {
+      if(inventoryItemRepository.existsByInventoryIdAndItemId(inventoryId, itemId)) {
         continue; // 이미 존재하는 물품이면 스킵
       }
 
