@@ -3,6 +3,7 @@ package com.nexerp.domain.logistics.controller;
 import com.nexerp.domain.logistics.model.request.LogisticsItemsCreateRequest;
 import com.nexerp.domain.logistics.model.request.LogisticsItemsUpdateRequest;
 import com.nexerp.domain.logistics.model.request.LogisticsUpdateRequest;
+import com.nexerp.domain.logistics.model.response.LogisticsDetailsResponse;
 import com.nexerp.domain.logistics.model.response.LogisticsItemResponse;
 import com.nexerp.domain.logistics.model.response.LogisticsSearchResponse;
 import com.nexerp.domain.logistics.service.LogisticsService;
@@ -97,6 +98,17 @@ public class LogisticsController {
     Long memberId = userDetails.getMemberId();
     logisticsService.updateLogisticsItems(memberId, logisticsId, request.getItems());
     return BaseResponse.success();
+  }
+
+  @GetMapping("/{logisticsId}")
+  @PreAuthorize("hasPermission('LOGISTICS', 'READ')")
+  public BaseResponse<LogisticsDetailsResponse> getLogisticsDetails(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @PathVariable Long logisticsId
+  ) {
+    Long memberId = userDetails.getMemberId();
+    LogisticsDetailsResponse response = logisticsService.getLogisticsDetails(memberId, logisticsId);
+    return BaseResponse.success(response);
   }
 
 }
