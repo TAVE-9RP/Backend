@@ -4,8 +4,10 @@ import com.nexerp.domain.inventory.model.request.InventoryCommonUpdateRequest;
 import com.nexerp.domain.inventory.model.request.InventoryItemAddRequest;
 import com.nexerp.domain.inventory.model.request.InventoryProcessRequest;
 import com.nexerp.domain.inventory.model.request.InventoryTargetQuantityUpdateRequest;
+import com.nexerp.domain.inventory.model.response.InventoryDetailResponse;
 import com.nexerp.domain.inventory.model.response.InventoryItemAddResponse;
 import com.nexerp.domain.inventory.model.response.InventoryItemResponse;
+import com.nexerp.domain.inventory.model.response.InventorySummaryResponse;
 import com.nexerp.domain.inventory.service.InventoryService;
 import com.nexerp.global.common.response.BaseResponse;
 import com.nexerp.global.security.details.CustomUserDetails;
@@ -256,5 +258,84 @@ public class InventoryController {
     inventoryService.completeInventory(memberId, inventoryId);
 
     return BaseResponse.success();
+  }
+
+  @GetMapping
+  @Operation(summary = "입고 업무 전체 조회 API",
+    description = """
+    회사에 소속된 모든 입고 업무 리스트를 조회합니다.
+    
+    반환 정보:
+    - inventoryId (입고 업무 ID)
+    - projectNumber (프로젝트 번호)
+    - title (업무명)
+    - itemSummary (예: '애플망고 외 2개')
+    - assigneeSummary (입고 담당자 기준)
+    - requestedAt
+    - status
+    
+    반환 예시:
+        ```json
+        [
+          {
+            "inventoryId": 5,
+            "projectNumber": "C01-25-001",
+            "title": "삼성 물산 수출 건",
+            "itemSummary": "애플망고 외 2개",
+            "assigneeSummary": "김철수 외 1명",
+            "requestedAt": "2025-12-21T14:22:00",
+            "status": "IN_PROGRESS"
+          }
+        ]
+        ```
+    """)
+  public BaseResponse<List<InventorySummaryResponse>> getInventoryList(
+    @AuthenticationPrincipal CustomUserDetails userDetails
+  ) {
+    Long memberId = userDetails.getMemberId();
+    List<InventorySummaryResponse> response =
+      inventoryService.getInventoryList(memberId);
+
+    return BaseResponse.success(response);
+  }
+
+  @GetMapping("/{inventoryId}")
+  @Operation(summary = "입고 업무 상세 조회 API",
+  description = """
+    회사에 소속된 모든 입고 업무 리스트를 조회합니다.
+    
+    반환 정보:
+    - inventoryId (입고 업무 ID)
+    - projectNumber (프로젝트 번호)
+    - assignees (입고 업무 담당자 전체)
+    - title (업무명)
+    - requestedAt
+    - description
+    - status
+    
+    반환 예시:
+        ```json
+        [
+          {
+            "inventoryId": 5,
+            "projectNumber": "C01-25-001",
+            "assignees": ["김철수", "이영희"],
+            "title": "삼성 물산 수출 건",
+            "requestedAt": "2025-12-21T14:22:00",
+            "description": "과일류 입고 처리",
+            "status": "IN_PROGRESS"
+          }
+        ]
+        ```
+    """)
+  public BaseResponse<InventoryDetailResponse> getInventoryDetail(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @PathVariable Long inventoryId
+  ) {
+    Long memberId = userDetails.getMemberId();
+    InventoryDetailResponse response =
+      inventoryService.getInventoryDetail(memberId, inventoryId);
+
+    return BaseResponse.success(response);
   }
 }
