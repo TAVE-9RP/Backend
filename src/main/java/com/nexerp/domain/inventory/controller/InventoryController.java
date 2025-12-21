@@ -195,4 +195,22 @@ public class InventoryController {
 
     return BaseResponse.success(result);
   }
+
+  @PostMapping("/{inventoryId}/request-approval")
+  @PreAuthorize("hasPermission('INVENTORY', 'WRITE')")
+  @Operation(
+    summary = "입고 승인 요청 API",
+    description = """
+      담당자가 입고 업무를 승인 요청(PENDING) 상태로 전환합니다.
+      ASSIGNED 상태에서만 요청 가능
+      입고 예정 품목(InventoryItem)이 1개 이상 존재해야 함
+      """)
+  public BaseResponse<Void> requestApproval(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @PathVariable Long inventoryId
+  ) {
+    Long memberId = userDetails.getMemberId();
+    inventoryService.requestApproval(memberId, inventoryId);
+    return BaseResponse.success();
+  }
 }

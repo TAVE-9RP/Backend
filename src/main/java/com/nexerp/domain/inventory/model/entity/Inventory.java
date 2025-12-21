@@ -38,8 +38,8 @@ public class Inventory {
   @Column(name = "inventory_requested_at")
   private LocalDateTime requestedAt;
 
-  @Column(name = "inventory_end_at")
-  private LocalDateTime endAt;
+  @Column(name = "inventory_completed_at")
+  private LocalDateTime completedAt;
 
   @Enumerated(EnumType.STRING)
   @Column(name = "inventory_status", nullable = false)
@@ -57,14 +57,14 @@ public class Inventory {
                    String title,
                    String description,
                    LocalDateTime requestedAt,
-                   LocalDateTime endAt,
+                   LocalDateTime completedAt,
                    InventoryStatus status,
                    LocalDateTime createdAt) {
     this.project = project;
     this.title = title;
     this.description = description;
     this.requestedAt = requestedAt;
-    this.endAt = endAt;
+    this.completedAt = completedAt;
     this.status = status;
     this.createdAt = createdAt;
   }
@@ -82,5 +82,19 @@ public class Inventory {
     this.title = title;
     this.description = description;
     this.requestedAt = requestedAt;
+  }
+
+  public void updateStatus(InventoryStatus status, LocalDateTime time) {
+    this.status = status;
+
+    // 승인 요청(PENDING) 시 요청일 갱신
+    if (status == InventoryStatus.PENDING) {
+      this.requestedAt = time;
+    }
+
+    // 업무 종료(COMPLETED) 시 완료일 저장
+    if (status == InventoryStatus.COMPLETED) {
+      this.completedAt = time;
+    }
   }
 }

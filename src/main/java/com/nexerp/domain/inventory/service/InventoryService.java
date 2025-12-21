@@ -135,6 +135,26 @@ public class InventoryService {
       .toList();
   }
 
+  @Transactional
+  public void requestApproval(Long memberId, Long inventoryId) {
+
+    Inventory inventory = inventoryRepository.findById(inventoryId)
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "입고 업무를 찾을 수 없습니다."));
+
+    validateAssignee(inventoryId, memberId);
+
+    if (inventory.getStatus() != InventoryStatus.ASSIGNED) {
+      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "ASSIGNED 상태에서만 승인 요청을 할 수 있습니다.");
+    }
+
+    boolean hasItem = inventoryItemRepository.existsByInventoryId(inventoryId);
+    if (!hasItem) {
+      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "입고 예정 품목 1개 이상 필요합니다.");
+    }
+
+    inventory.updateStatus(InventoryStatus.PENDING, LocalDateTime.now());
+  }
+
   // 담당자 검증
   private void validateAssignee(Long inventoryId, Long memberId) {
     Inventory inventory = inventoryRepository.findById(inventoryId)
