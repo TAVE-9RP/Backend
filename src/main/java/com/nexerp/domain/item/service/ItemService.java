@@ -24,14 +24,19 @@ public class ItemService {
   private final MemberRepository memberRepository;
 
   @Transactional
-  public ItemCreateResponse createItem(ItemCreateRequest request) {
+  public ItemCreateResponse createItem(Long memberId, ItemCreateRequest request) {
 
+    Member member = memberRepository.findById(memberId)
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "직원 정보를 찾을 수 없습니다."));
 
     if (itemRepository.existsByCode(request.getCode())) {
       throw new BaseException(GlobalErrorCode.CONFLICT, "이미 존재하는 재고 번호입니다.");
     }
 
+    Long companyId = member.getCompanyId();
+
     Item item = Item.builder()
+      .companyId(companyId)
       .code(request.getCode())
       .name(request.getName())
       .price(request.getPrice())
@@ -54,13 +59,15 @@ public class ItemService {
     Member member = memberRepository.findById(memberId)
       .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "회원 정보를 찾을 수 없습니다."));
 
+    Long companyId = member.getCompanyId();
+
     // 키워드 없는 경우는 전체 검색
     List<Item> items;
 
     if (keyword == null || keyword.isBlank()) {
       items = itemRepository.findAll();
     } else {
-      items = itemRepository.searchByKeyword(keyword);
+      items = itemRepository.searchByKeywordAndCompanyId(keyword, companyId);
     }
 
     return items.stream()

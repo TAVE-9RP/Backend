@@ -17,5 +17,5 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
       OR i.name LIKE %:keyword%
       OR i.location LIKE %:keyword%
     """)
-  List<Item> searchByKeyword(@Param("keyword") String keyword);
+  List<Item> searchByKeywordAndCompanyId(@Param("keyword") String keyword, @Param("companyId")Long companyId);
 }

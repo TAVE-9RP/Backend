@@ -30,7 +30,9 @@ public class ItemController {
   @Operation(
     summary = "신규 재고(Item) 생성 API",
     description = """
+            로그인한 직원이 속한 **자신의 회사**에 새로운 재고(Item)를 생성합니다.
             신규 품목(Item)을 생성합니다.
+            
             ✔ quantity는 항상 0으로 생성됩니다.
             ✔ 승인 전이므로 실제 재고 반영이 아닙니다.
             ✔ 생성 후 반환된 itemId로 입고 목록 추가 API를 바로 호출하면 됩니다.
@@ -51,9 +53,11 @@ public class ItemController {
     )
   )
   public BaseResponse<ItemCreateResponse> createItem (
+    @AuthenticationPrincipal CustomUserDetails userDetails,
     @Valid @RequestBody ItemCreateRequest request
   ) {
-    ItemCreateResponse response = itemService.createItem(request);
+    Long memberId = userDetails.getMemberId();
+    ItemCreateResponse response = itemService.createItem(memberId, request);
     return BaseResponse.success(response);
   }
 
@@ -62,6 +66,8 @@ public class ItemController {
   @Operation(
     summary = "기존 재고 검색 API",
     description = """
+      로그인한 직원이 속한 **자신의 회사 재고만** 검색합니다.
+      
       기존 재고(Item)를 키워드로 검색합니다.
       ✔ 재고 번호(code), 품목명(name), 위치(location) 등을 부분 검색합니다.
       ✔ keyword가 비어 있으면 전체 재고를 반환합니다.

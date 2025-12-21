@@ -1,5 +1,6 @@
 package com.nexerp.domain.item.model.entity;
 
+import com.nexerp.domain.company.model.entity.Company;
 import com.nexerp.domain.inventoryitem.model.entity.InventoryItem;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -49,20 +50,26 @@ public class Item {
   @Column(name = "target_stock")
   private Long targetStock;
 
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "company_id", nullable = false)
+  private Long companyId;
+
   @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<InventoryItem> inventoryItems = new ArrayList<>();
 
   @Builder
-  public Item(String code,
+  public Item(
+              Long companyId,
+              String code,
               String name,
               Long price,
-              String unitOfMeasure,
               Long quantity,
               LocalDateTime receivedAt,
               String location,
               LocalDateTime createdAt,
               Long safetyStock,
               Long targetStock) {
+    this.companyId = companyId;
     this.code = code;
     this.name = name;
     this.price = price;
