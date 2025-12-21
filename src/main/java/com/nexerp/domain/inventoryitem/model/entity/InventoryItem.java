@@ -53,6 +53,14 @@ public class InventoryItem {
     this.status = status;
   }
 
+  public void updateStatus(InventoryProcessingStatus status){
+    this.status = status;
+  }
+
+  public void updateProcessedQuantity(Long addedQuantity) {
+    this.processed_quantity += addedQuantity;
+  }
+
   public void updateTargetQuantity(Long quantity) {
     this.quantity = quantity;
   }

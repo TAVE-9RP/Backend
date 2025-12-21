@@ -80,4 +80,10 @@ public class Item {
     this.safetyStock = safetyStock;
     this.targetStock = targetStock;
   }
+
+  public void increaseQuantity(Long addedQuantity) {
+    this.quantity += addedQuantity;
+    // 최근 입고일 업데이트
+    this.receivedAt = LocalDateTime.now();
+  }
 }

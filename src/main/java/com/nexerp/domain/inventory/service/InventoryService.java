@@ -3,6 +3,7 @@ package com.nexerp.domain.inventory.service;
 import com.nexerp.domain.inventory.model.entity.Inventory;
 import com.nexerp.domain.inventory.model.enums.InventoryStatus;
 import com.nexerp.domain.inventory.model.request.InventoryItemAddRequest;
+import com.nexerp.domain.inventory.model.request.InventoryProcessRequest;
 import com.nexerp.domain.inventory.model.request.InventoryTargetQuantityUpdateRequest;
 import com.nexerp.domain.inventory.model.response.InventoryItemAddResponse;
 import com.nexerp.domain.inventory.model.response.InventoryItemResponse;
@@ -153,6 +154,45 @@ public class InventoryService {
     }
 
     inventory.updateStatus(InventoryStatus.PENDING, LocalDateTime.now());
+  }
+
+  @Transactional
+  public void processReceiving(Long memberId, Long inventoryId,
+                               InventoryProcessRequest request) {
+    Inventory inventory = inventoryRepository.findById(inventoryId)
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "입고 업무를 찾을 수 없습니다."));
+
+    validateAssignee(inventoryId, memberId);
+
+    if (inventory.getStatus() != InventoryStatus.IN_PROGRESS) {
+      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "IN_PROGRESS 상태에서만 입고 처리할 수 있습니다.");
+    }
+
+    for (InventoryProcessRequest.ProcessUnit unit : request.getProcess()) {
+
+      InventoryItem inventoryItem = inventoryItemRepository.findById(unit.getInventoryItemId())
+        .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "입고 예정 품목을 찾을 수 없습니다."));
+
+      if(!inventoryItem.getInventory().getId().equals(inventoryId)) {
+        throw new BaseException(GlobalErrorCode.FORBIDDEN, "잘못된 입고 품목입니다.");
+      }
+
+      Long qty = unit.getReceiveQuantity();
+
+      // 현재까지 입고 반영
+      inventoryItem.updateProcessedQuantity(qty);
+
+      // 품목 재고 증가
+      Item item = inventoryItem.getItem();
+      item.increaseQuantity(qty);
+
+      // 상태 갱신
+      if (inventoryItem.getProcessed_quantity() >= inventoryItem.getQuantity()) {
+        inventoryItem.updateStatus(InventoryProcessingStatus.COMPLETED);
+      } else {
+        inventoryItem.updateStatus(InventoryProcessingStatus.IN_PROGRESS);
+      }
+    }
   }
 
   // 담당자 검증

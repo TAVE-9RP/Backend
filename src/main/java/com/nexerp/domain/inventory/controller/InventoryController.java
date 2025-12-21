@@ -2,6 +2,7 @@ package com.nexerp.domain.inventory.controller;
 
 import com.nexerp.domain.inventory.model.request.InventoryCommonUpdateRequest;
 import com.nexerp.domain.inventory.model.request.InventoryItemAddRequest;
+import com.nexerp.domain.inventory.model.request.InventoryProcessRequest;
 import com.nexerp.domain.inventory.model.request.InventoryTargetQuantityUpdateRequest;
 import com.nexerp.domain.inventory.model.response.InventoryItemAddResponse;
 import com.nexerp.domain.inventory.model.response.InventoryItemResponse;
@@ -211,6 +212,25 @@ public class InventoryController {
   ) {
     Long memberId = userDetails.getMemberId();
     inventoryService.requestApproval(memberId, inventoryId);
+    return BaseResponse.success();
+  }
+
+  @PostMapping("/{inventoryId}/process")
+  @PreAuthorize("hasPermission('INVENTORY', 'WRITE')")
+  @Operation(summary = "입고 처리 API",
+  description = """
+    실제 입고된 수량을 반영합니다.
+    IN_PROGRESS 상태에서만 가능
+    Item 재고(quantity) 증가
+    입고 업무 물품(InventoryItem)의 현재 입고된 수량 (processed_quantity) 증가 및 상태 갱신
+    """)
+  public BaseResponse<Void> processingReceiving(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @PathVariable Long inventoryId,
+    @RequestBody @Valid InventoryProcessRequest request
+    ) {
+    Long memberId = userDetails.getMemberId();
+    inventoryService.processReceiving(memberId, inventoryId, request);
     return BaseResponse.success();
   }
 }
