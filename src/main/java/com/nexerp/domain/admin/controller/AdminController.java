@@ -78,7 +78,7 @@ public class AdminController {
   }
 
   // 입고 승인 처리
-  @PostMapping("/{inventoryId}/approve")
+  @PatchMapping("/{inventoryId}/approve")
   @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
   @Operation(summary = "입고 승인 처리(오너)",
   description = """

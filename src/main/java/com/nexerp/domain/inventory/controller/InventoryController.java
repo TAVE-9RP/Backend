@@ -197,7 +197,7 @@ public class InventoryController {
     return BaseResponse.success(result);
   }
 
-  @PostMapping("/{inventoryId}/request-approval")
+  @PatchMapping("/{inventoryId}/request-approval")
   @PreAuthorize("hasPermission('INVENTORY', 'WRITE')")
   @Operation(
     summary = "입고 승인 요청 API",
@@ -215,7 +215,7 @@ public class InventoryController {
     return BaseResponse.success();
   }
 
-  @PostMapping("/{inventoryId}/process")
+  @PatchMapping("/{inventoryId}/process")
   @PreAuthorize("hasPermission('INVENTORY', 'WRITE')")
   @Operation(summary = "입고 처리 API",
   description = """
