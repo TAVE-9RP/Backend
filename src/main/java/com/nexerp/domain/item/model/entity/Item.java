@@ -50,8 +50,7 @@ public class Item {
   @Column(name = "target_stock")
   private Long targetStock;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "company_id", nullable = false)
+  @Column(name = "company_id", nullable = false)
   private Long companyId;
 
   @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
