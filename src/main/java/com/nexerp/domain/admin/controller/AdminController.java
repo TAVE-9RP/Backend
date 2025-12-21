@@ -5,6 +5,7 @@ import com.nexerp.domain.admin.model.request.PermissionUpdateRequest;
 import com.nexerp.domain.admin.model.response.JoinStatusResponse;
 import com.nexerp.domain.admin.model.response.PermissionResponse;
 import com.nexerp.domain.admin.service.AdminService;
+import com.nexerp.domain.inventory.service.InventoryService;
 import com.nexerp.global.common.response.BaseResponse;
 import com.nexerp.global.security.details.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
@@ -73,6 +74,24 @@ public class AdminController {
   ) {
     Long ownerId = userDetails.getMemberId();
     adminService.updateMemberPermissions(ownerId, request);
+    return BaseResponse.success();
+  }
+
+  // 입고 승인 처리
+  @PostMapping("/{inventoryId}/approve")
+  @PreAuthorize("hasPermission('INVENTORY', 'APPROVE')")
+  @Operation(summary = "입고 스인 처리(오너)",
+  description = """
+    오너가 승인 요청된 입고 업무를 승인(IN_PROGRESS) 상태로 변경합니다.
+    PENDING 상태에서만 승인 가능
+    승인 이후 입고 처리 가능
+    """)
+  public BaseResponse<Void> approveInventory(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @PathVariable Long inventoryId
+  ) {
+    Long ownerId = userDetails.getMemberId();
+    adminService.approveInventory(ownerId, inventoryId);
     return BaseResponse.success();
   }
 }

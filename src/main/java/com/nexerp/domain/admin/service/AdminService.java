@@ -7,6 +7,9 @@ import com.nexerp.domain.admin.model.request.PermissionUpdateRequest.PermissionU
 import com.nexerp.domain.admin.model.response.JoinStatusResponse;
 import com.nexerp.domain.admin.model.response.PermissionResponse;
 import com.nexerp.domain.admin.repository.AdminRepository;
+import com.nexerp.domain.inventory.model.entity.Inventory;
+import com.nexerp.domain.inventory.model.enums.InventoryStatus;
+import com.nexerp.domain.inventory.repository.InventoryRepository;
 import com.nexerp.domain.member.model.entity.Member;
 import com.nexerp.domain.member.model.enums.MemberDepartment;
 import com.nexerp.domain.member.model.enums.MemberPosition;
@@ -15,6 +18,8 @@ import com.nexerp.domain.member.model.enums.MemberRole;
 import com.nexerp.domain.member.util.EnumValidatorUtil;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
+
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminService {
 
   private final AdminRepository adminRepository;
+  private final InventoryRepository inventoryRepository;
 
   // 로그인한 OWNER가 속한 회사의 모든 직원 (요청/승인/거절 포함) 조회
   @Transactional(readOnly = true)
@@ -188,6 +194,21 @@ public class AdminService {
 
       responses.add(PermissionResponse.from(member));
     }
+  }
+
+  @Transactional
+  public void approveInventory(Long ownerId, Long inventoryId) {
+
+    Inventory inventory = inventoryRepository.findById(inventoryId)
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "입고 업무를 찾을 수 없습니다."));
+
+    validateOwner(ownerId);
+
+    if (inventory.getStatus() != InventoryStatus.PENDING) {
+      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "PENDING 상태에서만 승인할 수 있습니다.");
+    }
+
+    inventory.updateStatus(InventoryStatus.IN_PROGRESS, LocalDateTime.now());
   }
 
   // 오너인지 검증 후 오너인 경우 오너 반환
