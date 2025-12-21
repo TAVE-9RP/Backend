@@ -79,7 +79,7 @@ public class AdminController {
 
   // 입고 승인 처리
   @PostMapping("/{inventoryId}/approve")
-  @PreAuthorize("hasPermission('INVENTORY', 'APPROVE')")
+  @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
   @Operation(summary = "입고 승인 처리(오너)",
   description = """
     오너가 승인 요청된 입고 업무를 승인(IN_PROGRESS) 상태로 변경합니다.
