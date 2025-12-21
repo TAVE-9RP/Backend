@@ -61,12 +61,13 @@ public class ItemService {
 
     Long companyId = member.getCompanyId();
 
-    // 키워드 없는 경우는 전체 검색
     List<Item> items;
 
+    // 키워드 없으면 회사별 전체
     if (keyword == null || keyword.isBlank()) {
-      items = itemRepository.findAll();
+      items = itemRepository.findAllByCompanyId(companyId);
     } else {
+      // 있으면 회사 + 키워드
       items = itemRepository.searchByKeywordAndCompanyId(keyword, companyId);
     }
 

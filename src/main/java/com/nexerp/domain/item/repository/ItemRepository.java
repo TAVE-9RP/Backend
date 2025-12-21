@@ -10,6 +10,7 @@ import java.util.List;
 public interface ItemRepository extends JpaRepository<Item, Long> {
   boolean existsByCode(String code);
 
+  List<Item> findAllByCompanyId(Long companyId);
   @Query("""
       SELECT i
       FROM Item i
