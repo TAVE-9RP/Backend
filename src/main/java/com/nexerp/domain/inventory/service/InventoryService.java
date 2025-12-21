@@ -195,6 +195,34 @@ public class InventoryService {
     }
   }
 
+  @Transactional
+  public void completeInventory(Long memberId, Long inventoryId) {
+
+    Inventory inventory = inventoryRepository.findById(inventoryId)
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "입고 업무를 찾을 수 없습니다."));
+
+    validateAssignee(inventoryId, memberId);
+
+    // 진행 중(IN_PROGRESS) 상태에서만 완료 가능
+    if (inventory.getStatus() != InventoryStatus.IN_PROGRESS) {
+      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "진행 중(IN_PROGRESS) 상태에서만 업무를 완료할 수 있습니다.");
+    }
+
+
+    // 모든 품목이 완료 상태인지 확인
+    boolean allDone = inventoryItemRepository
+      .findAllByInventoryId(inventoryId)
+      .stream()
+      .allMatch(item -> item.getStatus() == InventoryProcessingStatus.COMPLETED);
+
+    if (!allDone) {
+      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "아직 완료되지 않은 품목이 있습니다.");
+    }
+
+    // 업무 최종 완료
+    inventory.updateStatus(InventoryStatus.COMPLETED, LocalDateTime.now());
+  }
+
   // 담당자 검증
   private void validateAssignee(Long inventoryId, Long memberId) {
     Inventory inventory = inventoryRepository.findById(inventoryId)

@@ -233,4 +233,28 @@ public class InventoryController {
     inventoryService.processReceiving(memberId, inventoryId, request);
     return BaseResponse.success();
   }
+
+  @PreAuthorize("hasPermission('INVENTORY', 'WRITE')")
+  @PatchMapping("/{inventoryId}/complete")
+  @Operation(
+    summary = "입고 업무 최종 완료 처리 API",
+    description = """
+      모든 입고 품목이 완료 상태(COMPLETED)일 때
+      담당자가 '입고 완료' 버튼을 눌러 업무 상태를 COMPLETED로 변경합니다.
+      
+      - 진행 중(IN_PROGRESS) 상태에서만 수행 가능
+      - 하나라도 미완료 품목이 있으면 실패
+      - 담당자로 지정된 직원만 가능
+      """
+  )
+  public BaseResponse<Void> completeInventory(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @PathVariable Long inventoryId
+  ) {
+    Long memberId = userDetails.getMemberId();
+
+    inventoryService.completeInventory(memberId, inventoryId);
+
+    return BaseResponse.success();
+  }
 }
