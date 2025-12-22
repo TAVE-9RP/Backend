@@ -18,7 +18,6 @@ import com.nexerp.domain.project.model.entity.Project;
 import com.nexerp.domain.project.service.ProjectService;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -157,7 +156,6 @@ public class LogisticsService {
     Map<Long, Item> itemMap = foundItems.stream()
       .collect(Collectors.toMap(Item::getId, Function.identity()));
 
-    BigDecimal addedAmount = BigDecimal.ZERO;
     List<LogisticsItem> logisticsItems = new ArrayList<>();
 
     for (CreateLogisticsItemDetail detail : newRequests) {
@@ -168,18 +166,11 @@ public class LogisticsService {
           "ID: " + detail.getItemId() + " 물품을 찾을 수 없습니다.");
       }
 
-      LogisticsItem newItem = LogisticsItem.create(logistics, item,
-        detail.getLogisticsTargetedQuantity());
+      LogisticsItem newItem = LogisticsItem.create(logistics, item);
       logisticsItems.add(newItem);
 
-      if (item.getPrice() != null) {
-        BigDecimal itemTotal = BigDecimal.valueOf(item.getPrice())
-          .multiply(BigDecimal.valueOf(detail.getLogisticsTargetedQuantity()));
-        addedAmount = addedAmount.add(itemTotal);
-      }
     }
 
-    logistics.addTotalPrice(addedAmount);
     logisticsItemRepository.saveAll(logisticsItems);
 
   }
@@ -287,7 +278,6 @@ public class LogisticsService {
       .logisticsRequestedAt(logistics.getRequestedAt())
       .localCompletedAt(logistics.getCompletedAt())
       .logisticsSatus(logistics.getStatus())
-      .logisticsTotalPrice(logistics.getTotalPrice())
       .build();
   }
 

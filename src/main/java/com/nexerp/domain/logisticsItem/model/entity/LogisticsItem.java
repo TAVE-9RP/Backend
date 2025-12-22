@@ -59,12 +59,12 @@ public class LogisticsItem {
   @Column(name = "logistics_shipout_date")
   private LocalDateTime shipoutDate;
 
-  public static LogisticsItem create(Logistics logistics, Item item, Long targetedQuantity) {
+  public static LogisticsItem create(Logistics logistics, Item item) {
     return LogisticsItem.builder()
       .logistics(logistics)
       .item(item)
       .processedQuantity(0L)
-      .targetedQuantity(targetedQuantity)
+      .targetedQuantity(0L)
       .processingStatus(LogisticsProcessingStatus.PENDING)
       .shipoutDate(null)
       .build();

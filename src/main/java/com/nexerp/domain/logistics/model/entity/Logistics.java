@@ -19,7 +19,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -74,10 +73,6 @@ public class Logistics {
   // 관리자로 인한 생성 시각
   @Column(name = "logistic_created_at")
   private LocalDateTime createdAt;
-
-  //업무에 대한 총 판매액
-  @Column(name = "logistic_total_price")
-  private BigDecimal totalPrice;
 
   // 운송 수단
   @Column(name = "logistic_carrier")
@@ -134,15 +129,6 @@ public class Logistics {
     changeStatus(LogisticsSatus.IN_PROGRESS);
 
     this.logisticsItems.forEach(item -> item.changeStatus(LogisticsProcessingStatus.IN_PROGRESS));
-  }
-
-  public void addTotalPrice(BigDecimal additionalAmount) {
-
-    if (this.totalPrice == null) {
-      this.totalPrice = BigDecimal.ZERO;
-    }
-
-    this.totalPrice = this.totalPrice.add(additionalAmount);
   }
 
   public void complete() {
