@@ -1,5 +1,6 @@
 package com.nexerp.domain.logistics.controller;
 
+import com.nexerp.domain.logistics.model.request.LogisticsItemTargetQuantityRequest;
 import com.nexerp.domain.logistics.model.request.LogisticsItemsCreateRequest;
 import com.nexerp.domain.logistics.model.request.LogisticsItemsUpdateRequest;
 import com.nexerp.domain.logistics.model.request.LogisticsUpdateRequest;
@@ -121,6 +122,19 @@ public class LogisticsController {
   ) {
     Long memberId = userDetails.getMemberId();
     logisticsService.completeLogisticsStatus(memberId, logisticsId);
+    return BaseResponse.success();
+  }
+
+  // 목표 출하 수량 + 총 판매액 설정
+  @PatchMapping("/{logisticsId}/items/quantities")
+  @PreAuthorize("hasPermission('LOGISTICS', 'WRITE')")
+  public BaseResponse<Void> updateLogisticsItemTargetTargetQuantity(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @PathVariable Long logisticsId,
+    @Valid @RequestBody LogisticsItemTargetQuantityRequest request
+  ) {
+    Long memberId = userDetails.getMemberId();
+    logisticsService.updateLogisticsItemTargetQuantity(memberId, logisticsId, request.getItems());
     return BaseResponse.success();
   }
 
