@@ -1,6 +1,7 @@
 package com.nexerp.domain.logistics.model.response;
 
 import com.nexerp.domain.logisticsItem.model.enums.LogisticsProcessingStatus;
+import java.math.BigDecimal;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -24,6 +25,9 @@ public class LogisticsItemResponse {
 
   //물품 가격
   Long itemPrice;
+
+  // 물품 총 가격
+  BigDecimal itemTotalPrice;
 
   // 단위
   String unitOfMeasure;
