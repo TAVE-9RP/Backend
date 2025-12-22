@@ -3,6 +3,8 @@ package com.nexerp.domain.logistics.service;
 import com.nexerp.domain.item.model.entity.Item;
 import com.nexerp.domain.item.repository.ItemRepository;
 import com.nexerp.domain.logistics.model.entity.Logistics;
+import com.nexerp.domain.logistics.model.request.LogisticsItemTargetQuantityRequest;
+import com.nexerp.domain.logistics.model.request.LogisticsItemTargetQuantityRequest.ItemTargetQuantityDetail;
 import com.nexerp.domain.logistics.model.request.LogisticsItemsCreateRequest.CreateLogisticsItemDetail;
 import com.nexerp.domain.logistics.model.request.LogisticsItemsUpdateRequest.UpdateLogisticsItemDetail;
 import com.nexerp.domain.logistics.model.request.LogisticsUpdateRequest;
@@ -69,6 +71,7 @@ public class LogisticsService {
     return responseList;
   }
 
+  // Logistics + Project + Company
   @Transactional
   public void updateLogisticsInfo(Long memberId, Long logisticsId,
     LogisticsUpdateRequest request) {
@@ -91,6 +94,7 @@ public class LogisticsService {
 
   }
 
+  // Logistics + Project + Company
   @Transactional
   public void requestLogisticsApproval(Long memberId, Long logisticsId) {
 
@@ -106,6 +110,7 @@ public class LogisticsService {
     logistics.requestApproval();
   }
 
+  // Logistics + Project + Company + LogisticsItems
   @Transactional
   public void approveLogistics(Long ownerId, Long logisticsId) {
     Logistics logistics = logisticsRepository.findWithProjectAndCompanyById(logisticsId)
@@ -120,6 +125,7 @@ public class LogisticsService {
     logistics.approve();
   }
 
+  //Logistics + Project + Company + LogisticsItems + Item
   @Transactional
   public void addItems(Long memberId, Long logisticsId,
     List<CreateLogisticsItemDetail> itemRequests) {
@@ -175,6 +181,7 @@ public class LogisticsService {
 
   }
 
+  //Logistics + Project + Company + LogisticsItems + Item
   @Transactional(readOnly = true)
   public List<LogisticsItemResponse> getLogisticsItems(Long memberId, Long logisticsId) {
     Logistics logistics = logisticsRepository.findWithItemsById(logisticsId)
@@ -196,6 +203,7 @@ public class LogisticsService {
           .processedQuantity(li.getProcessedQuantity())
           .targetedQuantity(li.getTargetedQuantity())
           .itemPrice(item.getPrice())
+          .itemTotalPrice(li.getTotalPrice())
           .unitOfMeasure(item.getUnitOfMeasure())
           .logisticsProcessingStatus(li.getProcessingStatus())
           .build();
@@ -204,6 +212,7 @@ public class LogisticsService {
 
   }
 
+  //Logistics + Project + Company + LogisticsItems + Item
   @Transactional
   public void updateLogisticsItems(Long memberId, Long logisticsId,
     List<UpdateLogisticsItemDetail> itemRequests) {
@@ -258,6 +267,7 @@ public class LogisticsService {
     }
   }
 
+  // Logistics + Project + Company
   @Transactional(readOnly = true)
   public LogisticsDetailsResponse getLogisticsDetails(Long memberId, Long logisticsId) {
     Logistics logistics = logisticsRepository.findWithProjectAndCompanyById(logisticsId)
@@ -281,6 +291,7 @@ public class LogisticsService {
       .build();
   }
 
+  // Logistics + Project + Company + LogisticsItems
   @Transactional
   public void completeLogisticsStatus(Long memberId, Long logisticsId) {
     Logistics logistics = logisticsRepository.findWithProjectAndCompanyById(logisticsId)
@@ -293,5 +304,51 @@ public class LogisticsService {
     }
 
     logistics.complete();
+  }
+
+  //Logistics + Project + Company + LogisticsItems + Item
+  @Transactional
+  public void updateLogisticsItemTargetQuantity(Long memberId, Long logisticsId,
+    List<ItemTargetQuantityDetail> request) {
+    Logistics logistics = logisticsRepository.findWithProjectAndCompanyById(logisticsId)
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "출하 업무를 찾을 수 없습니다."));
+
+    // 회사 검증
+    Long memberCompanyId = memberService.getCompanyIdByMemberId(memberId);
+    if (!memberCompanyId.equals(logistics.getProject().getCompany().getId())) {
+      throw new BaseException(GlobalErrorCode.FORBIDDEN, "다른 회사의 출하 업무에는 접근할 수 없습니다.");
+    }
+
+    Map<Long, Long> targetQtyByItemId = request.stream()
+      .collect(Collectors.toMap(
+        LogisticsItemTargetQuantityRequest.ItemTargetQuantityDetail::getItemId,
+        LogisticsItemTargetQuantityRequest.ItemTargetQuantityDetail::getTargetQuantity,
+        (a, b) -> { // 같은 itemId가 중복으로 들어오면 예외
+          throw new BaseException(GlobalErrorCode.STATE_CONFLICT, "요청에 중복된 itemId가 존재합니다.");
+        }
+      ));
+
+    // 실제 logistics에 포함된 itemId set
+    Set<Long> logisticsItemIds = logistics.getLogisticsItems().stream()
+      .map(li -> li.getItem().getId())
+      .collect(Collectors.toSet());
+
+    // 요청 itemId가 해당 출하업무에 포함된 물품인지 검증
+    for (Long itemId : targetQtyByItemId.keySet()) {
+      if (!logisticsItemIds.contains(itemId)) {
+        throw new BaseException(GlobalErrorCode.NOT_FOUND,
+          "출하 업무에 포함되지 않은 물품입니다. itemId=" + itemId);
+      }
+    }
+
+    // targetedQuantity, totalPrice 반영 (미포함은 기존 유지)
+    for (LogisticsItem logisticsItem : logistics.getLogisticsItems()) {
+      Long itemId = logisticsItem.getItem().getId();
+      Long targetQty = targetQtyByItemId.get(itemId);
+      if (targetQty != null) {
+        logisticsItem.applyTargetQuantity(targetQty);
+      }
+    }
+
   }
 }
