@@ -3,6 +3,8 @@ package com.nexerp.domain.logisticsItem.model.entity;
 import com.nexerp.domain.item.model.entity.Item;
 import com.nexerp.domain.logistics.model.entity.Logistics;
 import com.nexerp.domain.logisticsItem.model.enums.LogisticsProcessingStatus;
+import com.nexerp.global.common.exception.BaseException;
+import com.nexerp.global.common.exception.GlobalErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -14,6 +16,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -50,6 +53,10 @@ public class LogisticsItem {
   @Column(name = "logistics_targeted_quantity", nullable = false)
   private Long targetedQuantity;
 
+  // 총 판매액
+  @Column(name = "logistic_total_price")
+  private BigDecimal totalPrice;
+
   //물품별 처리 상태(PENDING, IN_PROGRESS, COMPLETED)
   @Enumerated(EnumType.STRING)
   @Column(name = "logistics_processing_status", nullable = false)
@@ -68,6 +75,21 @@ public class LogisticsItem {
       .processingStatus(LogisticsProcessingStatus.PENDING)
       .shipoutDate(null)
       .build();
+  }
+
+  public void applyTargetQuantity(Long targetQuantity) {
+    if (targetQuantity == null || targetQuantity < 1) {
+      throw new BaseException(GlobalErrorCode.STATE_CONFLICT, "목표 수량은 1 이상이어야 합니다.");
+    }
+
+    Long price = this.item.getPrice();
+
+    if (price == null) {
+      throw new BaseException(GlobalErrorCode.STATE_CONFLICT, "물품 가격이 없어 총액을 계산할 수 없습니다.");
+    }
+
+    this.targetedQuantity = targetQuantity;
+    this.totalPrice = BigDecimal.valueOf(price).multiply(BigDecimal.valueOf(targetQuantity));
   }
 
   public void changeStatus(LogisticsProcessingStatus status) {
