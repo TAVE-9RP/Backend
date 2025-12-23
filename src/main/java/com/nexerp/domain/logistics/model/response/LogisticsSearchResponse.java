@@ -1,6 +1,7 @@
 package com.nexerp.domain.logistics.model.response;
 
 import com.nexerp.domain.logistics.model.entity.Logistics;
+import com.nexerp.domain.logistics.model.enums.LogisticsSatus;
 import com.nexerp.domain.project.model.entity.Project;
 import java.time.LocalDate;
 import java.util.List;
@@ -14,6 +15,8 @@ public class LogisticsSearchResponse {
   // 출하 업무 id
   private final Long logisticsId;
 
+  private final String projectNumber;
+
   // 출하 업무 제목
   private final String logisticsTitle;
 
@@ -25,6 +28,8 @@ public class LogisticsSearchResponse {
 
   // 출하 업무 담당자
   private final List<String> projectMembers;
+
+  private final LogisticsSatus logisticsSatus;
 
   public static LogisticsSearchResponse from(Project project) {
 
@@ -40,10 +45,12 @@ public class LogisticsSearchResponse {
 
     return LogisticsSearchResponse.builder()
       .logisticsId(logistics.getId())
+      .projectNumber(project.getNumber())
       .logisticsTitle(logistics.getTitle())
       .customer(project.getCustomer())
       .requestedAt(logistics.getRequestedAt())
       .projectMembers(List.copyOf(memberNames))
+      .logisticsSatus(logistics.getStatus())
       .build();
   }
 
