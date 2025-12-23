@@ -1,7 +1,7 @@
 package com.nexerp.domain.logistics.model.response;
 
 import com.nexerp.domain.logistics.model.entity.Logistics;
-import com.nexerp.domain.logistics.model.enums.LogisticsSatus;
+import com.nexerp.domain.logistics.model.enums.LogisticsStatus;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.Builder;
@@ -25,7 +25,7 @@ public class LogisticsDetailsResponse {
 
   private final LocalDateTime logisticsCompletedAt;
 
-  private final LogisticsSatus logisticsSatus;
+  private final LogisticsStatus logisticsStatus;
 
   public static LogisticsDetailsResponse from(Logistics logistics) {
     return LogisticsDetailsResponse.builder()
@@ -36,7 +36,7 @@ public class LogisticsDetailsResponse {
       .logisticsCarrierCompany(logistics.getCarrierCompany())
       .logisticsRequestedAt(logistics.getRequestedAt())
       .logisticsCompletedAt(logistics.getCompletedAt())
-      .logisticsSatus(logistics.getStatus())
+      .logisticsStatus(logistics.getStatus())
       .build();
   }
 
