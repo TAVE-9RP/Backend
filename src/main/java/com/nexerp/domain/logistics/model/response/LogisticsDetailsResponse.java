@@ -1,5 +1,6 @@
 package com.nexerp.domain.logistics.model.response;
 
+import com.nexerp.domain.logistics.model.entity.Logistics;
 import com.nexerp.domain.logistics.model.enums.LogisticsSatus;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -10,20 +11,33 @@ import lombok.Getter;
 @Builder
 public class LogisticsDetailsResponse {
 
-  String projectNumber;
+  private final String projectNumber;
 
-  String logisticsTitle;
+  private final String logisticsTitle;
 
-  String logisticsDescription;
+  private final String logisticsDescription;
 
-  String logisticsCarrier;
+  private final String logisticsCarrier;
 
-  String logisticsCarrierCompany;
+  private final String logisticsCarrierCompany;
 
-  LocalDate logisticsRequestedAt;
+  private final LocalDate logisticsRequestedAt;
 
-  LocalDateTime localCompletedAt;
+  private final LocalDateTime logisticsCompletedAt;
 
-  LogisticsSatus logisticsSatus;
+  private final LogisticsSatus logisticsSatus;
+
+  public static LogisticsDetailsResponse from(Logistics logistics) {
+    return LogisticsDetailsResponse.builder()
+      .projectNumber(logistics.getProject().getNumber())
+      .logisticsTitle(logistics.getTitle())
+      .logisticsDescription(logistics.getDescription())
+      .logisticsCarrier(logistics.getCarrier())
+      .logisticsCarrierCompany(logistics.getCarrierCompany())
+      .logisticsRequestedAt(logistics.getRequestedAt())
+      .logisticsCompletedAt(logistics.getCompletedAt())
+      .logisticsSatus(logistics.getStatus())
+      .build();
+  }
 
 }
