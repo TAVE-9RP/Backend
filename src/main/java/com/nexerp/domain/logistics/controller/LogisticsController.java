@@ -30,30 +30,33 @@ public class LogisticsController {
 
   private final LogisticsService logisticsService;
 
+  // 출하 업무 전체 조회
   @GetMapping
   @PreAuthorize("hasPermission('LOGISTICS', 'READ')")
-  public BaseResponse<List<LogisticsSearchResponse>> getLogisticsList(
+  public BaseResponse<List<LogisticsSearchResponse>> getCompanyLogisticsSummaries(
     @AuthenticationPrincipal CustomUserDetails userDetails) {
     Long memberId = userDetails.getMemberId();
-    List<LogisticsSearchResponse> result = logisticsService.searchLogisticsByMemberId(memberId);
+    List<LogisticsSearchResponse> result = logisticsService.getCompanyLogisticsSummaries(memberId);
 
     return BaseResponse.success(result);
   }
 
+  // 출하 업무 정보 수정
   @PatchMapping("/{logisticsId}")
   @PreAuthorize("hasPermission('LOGISTICS', 'WRITE')")
-  public BaseResponse<Void> updateLogisticsInfo(
+  public BaseResponse<Void> updateLogisticsDetails(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @PathVariable Long logisticsId,
     @Valid @RequestBody LogisticsUpdateRequest logisticsUpdateRequest
   ) {
     Long memberId = userDetails.getMemberId();
 
-    logisticsService.updateLogisticsInfo(memberId, logisticsId, logisticsUpdateRequest);
+    logisticsService.updateLogisticsDetails(memberId, logisticsId, logisticsUpdateRequest);
 
     return BaseResponse.success();
   }
 
+  // 출하 업무 승인 요청
   @PatchMapping("/{logisticsId}/status")
   @PreAuthorize("hasPermission('LOGISTICS', 'WRITE')")
   public BaseResponse<Void> requestLogisticsApproval(
@@ -65,6 +68,7 @@ public class LogisticsController {
     return BaseResponse.success();
   }
 
+  // 출하 물품 추가
   @PostMapping("/{logisticsId}/items")
   @PreAuthorize("hasPermission('LOGISTICS', 'WRITE')")
   public BaseResponse<Void> createLogisticsItem(
@@ -73,10 +77,11 @@ public class LogisticsController {
     @Valid @RequestBody LogisticsItemsCreateRequest request
   ) {
     Long memberId = userDetails.getMemberId();
-    logisticsService.addItems(memberId, logisticsId, request.getItems());
+    logisticsService.addLogisticsItems(memberId, logisticsId, request.getItemId());
     return BaseResponse.success();
   }
 
+  // 출하 물품 조회
   @GetMapping("/{logisticsId}/items")
   @PreAuthorize("hasPermission('LOGISTICS', 'READ')")
   public BaseResponse<List<LogisticsItemResponse>> getLogisticsItems(
@@ -89,15 +94,16 @@ public class LogisticsController {
     return BaseResponse.success(responses);
   }
 
+  // 출하
   @PatchMapping("/{logisticsId}/items")
   @PreAuthorize("hasPermission('LOGISTICS', 'WRITE')")
-  public BaseResponse<Void> updateLogisticsItem(
+  public BaseResponse<Void> updateLogisticsItemProgress(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @PathVariable Long logisticsId,
     @Valid @RequestBody LogisticsItemsUpdateRequest request
   ) {
     Long memberId = userDetails.getMemberId();
-    logisticsService.updateLogisticsItems(memberId, logisticsId, request.getItems());
+    logisticsService.updateLogisticsItemProgress(memberId, logisticsId, request.getItems());
     return BaseResponse.success();
   }
 
@@ -116,25 +122,25 @@ public class LogisticsController {
   //업무 완료 처리
   @PatchMapping("/{logisticsId}/status/complete")
   @PreAuthorize("hasPermission('LOGISTICS', 'WRITE')")
-  public BaseResponse<Void> completeLogisticsStatus(
+  public BaseResponse<Void> completeLogistics(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @PathVariable Long logisticsId
   ) {
     Long memberId = userDetails.getMemberId();
-    logisticsService.completeLogisticsStatus(memberId, logisticsId);
+    logisticsService.completeLogistics(memberId, logisticsId);
     return BaseResponse.success();
   }
 
   // 목표 출하 수량 + 총 판매액 설정
   @PatchMapping("/{logisticsId}/items/quantities")
   @PreAuthorize("hasPermission('LOGISTICS', 'WRITE')")
-  public BaseResponse<Void> updateLogisticsItemTargetTargetQuantity(
+  public BaseResponse<Void> updateTargetQuantities(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @PathVariable Long logisticsId,
     @Valid @RequestBody LogisticsItemTargetQuantityRequest request
   ) {
     Long memberId = userDetails.getMemberId();
-    logisticsService.updateLogisticsItemTargetQuantity(memberId, logisticsId, request.getItems());
+    logisticsService.updateTargetQuantities(memberId, logisticsId, request.getItems());
     return BaseResponse.success();
   }
 
