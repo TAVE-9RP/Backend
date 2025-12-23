@@ -13,9 +13,12 @@ import com.nexerp.global.common.response.BaseResponse;
 import com.nexerp.global.security.details.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -96,21 +99,23 @@ public class InventoryController {
         주의  
         - 실제 재고(Item.quantity) 수량에는 반영되지 않습니다.  
         - 승인 후(IN_PROGRESS)에는 품목 추가가 불가능합니다.
-        """
-  )
-  @io.swagger.v3.oas.annotations.parameters.RequestBody(
-    description = """
-        **여러 개의 itemId를 받아 일괄 추가하는 요청 형식**
-
-        예시:
-        ```json
-        {
-          "itemIds": [1, 3, 5]
-        }
-        ```
         """,
-    required = true
+    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+    description = "추가 파라미터 정보",
+    required = true,
+    content = @Content(
+      mediaType = "application/json",
+      schema = @Schema(implementation = InventoryCommonUpdateRequest.class),
+      examples = @ExampleObject(
+        name = "입고 예정 품목 추가 요청 형식",
+        value = """
+          {
+           "itemIds": [1, 3, 5]
+          }
+          """
+      )
   )
+  ))
   public BaseResponse<InventoryItemAddResponse> addInventoryItems(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @PathVariable Long inventoryId,
@@ -136,21 +141,26 @@ public class InventoryController {
         이미 존재하는 Inventory_Item의 quantity 필드만 변경  
         processed_quantity(현재 입고 수량)에는 영향을 주지 않음  
         담당자로 지정된 멤버만 수정 가능  
-        """
-  )
-  @io.swagger.v3.oas.annotations.parameters.RequestBody(
+        """,
+    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+    description = "추가 파라미터 정보",
     required = true,
-    description = """
-      요청 예시:
-        ```json
-        {
-          "updates": [
-            { "inventoryItemId": 10, "targetQuantity": 50 },
-            { "inventoryItemId": 11, "targetQuantity": 120 }
-          ]
-        }
-        ```
-      """
+    content = @Content(
+      mediaType = "application/json",
+      schema = @Schema(implementation = InventoryCommonUpdateRequest.class),
+      examples = @ExampleObject(
+        name = "목표 수량 일괄 수정 요청 형식",
+        value = """
+          {
+             "updates": [
+              { "inventoryItemId": 10, "targetQuantity": 50 },
+              { "inventoryItemId": 11, "targetQuantity": 120 }
+            ]
+          }
+          """
+      )
+
+  ))
   )
   public BaseResponse<Void> updateTargetQuantities(
     @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -174,23 +184,35 @@ public class InventoryController {
 
         승인 요청 전/후 모두 조회 가능
         목표 입고 수량(quantity), 현재 입고 수량(processed_quantity), 상태(status) 등을 반환
-        반환 예시:
-        ```json
-        [
-          {
-            "inventoryItemId": 10,
-            "itemId": 3,
-            "itemCode": "A-100",
-            "itemName": "물품명",
-            "price": 2000,
-            "targetQuantity": 50,
-            "processedQuantity": 0,
-            "status": "NOT_STARTED"
-          }
-        ]
-        ```
         """
   )
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      description = "입고 품목 목록 조회 성공",
+      content = @Content(
+        mediaType = "application/json",
+        array = @ArraySchema(schema = @Schema(implementation = InventoryItemResponse.class)),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+                    [
+                      {
+                        "inventoryItemId": 10,
+                        "itemId": 3,
+                        "itemCode": "A-100",
+                        "itemName": "물품명",
+                        "price": 2000,
+                        "targetQuantity": 50,
+                        "processedQuantity": 0,
+                        "status": "NOT_STARTED"
+                      }
+                    ]
+                    """
+        )
+      )
+    )
+  })
   public BaseResponse<List<InventoryItemResponse>> getInventoryItems(
     @PathVariable Long inventoryId
   ) {
@@ -273,22 +295,33 @@ public class InventoryController {
     - assigneeSummary (입고 담당자 기준)
     - requestedAt
     - status
-    
-    반환 예시:
-        ```json
-        [
-          {
-            "inventoryId": 5,
-            "projectNumber": "C01-25-001",
-            "title": "삼성 물산 수출 건",
-            "itemSummary": "애플망고 외 2개",
-            "assigneeSummary": "김철수 외 1명",
-            "requestedAt": "2025-12-21T14:22:00",
-            "status": "IN_PROGRESS"
-          }
-        ]
-        ```
     """)
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      description = "입고 업무 전체 조회 성공",
+      content = @Content(
+        mediaType = "application/json",
+        array = @ArraySchema(schema = @Schema(implementation = InventorySummaryResponse.class)),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+                    [
+                      {
+                        "inventoryId": 5,
+                        "projectNumber": "C01-25-001",
+                        "title": "삼성 물산 수출 건",
+                        "itemSummary": "애플망고 외 2개",
+                        "assigneeSummary": "김철수 외 1명",
+                        "requestedAt": "2025-12-21T14:22:00",
+                        "status": "IN_PROGRESS"
+                      }
+                    ]
+                    """
+        )
+      )
+    )
+  })
   public BaseResponse<List<InventorySummaryResponse>> getInventoryList(
     @AuthenticationPrincipal CustomUserDetails userDetails
   ) {
@@ -312,22 +345,33 @@ public class InventoryController {
     - requestedAt
     - description
     - status
-    
-    반환 예시:
-        ```json
-        [
-          {
-            "inventoryId": 5,
-            "projectNumber": "C01-25-001",
-            "assignees": ["김철수", "이영희"],
-            "title": "삼성 물산 수출 건",
-            "requestedAt": "2025-12-21T14:22:00",
-            "description": "과일류 입고 처리",
-            "status": "IN_PROGRESS"
-          }
-        ]
-        ```
     """)
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      description = "입고 업무 상세 조회 성공",
+      content = @Content(
+        mediaType = "application/json",
+        array = @ArraySchema(schema = @Schema(implementation = InventoryDetailResponse.class)),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+                    [
+                      {
+                        "inventoryId": 5,
+                        "projectNumber": "C01-25-001",
+                        "assignees": ["김철수", "이영희"],
+                        "title": "삼성 물산 수출 건",
+                        "requestedAt": "2025-12-21T14:22:00",
+                        "description": "과일류 입고 처리",
+                        "status": "IN_PROGRESS"
+                      }
+                    ]
+                    """
+        )
+      )
+    )
+  })
   public BaseResponse<InventoryDetailResponse> getInventoryDetail(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @PathVariable Long inventoryId
