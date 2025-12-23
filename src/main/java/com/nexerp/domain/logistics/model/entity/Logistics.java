@@ -1,6 +1,6 @@
 package com.nexerp.domain.logistics.model.entity;
 
-import com.nexerp.domain.logistics.model.enums.LogisticsSatus;
+import com.nexerp.domain.logistics.model.enums.LogisticsStatus;
 import com.nexerp.domain.logisticsItem.model.entity.LogisticsItem;
 import com.nexerp.domain.logisticsItem.model.enums.LogisticsProcessingStatus;
 import com.nexerp.domain.project.model.entity.Project;
@@ -68,7 +68,7 @@ public class Logistics {
   // (업무할당/승인대기/ 진행 중 / 출하 완료 ) 완료 로그 값
   @Column(name = "logistics_status", nullable = false)
   @Enumerated(EnumType.STRING)
-  private LogisticsSatus status;
+  private LogisticsStatus status;
 
   // 관리자로 인한 생성 시각
   @Column(name = "logistic_created_at")
@@ -85,7 +85,7 @@ public class Logistics {
   public static Logistics assign(Project project) {
     return Logistics.builder()
       .project(project)
-      .status(LogisticsSatus.ASSIGNED)
+      .status(LogisticsStatus.ASSIGNED)
       .createdAt(LocalDateTime.now())
       .build();
 
@@ -107,32 +107,32 @@ public class Logistics {
     }
   }
 
-  public void changeStatus(LogisticsSatus status) {
+  public void changeStatus(LogisticsStatus status) {
     this.status = status;
   }
 
   public void requestApproval() {
 
-    if (this.status != LogisticsSatus.ASSIGNED) {
+    if (this.status != LogisticsStatus.ASSIGNED) {
       throw new BaseException(GlobalErrorCode.STATE_CONFLICT, "할당 단계에서만 승인 요청이 가능합니다.");
     }
 
     this.requestedAt = LocalDate.now();
-    changeStatus(LogisticsSatus.APPROVAL_PENDING);
+    changeStatus(LogisticsStatus.APPROVAL_PENDING);
   }
 
   public void approve() {
-    if (this.status != LogisticsSatus.APPROVAL_PENDING) {
+    if (this.status != LogisticsStatus.APPROVAL_PENDING) {
       throw new BaseException(GlobalErrorCode.STATE_CONFLICT, "승인 대기에서만 승인 가능합니다.");
     }
 
-    changeStatus(LogisticsSatus.IN_PROGRESS);
+    changeStatus(LogisticsStatus.IN_PROGRESS);
 
     this.logisticsItems.forEach(item -> item.changeStatus(LogisticsProcessingStatus.IN_PROGRESS));
   }
 
   public void complete() {
-    if (this.status != LogisticsSatus.IN_PROGRESS) {
+    if (this.status != LogisticsStatus.IN_PROGRESS) {
       throw new BaseException(GlobalErrorCode.STATE_CONFLICT, "진행 중에서만 완료 가능합니다.");
     }
 
@@ -144,6 +144,6 @@ public class Logistics {
     }
 
     this.completedAt = LocalDateTime.now();
-    changeStatus(LogisticsSatus.COMPLETED);
+    changeStatus(LogisticsStatus.COMPLETED);
   }
 }
