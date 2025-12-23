@@ -72,14 +72,7 @@ public class ItemService {
     }
 
     return items.stream()
-      .map(i -> ItemSearchResponse.builder()
-        .itemId(i.getId())
-        .code(i.getCode())
-        .name(i.getName())
-        .quantity(i.getQuantity())
-        .location(i.getLocation())
-        .price(i.getPrice())
-        .build())
+      .map(ItemSearchResponse::from)
       .toList();
   }
 }

@@ -42,6 +42,7 @@ public class InventoryService {
   private final InventoryItemRepository inventoryItemRepository;
   private final MemberRepository memberRepository;
 
+  @Transactional
   public void updateInventoryCommonInfo(
     Long inventoryId,
     Long memberId,
@@ -268,15 +269,9 @@ public class InventoryService {
             + " 외 " + (members.size() - 1) + "명";
         }
 
-        return InventorySummaryResponse.builder()
-          .inventoryId(inv.getId())
-          .projectNumber(inv.getProject().getNumber())
-          .title(inv.getTitle())
-          .itemSummary(itemSummary)
-          .assigneeSummary(assigneeSummary)
-          .requestedAt(inv.getRequestedAt())
-          .status(inv.getStatus())
-          .build();
+        return InventorySummaryResponse.from(
+          inv, itemSummary, assigneeSummary
+        );
       })
       .toList();
   }
@@ -298,15 +293,9 @@ public class InventoryService {
       .map(Member::getName)
       .toList();
 
-    return InventoryDetailResponse.builder()
-      .inventoryId(inventory.getId())
-      .projectNumber(inventory.getProject().getNumber())
-      .assignees(assignees)
-      .title(inventory.getTitle())
-      .requestedAt(inventory.getRequestedAt())
-      .description(inventory.getDescription())
-      .status(inventory.getStatus())
-      .build();
+    return InventoryDetailResponse.from(
+      inventory, assignees
+    );
   }
 
   // 담당자 검증
