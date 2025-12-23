@@ -92,6 +92,16 @@ public class LogisticsItem {
     this.totalPrice = BigDecimal.valueOf(price).multiply(BigDecimal.valueOf(targetQuantity));
   }
 
+  public void completedLogisticsItem() {
+    this.shipoutDate = LocalDateTime.now();
+    changeStatus(LogisticsProcessingStatus.COMPLETED);
+  }
+
+  public void undoCompletedLogisticsItem() {
+    this.shipoutDate = null;
+    changeStatus(LogisticsProcessingStatus.IN_PROGRESS);
+  }
+
   public void changeStatus(LogisticsProcessingStatus status) {
     this.processingStatus = status;
   }
