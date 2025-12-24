@@ -14,6 +14,8 @@ public class LogisticsItemResponse {
 
   private final Long itemId;
 
+  private final Long logisticsItemId;
+
   //물품 코드
   private final String itemCode;
 
@@ -39,6 +41,7 @@ public class LogisticsItemResponse {
 
     return LogisticsItemResponse.builder()
       .itemId(item.getId())
+      .logisticsItemId(logisticsItem.getId())
       .itemCode(item.getCode())
       .itemName(item.getName())
       .processedQuantity(logisticsItem.getProcessedQuantity())
