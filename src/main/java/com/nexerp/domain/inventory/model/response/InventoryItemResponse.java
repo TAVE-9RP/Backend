@@ -16,7 +16,7 @@ public class InventoryItemResponse {
   private final Long itemPrice;
   private final Long targetQuantity;
   private final Long processedQuantity;
-  private InventoryProcessingStatus status;
+  private InventoryProcessingStatus inventoryProcessingStatus;
 
   public static InventoryItemResponse from(InventoryItem item) {
     return InventoryItemResponse.builder()
@@ -27,7 +27,7 @@ public class InventoryItemResponse {
       .itemPrice(item.getItem().getPrice())
       .targetQuantity(item.getQuantity())
       .processedQuantity(item.getProcessed_quantity())
-      .status(item.getStatus())
+      .inventoryProcessingStatus(item.getStatus())
       .build();
   }
 }

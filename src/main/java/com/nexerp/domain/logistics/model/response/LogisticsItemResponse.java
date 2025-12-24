@@ -12,9 +12,9 @@ import lombok.Getter;
 @Builder
 public class LogisticsItemResponse {
 
-  private final Long itemId;
-
   private final Long logisticsItemId;
+
+  private final Long itemId;
 
   //물품 코드
   private final String itemCode;
@@ -22,14 +22,14 @@ public class LogisticsItemResponse {
   //물품이름
   private final String itemName;
 
-  //물품 출하량
-  private final Long processedQuantity;
+  //물품 가격
+  private final Long itemPrice;
 
   //목표 출하 수량
   private final Long targetedQuantity;
 
-  //물품 가격
-  private final Long itemPrice;
+  //물품 출하량
+  private final Long processedQuantity;
 
   // 물품 총 가격
   private final BigDecimal itemTotalPrice;
@@ -44,9 +44,9 @@ public class LogisticsItemResponse {
       .logisticsItemId(logisticsItem.getId())
       .itemCode(item.getCode())
       .itemName(item.getName())
-      .processedQuantity(logisticsItem.getProcessedQuantity())
-      .targetedQuantity(logisticsItem.getTargetedQuantity())
       .itemPrice(item.getPrice())
+      .targetedQuantity(logisticsItem.getTargetedQuantity())
+      .processedQuantity(logisticsItem.getProcessedQuantity())
       .itemTotalPrice(logisticsItem.getTotalPrice())
       .logisticsProcessingStatus(logisticsItem.getProcessingStatus())
       .build();
