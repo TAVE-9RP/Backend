@@ -1,7 +1,7 @@
 package com.nexerp.domain.logistics.model.response;
 
 import com.nexerp.domain.logistics.model.entity.Logistics;
-import com.nexerp.domain.logistics.model.enums.LogisticsStatus;
+import com.nexerp.global.common.model.TaskStatus;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.Builder;
@@ -18,7 +18,7 @@ public class LogisticsDetailsResponse {
   private final String logisticsCarrier;
   private final String logisticsCarrierCompany;
   private final LocalDate logisticsRequestedAt;
-  private final LogisticsStatus logisticsStatus;
+  private final TaskStatus logisticsStatus;
 
   public static LogisticsDetailsResponse from(Logistics logistics, List<String> assignees) {
     return LogisticsDetailsResponse.builder()

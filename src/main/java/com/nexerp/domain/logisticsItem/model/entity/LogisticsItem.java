@@ -2,9 +2,9 @@ package com.nexerp.domain.logisticsItem.model.entity;
 
 import com.nexerp.domain.item.model.entity.Item;
 import com.nexerp.domain.logistics.model.entity.Logistics;
-import com.nexerp.domain.logisticsItem.model.enums.LogisticsProcessingStatus;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
+import com.nexerp.global.common.model.TaskProcessingStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -60,7 +60,7 @@ public class LogisticsItem {
   //물품별 처리 상태(PENDING, IN_PROGRESS, COMPLETED)
   @Enumerated(EnumType.STRING)
   @Column(name = "logistics_processing_status", nullable = false)
-  private LogisticsProcessingStatus processingStatus;
+  private TaskProcessingStatus processingStatus;
 
   // 물품별 출하 완료일
   @Column(name = "logistics_shipout_date")
@@ -68,13 +68,13 @@ public class LogisticsItem {
 
   public static LogisticsItem create(Logistics logistics, Item item) {
     return LogisticsItem.builder()
-      .logistics(logistics)
-      .item(item)
-      .processedQuantity(0L)
-      .targetedQuantity(0L)
-      .processingStatus(LogisticsProcessingStatus.NOT_STARTED)
-      .shipoutDate(null)
-      .build();
+        .logistics(logistics)
+        .item(item)
+        .processedQuantity(0L)
+        .targetedQuantity(0L)
+        .processingStatus(TaskProcessingStatus.NOT_STARTED)
+        .shipoutDate(null)
+        .build();
   }
 
   public void applyTargetQuantity(Long targetQuantity) {
@@ -89,10 +89,10 @@ public class LogisticsItem {
     if (this.shipoutDate == null) {
       this.shipoutDate = LocalDateTime.now();
     }
-    changeStatus(LogisticsProcessingStatus.COMPLETED);
+    changeStatus(TaskProcessingStatus.COMPLETED);
   }
 
-  public void changeStatus(LogisticsProcessingStatus status) {
+  public void changeStatus(TaskProcessingStatus status) {
     this.processingStatus = status;
   }
 
@@ -109,7 +109,7 @@ public class LogisticsItem {
     // 현재 출하량 증가
     this.processedQuantity += processedQuantity;
     this.totalPrice = BigDecimal.valueOf(price)
-      .multiply(BigDecimal.valueOf(this.processedQuantity));
+        .multiply(BigDecimal.valueOf(this.processedQuantity));
   }
 
 }

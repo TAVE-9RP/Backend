@@ -2,7 +2,7 @@ package com.nexerp.domain.logistics.model.response;
 
 import com.nexerp.domain.item.model.entity.Item;
 import com.nexerp.domain.logisticsItem.model.entity.LogisticsItem;
-import com.nexerp.domain.logisticsItem.model.enums.LogisticsProcessingStatus;
+import com.nexerp.global.common.model.TaskProcessingStatus;
 import java.math.BigDecimal;
 import java.util.List;
 import lombok.Builder;
@@ -34,7 +34,7 @@ public class LogisticsItemResponse {
   // 물품 총 가격
   private final BigDecimal itemTotalPrice;
 
-  private final LogisticsProcessingStatus logisticsProcessingStatus;
+  private final TaskProcessingStatus logisticsProcessingStatus;
 
   public static LogisticsItemResponse from(LogisticsItem logisticsItem) {
     Item item = logisticsItem.getItem();

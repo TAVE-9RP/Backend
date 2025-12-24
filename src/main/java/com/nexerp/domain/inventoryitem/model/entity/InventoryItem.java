@@ -1,9 +1,19 @@
 package com.nexerp.domain.inventoryitem.model.entity;
 
 import com.nexerp.domain.inventory.model.entity.Inventory;
-import com.nexerp.domain.inventoryitem.model.enums.InventoryProcessingStatus;
 import com.nexerp.domain.item.model.entity.Item;
-import jakarta.persistence.*;
+import com.nexerp.global.common.model.TaskProcessingStatus;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -38,14 +48,14 @@ public class InventoryItem {
 
   @Enumerated(EnumType.STRING)
   @Column(name = "inventory_processing_status", nullable = false)
-  private InventoryProcessingStatus status;
+  private TaskProcessingStatus status;
 
   @Builder
   public InventoryItem(Inventory inventory,
-                       Item item,
-                       Long quantity,
-                       Long processed_quantity,
-                       InventoryProcessingStatus status) {
+    Item item,
+    Long quantity,
+    Long processed_quantity,
+    TaskProcessingStatus status) {
     this.inventory = inventory;
     this.item = item;
     this.quantity = quantity; // 목표 입고 수량
@@ -53,7 +63,7 @@ public class InventoryItem {
     this.status = status;
   }
 
-  public void updateStatus(InventoryProcessingStatus status){
+  public void updateStatus(TaskProcessingStatus status) {
     this.status = status;
   }
 

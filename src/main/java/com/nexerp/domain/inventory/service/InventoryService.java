@@ -1,7 +1,6 @@
 package com.nexerp.domain.inventory.service;
 
 import com.nexerp.domain.inventory.model.entity.Inventory;
-import com.nexerp.domain.inventory.model.enums.InventoryStatus;
 import com.nexerp.domain.inventory.model.request.InventoryCommonUpdateRequest;
 import com.nexerp.domain.inventory.model.request.InventoryItemAddRequest;
 import com.nexerp.domain.inventory.model.request.InventoryProcessRequest;
@@ -12,7 +11,6 @@ import com.nexerp.domain.inventory.model.response.InventoryItemResponse;
 import com.nexerp.domain.inventory.model.response.InventorySummaryResponse;
 import com.nexerp.domain.inventory.repository.InventoryRepository;
 import com.nexerp.domain.inventoryitem.model.entity.InventoryItem;
-import com.nexerp.domain.inventoryitem.model.enums.InventoryProcessingStatus;
 import com.nexerp.domain.inventoryitem.repository.InventoryItemRepository;
 import com.nexerp.domain.item.model.entity.Item;
 import com.nexerp.domain.item.repository.ItemRepository;
@@ -23,6 +21,8 @@ import com.nexerp.domain.projectmember.model.entity.ProjectMember;
 import com.nexerp.domain.projectmember.repository.ProjectMemberRepository;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
+import com.nexerp.global.common.model.TaskProcessingStatus;
+import com.nexerp.global.common.model.TaskStatus;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,7 +54,7 @@ public class InventoryService {
       .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "입고 업무를 찾을 수 없습니다."));
 
     // 상태 검증: 승인 요청(PENDING) 이후에는 수정 불가
-    if (inv.getStatus() != InventoryStatus.ASSIGNED) {
+    if (inv.getStatus() != TaskStatus.ASSIGNED) {
       throw new BaseException(GlobalErrorCode.BAD_REQUEST, "ASSIGNED 상태에서만 수정할 수 있습니다.");
     }
 
@@ -92,7 +92,7 @@ public class InventoryService {
         .item(item)
         .quantity(0L) // 목표 수량은 별도로 입력
         .processed_quantity(0L)
-        .status(InventoryProcessingStatus.NOT_STARTED)
+        .status(TaskProcessingStatus.NOT_STARTED)
         .build();
 
       InventoryItem saved = inventoryItemRepository.save(inventoryItem);
@@ -113,7 +113,7 @@ public class InventoryService {
 
     validateAssignee(inventoryId, memberId);
 
-    if (inventory.getStatus() != InventoryStatus.ASSIGNED) {
+    if (inventory.getStatus() != TaskStatus.ASSIGNED) {
       throw new BaseException(GlobalErrorCode.BAD_REQUEST, "승인 요청 전까지만 설정 가능합니다.");
     }
 
@@ -149,7 +149,7 @@ public class InventoryService {
 
     validateAssignee(inventoryId, memberId);
 
-    if (inventory.getStatus() != InventoryStatus.ASSIGNED) {
+    if (inventory.getStatus() != TaskStatus.ASSIGNED) {
       throw new BaseException(GlobalErrorCode.BAD_REQUEST, "ASSIGNED 상태에서만 승인 요청을 할 수 있습니다.");
     }
 
@@ -158,7 +158,7 @@ public class InventoryService {
       throw new BaseException(GlobalErrorCode.BAD_REQUEST, "입고 예정 품목 1개 이상 필요합니다.");
     }
 
-    inventory.updateStatus(InventoryStatus.PENDING, LocalDateTime.now());
+    inventory.updateStatus(TaskStatus.PENDING, LocalDateTime.now());
   }
 
   @Transactional
@@ -169,7 +169,7 @@ public class InventoryService {
 
     validateAssignee(inventoryId, memberId);
 
-    if (inventory.getStatus() != InventoryStatus.IN_PROGRESS) {
+    if (inventory.getStatus() != TaskStatus.IN_PROGRESS) {
       throw new BaseException(GlobalErrorCode.BAD_REQUEST, "IN_PROGRESS 상태에서만 입고 처리할 수 있습니다.");
     }
 
@@ -193,9 +193,9 @@ public class InventoryService {
 
       // 상태 갱신
       if (inventoryItem.getProcessed_quantity() >= inventoryItem.getQuantity()) {
-        inventoryItem.updateStatus(InventoryProcessingStatus.COMPLETED);
+        inventoryItem.updateStatus(TaskProcessingStatus.COMPLETED);
       } else {
-        inventoryItem.updateStatus(InventoryProcessingStatus.IN_PROGRESS);
+        inventoryItem.updateStatus(TaskProcessingStatus.IN_PROGRESS);
       }
     }
   }
@@ -209,7 +209,7 @@ public class InventoryService {
     validateAssignee(inventoryId, memberId);
 
     // 진행 중(IN_PROGRESS) 상태에서만 완료 가능
-    if (inventory.getStatus() != InventoryStatus.IN_PROGRESS) {
+    if (inventory.getStatus() != TaskStatus.IN_PROGRESS) {
       throw new BaseException(GlobalErrorCode.BAD_REQUEST,
         "진행 중(IN_PROGRESS) 상태에서만 업무를 완료할 수 있습니다.");
     }
@@ -218,14 +218,14 @@ public class InventoryService {
     boolean allDone = inventoryItemRepository
       .findAllByInventoryId(inventoryId)
       .stream()
-      .allMatch(item -> item.getStatus() == InventoryProcessingStatus.COMPLETED);
+      .allMatch(item -> item.getStatus() == TaskProcessingStatus.COMPLETED);
 
     if (!allDone) {
       throw new BaseException(GlobalErrorCode.BAD_REQUEST, "아직 완료되지 않은 품목이 있습니다.");
     }
 
     // 업무 최종 완료
-    inventory.updateStatus(InventoryStatus.COMPLETED, LocalDateTime.now());
+    inventory.updateStatus(TaskStatus.COMPLETED, LocalDateTime.now());
   }
 
   public List<InventorySummaryResponse> getInventoryList(Long memberId) {

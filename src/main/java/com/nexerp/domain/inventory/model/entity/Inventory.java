@@ -1,8 +1,8 @@
 package com.nexerp.domain.inventory.model.entity;
 
-import com.nexerp.domain.inventory.model.enums.InventoryStatus;
 import com.nexerp.domain.inventoryitem.model.entity.InventoryItem;
 import com.nexerp.domain.project.model.entity.Project;
+import com.nexerp.global.common.model.TaskStatus;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -54,7 +54,7 @@ public class Inventory {
 
   @Enumerated(EnumType.STRING)
   @Column(name = "inventory_status", nullable = false)
-  private InventoryStatus status;
+  private TaskStatus status;
 
   // 업무 생성일
   @Column(name = "inventory_created_at")
@@ -69,7 +69,7 @@ public class Inventory {
     String description,
     LocalDateTime requestedAt,
     LocalDateTime completedAt,
-    InventoryStatus status,
+    TaskStatus status,
     LocalDateTime createdAt) {
     this.project = project;
     this.title = title;
@@ -84,7 +84,7 @@ public class Inventory {
   public static Inventory assign(Project project) {
     return Inventory.builder()
       .project(project)
-      .status(InventoryStatus.ASSIGNED)
+      .status(TaskStatus.ASSIGNED)
       .createdAt(LocalDateTime.now())
       .build();
   }
@@ -94,22 +94,22 @@ public class Inventory {
     this.description = description;
   }
 
-  public void updateStatus(InventoryStatus status, LocalDateTime time) {
+  public void updateStatus(TaskStatus status, LocalDateTime time) {
     this.status = status;
 
     // 승인 요청(PENDING) 시 요청일 갱신
-    if (status == InventoryStatus.PENDING) {
+    if (status == TaskStatus.PENDING) {
       this.requestedAt = time;
     }
 
     // 업무 종료(COMPLETED) 시 완료일 저장
-    if (status == InventoryStatus.COMPLETED) {
+    if (status == TaskStatus.COMPLETED) {
       this.completedAt = time;
     }
   }
 
   public void reject() {
     this.requestedAt = null;
-    updateStatus(InventoryStatus.ASSIGNED, null);
+    updateStatus(TaskStatus.ASSIGNED, null);
   }
 }

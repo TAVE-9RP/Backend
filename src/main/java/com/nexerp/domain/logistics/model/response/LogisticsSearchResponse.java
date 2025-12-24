@@ -1,10 +1,10 @@
 package com.nexerp.domain.logistics.model.response;
 
 import com.nexerp.domain.logistics.model.entity.Logistics;
-import com.nexerp.domain.logistics.model.enums.LogisticsStatus;
 import com.nexerp.domain.project.model.entity.Project;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
+import com.nexerp.global.common.model.TaskStatus;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.Builder;
@@ -31,7 +31,7 @@ public class LogisticsSearchResponse {
   // 출하 업무 승인 요청 일
   private final LocalDate requestedAt;
 
-  private final LogisticsStatus logisticsStatus;
+  private final TaskStatus logisticsStatus;
 
   public static LogisticsSearchResponse from(Project project) {
 

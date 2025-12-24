@@ -1,7 +1,7 @@
 package com.nexerp.domain.inventory.model.response;
 
 import com.nexerp.domain.inventoryitem.model.entity.InventoryItem;
-import com.nexerp.domain.inventoryitem.model.enums.InventoryProcessingStatus;
+import com.nexerp.global.common.model.TaskProcessingStatus;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -16,7 +16,7 @@ public class InventoryItemResponse {
   private final Long itemPrice;
   private final Long targetQuantity;
   private final Long processedQuantity;
-  private InventoryProcessingStatus inventoryProcessingStatus;
+  private TaskProcessingStatus inventoryProcessingStatus;
 
   public static InventoryItemResponse from(InventoryItem item) {
     return InventoryItemResponse.builder()

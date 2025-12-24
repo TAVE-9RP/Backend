@@ -1,7 +1,7 @@
 package com.nexerp.domain.inventory.model.response;
 
 import com.nexerp.domain.inventory.model.entity.Inventory;
-import com.nexerp.domain.inventory.model.enums.InventoryStatus;
+import com.nexerp.global.common.model.TaskStatus;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.Builder;
@@ -16,7 +16,7 @@ public class InventoryDetailResponse {
   private String inventoryTitle;
   private String inventoryDescription;
   private LocalDateTime inventoryRequestedAt;
-  private InventoryStatus inventoryStatus;
+  private TaskStatus inventoryStatus;
 
   public static InventoryDetailResponse from(
     Inventory inventory,

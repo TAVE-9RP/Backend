@@ -8,10 +8,8 @@ import com.nexerp.domain.admin.model.response.JoinStatusResponse;
 import com.nexerp.domain.admin.model.response.PermissionResponse;
 import com.nexerp.domain.admin.repository.AdminRepository;
 import com.nexerp.domain.inventory.model.entity.Inventory;
-import com.nexerp.domain.inventory.model.enums.InventoryStatus;
 import com.nexerp.domain.inventory.repository.InventoryRepository;
 import com.nexerp.domain.logistics.model.entity.Logistics;
-import com.nexerp.domain.logistics.model.enums.LogisticsStatus;
 import com.nexerp.domain.logistics.repository.LogisticsRepository;
 import com.nexerp.domain.member.model.entity.Member;
 import com.nexerp.domain.member.model.enums.MemberDepartment;
@@ -21,6 +19,7 @@ import com.nexerp.domain.member.model.enums.MemberRole;
 import com.nexerp.domain.member.util.EnumValidatorUtil;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
+import com.nexerp.global.common.model.TaskStatus;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -207,11 +206,11 @@ public class AdminService {
 
     validateOwner(ownerId);
 
-    if (inventory.getStatus() != InventoryStatus.PENDING) {
+    if (inventory.getStatus() != TaskStatus.PENDING) {
       throw new BaseException(GlobalErrorCode.BAD_REQUEST, "PENDING 상태에서만 승인할 수 있습니다.");
     }
 
-    inventory.updateStatus(InventoryStatus.IN_PROGRESS, LocalDateTime.now());
+    inventory.updateStatus(TaskStatus.IN_PROGRESS, LocalDateTime.now());
   }
 
   // 오너인지 검증 후 오너인 경우 오너 반환
@@ -268,7 +267,7 @@ public class AdminService {
 
     validateOwner(ownerId);
 
-    if (inventory.getStatus() != InventoryStatus.PENDING) {
+    if (inventory.getStatus() != TaskStatus.PENDING) {
       throw new BaseException(GlobalErrorCode.BAD_REQUEST, "PENDING 상태에서만 거절할 수 있습니다.");
     }
 
@@ -281,7 +280,7 @@ public class AdminService {
       .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "출하 업무를 찾을 수 없습니다."));
     validateOwner(ownerId);
 
-    if (logistics.getStatus() != LogisticsStatus.APPROVAL_PENDING) {
+    if (logistics.getStatus() != TaskStatus.PENDING) {
       throw new BaseException(GlobalErrorCode.BAD_REQUEST, "PENDING 상태에서만 거절할 수 있습니다.");
     }
 
