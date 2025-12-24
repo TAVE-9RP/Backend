@@ -1,6 +1,7 @@
 package com.nexerp.domain.project.model.entity;
 
 import com.nexerp.domain.company.model.entity.Company;
+import com.nexerp.domain.inventory.model.entity.Inventory;
 import com.nexerp.domain.logistics.model.entity.Logistics;
 import com.nexerp.domain.project.model.enums.ProjectStatus;
 import com.nexerp.domain.projectmember.model.entity.ProjectMember;
@@ -52,6 +53,9 @@ public class Project {
 
   @OneToOne(mappedBy = "project", fetch = FetchType.LAZY)
   private Logistics logistics;
+
+  @OneToOne(mappedBy = "project", fetch = FetchType.LAZY)
+  private Inventory inventory;
 
   //연결된 회원
   @OneToMany(mappedBy = "project", fetch = FetchType.LAZY,
