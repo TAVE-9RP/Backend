@@ -72,7 +72,7 @@ public class LogisticsItem {
       .item(item)
       .processedQuantity(0L)
       .targetedQuantity(0L)
-      .processingStatus(LogisticsProcessingStatus.PENDING)
+      .processingStatus(LogisticsProcessingStatus.NOT_STARTED)
       .shipoutDate(null)
       .build();
   }
