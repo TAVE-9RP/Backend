@@ -21,6 +21,17 @@ public interface LogisticsRepository extends JpaRepository<Logistics, Long> {
     FROM Logistics l
     JOIN FETCH l.project p
     JOIN FETCH p.company c
+    LEFT JOIN FETCH p.projectMembers pm
+    LEFT JOIN FETCH pm.member m
+    WHERE l.id = :logisticsId
+    """)
+  Optional<Logistics> findWithProjectCompanyAndMemberById(Long logisticsId);
+
+  @Query("""
+    SELECT DISTINCT l
+    FROM Logistics l
+    JOIN FETCH l.project p
+    JOIN FETCH p.company c
     JOIN FETCH l.logisticsItems li
     WHERE l.id = :logisticsId
     """)
