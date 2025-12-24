@@ -3,6 +3,7 @@ package com.nexerp.domain.logistics.service;
 import com.nexerp.domain.item.model.entity.Item;
 import com.nexerp.domain.item.repository.ItemRepository;
 import com.nexerp.domain.logistics.model.entity.Logistics;
+import com.nexerp.domain.logistics.model.enums.LogisticsStatus;
 import com.nexerp.domain.logistics.model.request.LogisticsItemTargetQuantityRequest.ItemTargetQuantityDetail;
 import com.nexerp.domain.logistics.model.request.LogisticsItemsUpdateRequest.UpdateLogisticsItemDetail;
 import com.nexerp.domain.logistics.model.request.LogisticsUpdateRequest;
@@ -59,6 +60,10 @@ public class LogisticsService {
 
     validateAssignee(logistics, memberId);
 
+    if (logistics.getStatus() != LogisticsStatus.ASSIGNED) {
+      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "ASSIGNED 상태에서만 수정할 수 있습니다.");
+    }
+
     logistics.update(
       request.getLogisticsTitle(),
       request.getLogisticsCarrier(),
@@ -97,7 +102,11 @@ public class LogisticsService {
 
     validateAssignee(logistics, memberId);
 
-    Set<Long> requestedIds = validateDuplicateItemIds(itemRequests);
+    if (logistics.getStatus() != LogisticsStatus.ASSIGNED) {
+      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "ASSIGNED 상태에서만 수정할 수 있습니다.");
+    }
+
+    Set<Long> requestedIds = validateDuplicate(itemRequests);
 
     // 요청 중 새로운 요청만 필터
     Map<Long, LogisticsItem> existingByItemId = mapByItemId(logistics);
@@ -142,18 +151,19 @@ public class LogisticsService {
     validateAssignee(logistics, memberId);
 
     List<Long> requestedIdsList = itemRequests.stream()
-      .map(UpdateLogisticsItemDetail::getItemId)
+      .map(UpdateLogisticsItemDetail::getLogisticsItemId)
       .toList();
 
-    Set<Long> requestedIds = validateDuplicateItemIds(requestedIdsList);
+    Set<Long> uniqueIds = validateDuplicate(requestedIdsList);
 
-    Map<Long, LogisticsItem> existingByItemId = mapByItemId(logistics);
+    Map<Long, LogisticsItem> existingItems = logistics.getLogisticsItems().stream()
+      .collect(Collectors.toMap(LogisticsItem::getId, Function.identity()));
 
-    validateAllItemsExistInLogistics(requestedIds, existingByItemId);
+    validateAllItemsExistInLogistics(uniqueIds, existingItems);
 
     // 관계가 없던 itemId 추출
     for (UpdateLogisticsItemDetail detail : itemRequests) {
-      LogisticsItem li = existingByItemId.get(detail.getItemId());
+      LogisticsItem li = existingItems.get(detail.getLogisticsItemId());
 
       // 출하 수량 변경 + 총 금액 설정
       li.increaseProcessedQuantity(detail.getProcessedQuantity());
@@ -198,19 +208,23 @@ public class LogisticsService {
 
     validateAssignee(logistics, memberId);
 
+    if (logistics.getStatus() != LogisticsStatus.ASSIGNED) {
+      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "ASSIGNED 상태에서만 수정할 수 있습니다.");
+    }
+
     List<Long> requestedIds = request.stream()
-      .map(ItemTargetQuantityDetail::getItemId)
+      .map(ItemTargetQuantityDetail::getLogisticsItemId)
       .toList();
 
-    Set<Long> uniqueRequestedIds = validateDuplicateItemIds(requestedIds);
+    Set<Long> uniqueRequestedIds = validateDuplicate(requestedIds);
 
-    Map<Long, LogisticsItem> existingByItemId = mapByItemId(logistics);
+    Map<Long, LogisticsItem> existingByLogisticsItemId = mapByLogisticsItemId(logistics);
 
-    validateAllItemsExistInLogistics(uniqueRequestedIds, existingByItemId);
+    validateAllItemsExistInLogistics(uniqueRequestedIds, existingByLogisticsItemId);
 
     // 수량 업데이트 반영
     for (ItemTargetQuantityDetail detail : request) {
-      LogisticsItem item = existingByItemId.get(detail.getItemId());
+      LogisticsItem item = existingByLogisticsItemId.get(detail.getLogisticsItemId());
       item.applyTargetQuantity(detail.getTargetQuantity());
     }
   }
@@ -226,10 +240,10 @@ public class LogisticsService {
   }
 
   // set을 통한 중복 요청 제거
-  private Set<Long> validateDuplicateItemIds(List<Long> itemIds) {
-    Set<Long> uniqueIds = new HashSet<>(itemIds);
-    if (uniqueIds.size() != itemIds.size()) {
-      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "요청에 중복된 itemId가 존재합니다.");
+  private Set<Long> validateDuplicate(List<Long> ids) {
+    Set<Long> uniqueIds = new HashSet<>(ids);
+    if (uniqueIds.size() != ids.size()) {
+      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "요청에 중복이 존재합니다.");
     }
     return uniqueIds;
   }
@@ -240,16 +254,21 @@ public class LogisticsService {
       .collect(Collectors.toMap(li -> li.getItem().getId(), Function.identity()));
   }
 
+  private Map<Long, LogisticsItem> mapByLogisticsItemId(Logistics logistics) {
+    return logistics.getLogisticsItems().stream()
+      .collect(Collectors.toMap(LogisticsItem::getId, Function.identity()));
+  }
+
   // 요청과 연관 물품 비교
   private void validateAllItemsExistInLogistics(Set<Long> requestedItemIds,
-    Map<Long, LogisticsItem> existingByItemId) {
+    Map<Long, LogisticsItem> existingItems) {
     List<Long> notExists = requestedItemIds.stream()
-      .filter(id -> !existingByItemId.containsKey(id))
+      .filter(id -> !existingItems.containsKey(id))
       .toList();
 
     if (!notExists.isEmpty()) {
-      throw new BaseException(GlobalErrorCode.STATE_CONFLICT,
-        "출하 업무에 등록되지 않은 물품입니다. itemIds=" + notExists);
+      throw new BaseException(GlobalErrorCode.BAD_REQUEST,
+        "출하 업무에 등록되지 않은 물품입니다. LogisticsItemID=" + notExists);
     }
   }
 
