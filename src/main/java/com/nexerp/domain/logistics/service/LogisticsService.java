@@ -14,9 +14,12 @@ import com.nexerp.domain.logistics.repository.LogisticsRepository;
 import com.nexerp.domain.logisticsItem.model.entity.LogisticsItem;
 import com.nexerp.domain.logisticsItem.model.enums.LogisticsProcessingStatus;
 import com.nexerp.domain.logisticsItem.repository.LogisticsItemRepository;
+import com.nexerp.domain.member.model.entity.Member;
+import com.nexerp.domain.member.model.enums.MemberDepartment;
 import com.nexerp.domain.member.service.MemberService;
 import com.nexerp.domain.project.model.entity.Project;
 import com.nexerp.domain.project.service.ProjectService;
+import com.nexerp.domain.projectmember.model.entity.ProjectMember;
 import com.nexerp.domain.projectmember.repository.ProjectMemberRepository;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
@@ -180,12 +183,18 @@ public class LogisticsService {
   @Transactional(readOnly = true)
   public LogisticsDetailsResponse getLogisticsDetails(Long memberId, Long logisticsId) {
 
-    Logistics logistics = logisticsRepository.findWithProjectAndCompanyById(logisticsId)
+    Logistics logistics = logisticsRepository.findWithProjectCompanyAndMemberById(logisticsId)
       .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "출하 업무를 찾을 수 없습니다."));
 
     validateSameCompany(memberId, logistics);
 
-    return LogisticsDetailsResponse.from(logistics);
+    List<String> assignees = logistics.getProject().getProjectMembers().stream()
+      .map(ProjectMember::getMember)
+      .filter(member -> member.getDepartment() == MemberDepartment.LOGISTICS)
+      .map(Member::getName)
+      .toList();
+
+    return LogisticsDetailsResponse.from(logistics, assignees);
   }
 
   @Transactional
