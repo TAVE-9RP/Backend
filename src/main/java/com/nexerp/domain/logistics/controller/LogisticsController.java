@@ -61,12 +61,14 @@ public class LogisticsController {
     return BaseResponse.success(result);
   }
 
-  // 출하 업무 정보 수정 -> 수정 가능 시점 & 할당된 담당자만 미반영
+  // 출하 업무 정보 수정
   @PatchMapping("/{logisticsId}")
   @PreAuthorize("hasPermission('LOGISTICS', 'WRITE')")
   @Operation(
     summary = "출하 업무 상세(물품 제외) 정보 수정 API",
     description = """
+      - **상태 검증**: ASSIGNED에서만 수정 가능
+      
       출하 업무의 기본 정보(제목, 설명 등)를 수정합니다.
       - logisticsTitle (업무 이름)
       - logisticsCarrier (이동수단)
@@ -112,6 +114,7 @@ public class LogisticsController {
     summary = "출하 업무 승인 요청 API",
     description = """
       담당자가 작성을 완료한 출하 업무를 승인 대기(APPROVAL_PENDING) 상태로 전환합니다.
+      - **상태 검증**: ASSIGNED에서만 수정 가능
       """
   )
   public BaseResponse<Void> requestLogisticsApproval(
@@ -123,7 +126,7 @@ public class LogisticsController {
     return BaseResponse.success();
   }
 
-  // 출하 물품 추가 > PENDING 상태에서만 추가 미반영
+  // 물품 추가
   @PostMapping("/{logisticsId}/items")
   @PreAuthorize("hasPermission('LOGISTICS', 'WRITE')")
   @Operation(
@@ -131,6 +134,7 @@ public class LogisticsController {
     description = """
       출하 업무에 포함될 물품들을 ID 리스트 형식으로 추가합니다.
       - **중복 방지**: 이미 등록된 itemId는 자동으로 제외됩니다.
+      - **상태 검증**: ASSIGNED에서만 수정 가능
       """,
     requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
       description = "물품 입력 정보",
@@ -168,6 +172,7 @@ public class LogisticsController {
          특정 출하 업무에 등록된 모든 물품의 상세 상태와 수량 정보를 조회합니다.
       - **반환 정보:**
       - itemId (재고 id)
+      - logisticsItemId (출하 재고 id)
       - itemCode (재고 번호)
       - itemName (재고 이름)
       - processedQuantity (현재 수량)
@@ -212,8 +217,8 @@ public class LogisticsController {
           value = """
             {
               "items": [
-                { "itemId": 1, "processedQuantity": 1 },
-                { "itemId": 2, "processedQuantity": 1 }
+                { "logisticsItemId": 1, "processedQuantity": 1 },
+                { "logisticsItemId": 2, "processedQuantity": 1 }
               ]
             }
             """
@@ -277,14 +282,14 @@ public class LogisticsController {
     return BaseResponse.success();
   }
 
-  // 목표 출하 수량 > ASSIGNED 상태에서만 설정 미반영
+  // 목표 출하 수량
   @PatchMapping("/{logisticsId}/items/quantities")
   @PreAuthorize("hasPermission('LOGISTICS', 'WRITE')")
   @Operation(
     summary = "목표 출하 수량 설정 API",
     description = """
       각 물품별로 얼마만큼 출하할 것인지(목표 수량)를 설정합니다.
-      
+      - **상태 검증**: ASSIGNED에서만 수정 가능
       - 요청 시 누락된 물품은 기존 수량을 유지합니다.
       """,
     requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -298,8 +303,8 @@ public class LogisticsController {
           value = """
             {
               "items": [
-                { "itemId": 1, "targetQuantity": 1 },
-                { "itemId": 3, "targetQuantity": 5 }
+                { "logisticsItemId": 1, "targetQuantity": 1 },
+                { "logisticsItemId": 3, "targetQuantity": 5 }
               ]
             }
             
