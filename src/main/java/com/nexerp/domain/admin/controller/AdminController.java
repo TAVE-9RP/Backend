@@ -103,4 +103,22 @@ public class AdminController {
 
     return BaseResponse.success();
   }
+
+  // 입고 승인 처리
+  @PatchMapping("/{inventoryId}/approve")
+  @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
+  @Operation(summary = "입고 승인 처리(오너)",
+    description = """
+      오너가 승인 요청된 입고 업무를 승인(IN_PROGRESS) 상태로 변경합니다.
+      PENDING 상태에서만 승인 가능
+      승인 이후 입고 처리 가능
+      """)
+  public BaseResponse<Void> approveInventory(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @PathVariable Long inventoryId
+  ) {
+    Long ownerId = userDetails.getMemberId();
+    adminService.approveInventory(ownerId, inventoryId);
+    return BaseResponse.success();
+  }
 }
