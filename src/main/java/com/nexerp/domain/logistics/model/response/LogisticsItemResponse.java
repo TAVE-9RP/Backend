@@ -32,9 +32,6 @@ public class LogisticsItemResponse {
   // 물품 총 가격
   private final BigDecimal itemTotalPrice;
 
-  // 단위
-  private final String unitOfMeasure;
-
   private final LogisticsProcessingStatus logisticsProcessingStatus;
 
   public static LogisticsItemResponse from(LogisticsItem logisticsItem) {
@@ -48,7 +45,6 @@ public class LogisticsItemResponse {
       .targetedQuantity(logisticsItem.getTargetedQuantity())
       .itemPrice(item.getPrice())
       .itemTotalPrice(logisticsItem.getTotalPrice())
-      .unitOfMeasure(item.getUnitOfMeasure())
       .logisticsProcessingStatus(logisticsItem.getProcessingStatus())
       .build();
   }

@@ -174,7 +174,6 @@ public class LogisticsController {
       - targetedQuantity (목표 수량)
       - itemPrice (재고 가격)
       - itemTotalPrice (총 가격[목표수량 * 가격])
-      - unitOfMeasure (단위)
       - logisticsProcessingStatus (진행상태)
       """
   )
