@@ -14,5 +14,27 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  batch:
+    jdbc:
+      initialize-schema:always # 로컬에서는 always 추천
+    job:
+      enabled:false # 앱 시작 시 자동 실행 막고, 스케줄러로만 돌리기
+
+etl:
+  local-dir:./etl-data # 실행 경로 기준 폴더 생성됨
+
+cloud:
+  aws:
+    credentials:
+      access-key: ${AWS_ACCESS_KEY}
+      secret-key: ${AWS_SECRET_KEY}
+    s3:
+      bucket: nexerp-etl-bucket
+    region:
+      static: ${AWS_REGION}
+    stack:
+      auto: false
+
+
 
 
