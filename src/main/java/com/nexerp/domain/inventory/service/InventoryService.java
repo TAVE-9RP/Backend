@@ -173,7 +173,7 @@ public class InventoryService {
       throw new BaseException(GlobalErrorCode.BAD_REQUEST, "IN_PROGRESS 상태에서만 입고 처리할 수 있습니다.");
     }
 
-    for (InventoryProcessRequest.ProcessUnit unit : request.getProcess()) {
+    for (InventoryProcessRequest.ProcessUnit unit : request.getItems()) {
 
       InventoryItem inventoryItem = inventoryItemRepository.findById(unit.getInventoryItemId())
         .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "입고 예정 품목을 찾을 수 없습니다."));

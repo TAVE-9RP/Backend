@@ -171,7 +171,7 @@ public class LogisticsController {
   }
 
   // 물품 추가
-  @PostMapping("/{logisticsId}/items/batch")
+  @PostMapping("/{logisticsId}/items")
   @PreAuthorize("hasPermission('LOGISTICS', 'WRITE')")
   @Operation(
     summary = "출하 예정 품목 추가 API",
@@ -254,12 +254,11 @@ public class LogisticsController {
     summary = "실제 출하 처리(수량 반영) API",
     description = """
       실제로 출하된 물품의 수량을 반영합니다.
-      
+      IN_PROGRESS 상태에서만 가능
+      Item 재고(quantity) 감소
       - **재고 반영**: 입력한 수량만큼 실제 재고(Item) 수량이 변경됩니다.
       - **상태 변화**: 
         - **진행 수량 >= 목표 수량** 인 경우 해당 물품은 **COMPLETED** 처리됩니다 + **출하일 설정**
-        - 완료된 물품의 수량을 낮추면 다시 **IN_PROGRESS** 로 변경됩니다 + **출하일 null**
-      - **제한**: 승인 대기(PENDING) 중인 물품이 하나라도 있으면 수정이 불가합니다.
       """,
     requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
       description = "물품 입력 정보",
@@ -347,13 +346,17 @@ public class LogisticsController {
   }
 
   //업무 완료 처리
-  @PatchMapping("/{logisticsId}/status/complete")
+  @PatchMapping("/{logisticsId}/complete")
   @PreAuthorize("hasPermission('LOGISTICS', 'WRITE')")
   @Operation(
     summary = "출하 업무 최종 완료 처리 API",
     description = """
-      모든 개별 물품의 출하가 완료되었을 때, 전체 업무 상태를 `COMPLETED`로 전환합니다.
-      - 모든 물품의 상태가 `COMPLETED`여야 합니다.
+      모든 출하 품목이 완료 상태(COMPLETED)일 때
+      담당자가 '출하 완료' 버튼을 눌러 업무 상태를 COMPLETED로 변경합니다.
+      
+      - 진행 중(IN_PROGRESS) 상태에서만 수행 가능
+      - 하나라도 미완료 품목이 있으면 실패
+      - 담당자로 지정된 직원만 가능
       """
   )
   public BaseResponse<Void> completeLogistics(

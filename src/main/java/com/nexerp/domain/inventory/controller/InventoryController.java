@@ -90,7 +90,7 @@ public class InventoryController {
     return BaseResponse.success();
   }
 
-  @PostMapping("/{inventoryId}/items/batch")
+  @PostMapping("/{inventoryId}/items")
   @PreAuthorize("hasPermission('INVENTORY', 'WRITE')")
   @Operation(summary = "입고 예정 품목 추가 API",
     description = """
@@ -253,15 +253,35 @@ public class InventoryController {
     return BaseResponse.success();
   }
 
-  @PatchMapping("/{inventoryId}/process")
+  @PatchMapping("/{inventoryId}/items")
   @PreAuthorize("hasPermission('INVENTORY', 'WRITE')")
-  @Operation(summary = "입고 처리 API",
+  @Operation(summary = "실제 입고 처리(수량 반영) API",
     description = """
       실제 입고된 수량을 반영합니다.
       IN_PROGRESS 상태에서만 가능
       Item 재고(quantity) 증가
       입고 업무 물품(InventoryItem)의 현재 입고된 수량 (processed_quantity) 증가 및 상태 갱신
-      """)
+      """,
+    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+      description = "물품 입력 정보",
+      required = true,
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = InventoryProcessRequest.class),
+        examples = @ExampleObject(
+          name = "입고 예시",
+          value = """
+            {
+              "items": [
+                { "inventoryItemId": 1, "receiveQuantity": 1 },
+                { "inventoryItemId": 2, "receiveQuantity": 1 }
+              ]
+            }
+            """
+        )
+      )
+    )
+  )
   public BaseResponse<Void> processingReceiving(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @PathVariable Long inventoryId,
