@@ -84,6 +84,10 @@ public class LogisticsService {
 
     validateAssignee(logistics, memberId);
 
+    if (logistics.getLogisticsItems().isEmpty()) {
+      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "출하 예정 품목 1개 이상 필요합니다.");
+    }
+
     logistics.requestApproval();
   }
 
