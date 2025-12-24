@@ -47,7 +47,7 @@ public class Logistics {
   private Project project;
 
   @OneToMany(mappedBy = "logistics",
-    cascade = CascadeType.ALL, orphanRemoval = true)
+      cascade = CascadeType.ALL, orphanRemoval = true)
   @Builder.Default
   private List<LogisticsItem> logisticsItems = new ArrayList<>();
 
@@ -84,15 +84,15 @@ public class Logistics {
 
   public static Logistics assign(Project project) {
     return Logistics.builder()
-      .project(project)
-      .status(LogisticsStatus.ASSIGNED)
-      .createdAt(LocalDateTime.now())
-      .build();
+        .project(project)
+        .status(LogisticsStatus.ASSIGNED)
+        .createdAt(LocalDateTime.now())
+        .build();
 
   }
 
   public void update(String logisticsTitle, String logisticsCarrier,
-    String logisticsCarrierCompany, String logisticsDescription) {
+      String logisticsCarrierCompany, String logisticsDescription) {
     if (logisticsTitle != null) {
       this.title = logisticsTitle;
     }
@@ -135,7 +135,7 @@ public class Logistics {
     }
 
     boolean allItemsCompleted = this.logisticsItems.stream()
-      .allMatch(item -> item.getProcessingStatus() == LogisticsProcessingStatus.COMPLETED);
+        .allMatch(item -> item.getProcessingStatus() == LogisticsProcessingStatus.COMPLETED);
 
     if (!allItemsCompleted) {
       throw new BaseException(GlobalErrorCode.STATE_CONFLICT, "모든 물품의 출하 처리가 완료되지 않았습니다.");
@@ -143,5 +143,10 @@ public class Logistics {
 
     this.completedAt = LocalDateTime.now();
     changeStatus(LogisticsStatus.COMPLETED);
+  }
+
+  public void reject() {
+    this.requestedAt = null;
+    changeStatus(LogisticsStatus.ASSIGNED);
   }
 }

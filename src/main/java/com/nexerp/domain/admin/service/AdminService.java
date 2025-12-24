@@ -10,6 +10,9 @@ import com.nexerp.domain.admin.repository.AdminRepository;
 import com.nexerp.domain.inventory.model.entity.Inventory;
 import com.nexerp.domain.inventory.model.enums.InventoryStatus;
 import com.nexerp.domain.inventory.repository.InventoryRepository;
+import com.nexerp.domain.logistics.model.entity.Logistics;
+import com.nexerp.domain.logistics.model.enums.LogisticsStatus;
+import com.nexerp.domain.logistics.repository.LogisticsRepository;
 import com.nexerp.domain.member.model.entity.Member;
 import com.nexerp.domain.member.model.enums.MemberDepartment;
 import com.nexerp.domain.member.model.enums.MemberPosition;
@@ -18,7 +21,6 @@ import com.nexerp.domain.member.model.enums.MemberRole;
 import com.nexerp.domain.member.util.EnumValidatorUtil;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +36,7 @@ public class AdminService {
 
   private final AdminRepository adminRepository;
   private final InventoryRepository inventoryRepository;
+  private final LogisticsRepository logisticsRepository;
 
   // 로그인한 OWNER가 속한 회사의 모든 직원 (요청/승인/거절 포함) 조회
   @Transactional(readOnly = true)
@@ -228,7 +231,7 @@ public class AdminService {
   @Transactional(readOnly = true)
   public List<Member> getMembersByIdsAndCompany(List<Long> memberIds, Long companyId) {
 
-    if(memberIds == null || memberIds.isEmpty()) {
+    if (memberIds == null || memberIds.isEmpty()) {
       throw new BaseException(
         GlobalErrorCode.VALIDATION_ERROR,
         "담당자는 최소 1명 이상 지정해야 합니다."
@@ -246,7 +249,8 @@ public class AdminService {
 
     return members;
   }
- // 승인된 직원만 리턴
+
+  // 승인된 직원만 리턴
   @Transactional(readOnly = true)
   public List<Member> getApprovedMembers(Long companyId) {
     return adminRepository.findByCompanyIdAndRequestStatusAndPositionNot(
@@ -254,5 +258,33 @@ public class AdminService {
       MemberRequestStatus.APPROVED,
       MemberPosition.OWNER
     );
+  }
+
+  @Transactional
+  public void rejectInventory(Long ownerId, Long inventoryId) {
+
+    Inventory inventory = inventoryRepository.findById(inventoryId)
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "입고 업무를 찾을 수 없습니다."));
+
+    validateOwner(ownerId);
+
+    if (inventory.getStatus() != InventoryStatus.PENDING) {
+      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "PENDING 상태에서만 거절할 수 있습니다.");
+    }
+
+    inventory.reject();
+  }
+
+  @Transactional
+  public void rejectLogistics(Long ownerId, Long logisticsId) {
+    Logistics logistics = logisticsRepository.findById(logisticsId)
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "출하 업무를 찾을 수 없습니다."));
+    validateOwner(ownerId);
+
+    if (logistics.getStatus() != LogisticsStatus.APPROVAL_PENDING) {
+      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "PENDING 상태에서만 거절할 수 있습니다.");
+    }
+
+    logistics.reject();
   }
 }

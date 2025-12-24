@@ -107,4 +107,9 @@ public class Inventory {
       this.completedAt = time;
     }
   }
+
+  public void reject() {
+    this.requestedAt = null;
+    updateStatus(InventoryStatus.ASSIGNED, null);
+  }
 }
