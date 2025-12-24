@@ -3,15 +3,26 @@ package com.nexerp.domain.inventory.model.entity;
 import com.nexerp.domain.inventory.model.enums.InventoryStatus;
 import com.nexerp.domain.inventoryitem.model.entity.InventoryItem;
 import com.nexerp.domain.project.model.entity.Project;
-import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "inventory")
@@ -54,12 +65,12 @@ public class Inventory {
 
   @Builder
   public Inventory(Project project,
-                   String title,
-                   String description,
-                   LocalDateTime requestedAt,
-                   LocalDateTime completedAt,
-                   InventoryStatus status,
-                   LocalDateTime createdAt) {
+    String title,
+    String description,
+    LocalDateTime requestedAt,
+    LocalDateTime completedAt,
+    InventoryStatus status,
+    LocalDateTime createdAt) {
     this.project = project;
     this.title = title;
     this.description = description;
@@ -78,10 +89,9 @@ public class Inventory {
       .build();
   }
 
-  public void updateCommonInfo(String title, String description, LocalDateTime requestedAt) {
+  public void updateCommonInfo(String title, String description) {
     this.title = title;
     this.description = description;
-    this.requestedAt = requestedAt;
   }
 
   public void updateStatus(InventoryStatus status, LocalDateTime time) {
