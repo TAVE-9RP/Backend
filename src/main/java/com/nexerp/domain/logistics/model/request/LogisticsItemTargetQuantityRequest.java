@@ -27,7 +27,7 @@ public class LogisticsItemTargetQuantityRequest {
   public static class ItemTargetQuantityDetail {
 
     @NotNull(message = "물품(Inventory) ID는 필수입니다.")
-    private Long itemId;
+    private Long logisticsItemId;
 
     @Min(value = 1, message = "수량은 1개 이상이어야 합니다.")
     private Long targetQuantity;
