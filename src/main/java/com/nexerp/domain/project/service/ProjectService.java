@@ -5,6 +5,8 @@ import com.nexerp.domain.company.model.entity.Company;
 import com.nexerp.domain.company.service.CompanyService;
 import com.nexerp.domain.inventory.model.entity.Inventory;
 import com.nexerp.domain.inventory.repository.InventoryRepository;
+import com.nexerp.domain.logistics.model.entity.Logistics;
+import com.nexerp.domain.logistics.repository.LogisticsRepository;
 import com.nexerp.domain.member.model.entity.Member;
 import com.nexerp.domain.member.model.enums.MemberDepartment;
 import com.nexerp.domain.member.repository.MemberRepository;
@@ -38,6 +40,7 @@ public class ProjectService {
   private final CompanyService companyService;
   private final ProjectRepository projectRepository;
   private final MemberRepository memberRepository;
+  private final LogisticsRepository logisticsRepository;
   private final InventoryRepository inventoryRepository;
 
   @Transactional
@@ -72,9 +75,18 @@ public class ProjectService {
       boolean hasInventoryAssignee = assignees.stream()
         .anyMatch(a -> a.getDepartment() == MemberDepartment.INVENTORY);
 
+      boolean hasLogisticsAssignee = assignees.stream()
+        .anyMatch(a -> a.getDepartment() == MemberDepartment.LOGISTICS);
+
       if (hasInventoryAssignee) {
         Inventory inventory = Inventory.assign(savedProject);
         inventoryRepository.save(inventory);
+      }
+
+      // 5. 출하업무 생성 (ASSIGNED)
+      if (hasLogisticsAssignee) {
+        Logistics logistics = Logistics.assign(savedProject);
+        logisticsRepository.save(logistics);
       }
     }
 
@@ -260,6 +272,13 @@ public class ProjectService {
 
     // 접두사와 새로운 일련번호 반환
     return prefix + formattedNextSerialNum;
+  }
+
+  // 회사 id를 통해 모든 프로젝트와 연관 정보 한번에 가져오기
+  @Transactional(readOnly = true)
+  public List<Project> getProjectsWithLogisticsByCompanyId(Long companyId) {
+    List<Project> projects = projectRepository.findAllWithLogisticsAndMembersByCompanyId(companyId);
+    return projects;
   }
 
 }

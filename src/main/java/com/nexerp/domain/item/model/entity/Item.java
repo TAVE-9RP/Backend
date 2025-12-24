@@ -1,16 +1,24 @@
 package com.nexerp.domain.item.model.entity;
 
-import com.nexerp.domain.company.model.entity.Company;
 import com.nexerp.domain.inventoryitem.model.entity.InventoryItem;
-import jakarta.persistence.*;
+import com.nexerp.domain.logisticsItem.model.entity.LogisticsItem;
+import com.nexerp.global.common.exception.BaseException;
+import com.nexerp.global.common.exception.GlobalErrorCode;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "item")
@@ -56,18 +64,21 @@ public class Item {
   @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<InventoryItem> inventoryItems = new ArrayList<>();
 
+  @OneToMany(mappedBy = "item", cascade = CascadeType.ALL)
+  private List<LogisticsItem> logisticsItems = new ArrayList<>();
+
   @Builder
   public Item(
-              Long companyId,
-              String code,
-              String name,
-              Long price,
-              Long quantity,
-              LocalDateTime receivedAt,
-              String location,
-              LocalDateTime createdAt,
-              Long safetyStock,
-              Long targetStock) {
+      Long companyId,
+      String code,
+      String name,
+      Long price,
+      Long quantity,
+      LocalDateTime receivedAt,
+      String location,
+      LocalDateTime createdAt,
+      Long safetyStock,
+      Long targetStock) {
     this.companyId = companyId;
     this.code = code;
     this.name = name;
@@ -84,5 +95,14 @@ public class Item {
     this.quantity += addedQuantity;
     // 최근 입고일 업데이트
     this.receivedAt = LocalDateTime.now();
+  }
+
+  public void decreaseQuantity(Long removedQuantity) {
+
+    if (this.quantity < removedQuantity) {
+      throw new BaseException(GlobalErrorCode.STATE_CONFLICT, "출하 요청 수량이 현재 재고를 넘고 있습니다.");
+    }
+
+    this.quantity -= removedQuantity;
   }
 }
