@@ -16,6 +16,7 @@ import com.nexerp.domain.logisticsItem.repository.LogisticsItemRepository;
 import com.nexerp.domain.member.service.MemberService;
 import com.nexerp.domain.project.model.entity.Project;
 import com.nexerp.domain.project.service.ProjectService;
+import com.nexerp.domain.projectmember.repository.ProjectMemberRepository;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
 import java.util.HashSet;
@@ -35,6 +36,7 @@ public class LogisticsService {
   private final MemberService memberService;
   private final ProjectService projectService;
   private final LogisticsRepository logisticsRepository;
+  private final ProjectMemberRepository projectMemberRepository;
   private final ItemRepository itemRepository;
   private final LogisticsItemRepository logisticsItemRepository;
 
@@ -55,7 +57,7 @@ public class LogisticsService {
     Logistics logistics = logisticsRepository.findWithProjectAndCompanyById(logisticsId)
       .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "출하 업무를 찾을 수 없습니다."));
 
-    validateSameCompany(memberId, logistics);
+    validateAssignee(logistics, memberId);
 
     logistics.update(
       request.getLogisticsTitle(),
@@ -72,7 +74,7 @@ public class LogisticsService {
     Logistics logistics = logisticsRepository.findWithProjectAndCompanyById(logisticsId)
       .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "출하 업무를 찾을 수 없습니다."));
 
-    validateSameCompany(memberId, logistics);
+    validateAssignee(logistics, memberId);
 
     logistics.requestApproval();
   }
@@ -93,7 +95,7 @@ public class LogisticsService {
     Logistics logistics = logisticsRepository.findWithProjectAndCompanyById(logisticsId)
       .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "출하 업무를 찾을 수 없습니다."));
 
-    validateSameCompany(memberId, logistics);
+    validateAssignee(logistics, memberId);
 
     Set<Long> requestedIds = validateDuplicateItemIds(itemRequests);
 
@@ -137,14 +139,14 @@ public class LogisticsService {
     Logistics logistics = logisticsRepository.findWithAllDetailsById(logisticsId)
       .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "출하 업무를 찾을 수 없습니다."));
 
-    validateSameCompany(memberId, logistics);
+    validateAssignee(logistics, memberId);
 
     boolean hasPending = logistics.getLogisticsItems().stream()
-      .anyMatch(li -> li.getProcessingStatus() == LogisticsProcessingStatus.PENDING);
+      .anyMatch(li -> li.getProcessingStatus() == LogisticsProcessingStatus.NOT_STARTED);
 
     if (hasPending) {
       throw new BaseException(GlobalErrorCode.STATE_CONFLICT,
-        "출하 업무에 승인 대기(PENDING) 물품이 존재하여 진행 수량을 수정할 수 없습니다.");
+        "출하 업무에 승인 대기(NOT_STARTED) 물품이 존재하여 진행 수량을 수정할 수 없습니다.");
     }
 
     List<Long> requestedIdsList = itemRequests.stream()
@@ -189,7 +191,7 @@ public class LogisticsService {
     Logistics logistics = logisticsRepository.findWithProjectCompanyAndItemsById(logisticsId)
       .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "출하 업무를 찾을 수 없습니다."));
 
-    validateSameCompany(memberId, logistics);
+    validateAssignee(logistics, memberId);
 
     logistics.complete();
   }
@@ -201,7 +203,7 @@ public class LogisticsService {
     Logistics logistics = logisticsRepository.findWithAllDetailsById(logisticsId)
       .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "출하 업무를 찾을 수 없습니다."));
 
-    validateSameCompany(memberId, logistics);
+    validateAssignee(logistics, memberId);
 
     List<Long> requestedIds = request.stream()
       .map(ItemTargetQuantityDetail::getItemId)
@@ -274,6 +276,18 @@ public class LogisticsService {
     }
 
     return map;
+  }
+
+  private void validateAssignee(Logistics logistics, Long memberId) {
+
+    Long projectId = logistics.getProject().getId();
+
+    boolean isAssigned = projectMemberRepository
+      .existsByProjectIdAndMemberId(projectId, memberId);
+
+    if (!isAssigned) {
+      throw new BaseException(GlobalErrorCode.FORBIDDEN, "해당 업무에 접근할 수 없습니다.");
+    }
   }
 
 }
