@@ -11,6 +11,7 @@ import com.nexerp.domain.logistics.service.LogisticsService;
 import com.nexerp.global.common.response.BaseResponse;
 import com.nexerp.global.security.details.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -95,15 +96,21 @@ public class LogisticsController {
   @PatchMapping("/{logisticsId}")
   @PreAuthorize("hasPermission('LOGISTICS', 'WRITE')")
   @Operation(
-    summary = "출하 업무 상세(물품 제외) 정보 수정 API",
+    summary = "출하 공통 정보 저장 및 수정 API",
     description = """
-      - **상태 검증**: ASSIGNED에서만 수정 가능
-      
-      출하 업무의 기본 정보(제목, 설명 등)를 수정합니다.
-      - logisticsTitle (업무 이름)
-      - logisticsCarrier (이동수단)
-      - logisticsCarrierCompany (운송업체)
-      - logisticsDescription (업무 설명)
+      **물품 추가를 제외한 입고 업무의 공통 정보를 저장 또는 수정합니다.**
+      - 해당 업무 할당된 담당자만 가능
+      - 상태 검증: ASSIGNED에서만 수정 가능
+      - 출하 업무명(title), 업무 설명(description)을 필수
+      - URL 경로의 {logisticsId} 값을 통해 수정할 입고 업무를 지정
+      - 프로젝트 넘버는 오너가 프로젝트 생성 시 할당되었기에 별도로 지정하지 않습니다.
+      수정과 같은 기능을 하기 때문에 수정 시에도 본 API를 활용합니다.
+      수정 가능 시점은 입고 승인 요청을 보내기 전까지입니다.
+      - **필드 설명**
+          - logisticsTitle (업무 이름)
+          - logisticsCarrier (이동수단)
+          - logisticsCarrierCompany (운송업체)
+          - logisticsDescription (업무 설명)
       """,
     requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
       description = "추가 입력 정보",
@@ -112,7 +119,7 @@ public class LogisticsController {
         mediaType = "application/json",
         schema = @Schema(implementation = LogisticsUpdateRequest.class),
         examples = @ExampleObject(
-          name = "출하 업무 수정 예시",
+          name = "출하 공통 정보 예시",
           value = """
             {
               "logisticsTitle": "버스타고 출근 하기",
@@ -127,6 +134,12 @@ public class LogisticsController {
   )
   public BaseResponse<Void> updateLogisticsDetails(
     @AuthenticationPrincipal CustomUserDetails userDetails,
+    @Parameter(
+      name = "logisticsId",
+      description = "수정할 출하 업무의 ID (URL Path에 포함)",
+      required = true,
+      example = "12"
+    )
     @PathVariable Long logisticsId,
     @Valid @RequestBody LogisticsUpdateRequest logisticsUpdateRequest
   ) {

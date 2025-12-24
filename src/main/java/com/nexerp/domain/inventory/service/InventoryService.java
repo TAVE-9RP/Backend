@@ -59,8 +59,8 @@ public class InventoryService {
     }
 
     inv.updateCommonInfo(
-      request.getTitle(),
-      request.getDescription()
+      request.getInventoryTitle(),
+      request.getInventoryDescription()
     );
   }
 
