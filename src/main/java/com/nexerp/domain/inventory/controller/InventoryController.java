@@ -21,12 +21,17 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
@@ -56,15 +61,15 @@ public class InventoryController {
         examples = @ExampleObject(
           name = "입고 공통 정보 저장 예시",
           value = """
-          {
-           "title": "삼성 물산 과일 입고 건",
-           "description": "삼성 물산 망고 200개, 사과 100개, 딸기 100개를 모두 입고 처리하고자 합니다."
-          }
-          """
+            {
+             "title": "삼성 물산 과일 입고 건",
+             "description": "삼성 물산 망고 200개, 사과 100개, 딸기 100개를 모두 입고 처리하고자 합니다."
+            }
+            """
         )
       )
     ))
-  public BaseResponse<Void> updateInventoryCommon (
+  public BaseResponse<Void> updateInventoryCommon(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @Parameter(
       name = "inventoryId",
@@ -74,7 +79,7 @@ public class InventoryController {
     )
     @PathVariable Long inventoryId,
     @Valid @RequestBody InventoryCommonUpdateRequest request
-    ) {
+  ) {
     Long memberId = userDetails.getMemberId();
 
     inventoryService.updateInventoryCommonInfo(inventoryId, memberId, request);
@@ -86,45 +91,46 @@ public class InventoryController {
   @PreAuthorize("hasPermission('INVENTORY', 'WRITE')")
   @Operation(summary = "입고 예정 품목 추가 API",
     description = """
-        입고 업무에 여러 개의 품목 또는 한 개의 품목을 추가합니다.
-        기존 재고 검색을 통해서 추가할 때는 여러 개를 추가하겠지만,
-        새 물품 추가를 통해서 추가 시에는 한 개씩 추가 가능합니다.
-        
-        **입고 예정 품목(Inventory_Item) 생성 전용 API**  
-        품목의 목표 입고 수량은 이 API에서 입력하지 않으며,  
-        별도의 '목표 수량 설정 API'에서 진행합니다.  
-        이미 목록에 존재하는 품목은 자동으로 제외됩니다.  
-        품목은 '승인 요청' 이전 상태(ASSIGNED)에서만 추가가 가능합니다.  
-
-        주의  
-        - 실제 재고(Item.quantity) 수량에는 반영되지 않습니다.  
-        - 승인 후(IN_PROGRESS)에는 품목 추가가 불가능합니다.
-        """,
+      입고 업무에 여러 개의 품목 또는 한 개의 품목을 추가합니다.
+      기존 재고 검색을 통해서 추가할 때는 여러 개를 추가하겠지만,
+      새 물품 추가를 통해서 추가 시에는 한 개씩 추가 가능합니다.
+      
+      **입고 예정 품목(Inventory_Item) 생성 전용 API**  
+      품목의 목표 입고 수량은 이 API에서 입력하지 않으며,  
+      별도의 '목표 수량 설정 API'에서 진행합니다.  
+      이미 목록에 존재하는 품목은 자동으로 제외됩니다.  
+      품목은 '승인 요청' 이전 상태(ASSIGNED)에서만 추가가 가능합니다.  
+      
+      주의  
+      - 실제 재고(Item.quantity) 수량에는 반영되지 않습니다.  
+      - 승인 후(IN_PROGRESS)에는 품목 추가가 불가능합니다.
+      """,
     requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-    description = "추가 파라미터 정보",
-    required = true,
-    content = @Content(
-      mediaType = "application/json",
-      schema = @Schema(implementation = InventoryCommonUpdateRequest.class),
-      examples = @ExampleObject(
-        name = "입고 예정 품목 추가 요청 형식",
-        value = """
-          {
-           "itemIds": [1, 3, 5]
-          }
-          """
+      description = "추가 파라미터 정보",
+      required = true,
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = InventoryCommonUpdateRequest.class),
+        examples = @ExampleObject(
+          name = "입고 예정 품목 추가 요청 형식",
+          value = """
+            {
+             "itemIds": [1, 3, 5]
+            }
+            """
+        )
       )
-  )
-  ))
+    ))
   public BaseResponse<InventoryItemAddResponse> addInventoryItems(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @PathVariable Long inventoryId,
     @Valid @RequestBody InventoryItemAddRequest request
-    ) {
+  ) {
 
     Long memberId = userDetails.getMemberId();
 
-    InventoryItemAddResponse response = inventoryService.addInventoryItems(memberId, inventoryId, request);
+    InventoryItemAddResponse response = inventoryService.addInventoryItems(memberId, inventoryId,
+      request);
 
     return BaseResponse.success(response);
   }
@@ -134,39 +140,39 @@ public class InventoryController {
   @Operation(
     summary = "입고 예정 품목의 목표 입고 수량 일괄 수정 API",
     description = """
-        특정 입고 업무(inventoryId)에 등록된 여러 품목들의  
-        **목표 입고 수량(targetQuantity)** 을 한 번에 수정합니다.
-
-        승인 요청 전(ASSIGNED 상태)에서만 가능  
-        이미 존재하는 Inventory_Item의 quantity 필드만 변경  
-        processed_quantity(현재 입고 수량)에는 영향을 주지 않음  
-        담당자로 지정된 멤버만 수정 가능  
-        """,
+      특정 입고 업무(inventoryId)에 등록된 여러 품목들의  
+      **목표 입고 수량(targetQuantity)** 을 한 번에 수정합니다.
+      
+      승인 요청 전(ASSIGNED 상태)에서만 가능  
+      이미 존재하는 Inventory_Item의 quantity 필드만 변경  
+      processed_quantity(현재 입고 수량)에는 영향을 주지 않음  
+      담당자로 지정된 멤버만 수정 가능  
+      """,
     requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-    description = "추가 파라미터 정보",
-    required = true,
-    content = @Content(
-      mediaType = "application/json",
-      schema = @Schema(implementation = InventoryCommonUpdateRequest.class),
-      examples = @ExampleObject(
-        name = "목표 수량 일괄 수정 요청 형식",
-        value = """
-          {
-             "updates": [
-              { "inventoryItemId": 10, "targetQuantity": 50 },
-              { "inventoryItemId": 11, "targetQuantity": 120 }
-            ]
-          }
-          """
-      )
+      description = "추가 파라미터 정보",
+      required = true,
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = InventoryCommonUpdateRequest.class),
+        examples = @ExampleObject(
+          name = "목표 수량 일괄 수정 요청 형식",
+          value = """
+            {
+               "updates": [
+                { "inventoryItemId": 10, "targetQuantity": 50 },
+                { "inventoryItemId": 11, "targetQuantity": 120 }
+              ]
+            }
+            """
+        )
 
-  ))
+      ))
   )
   public BaseResponse<Void> updateTargetQuantities(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @PathVariable Long inventoryId,
     @Valid @RequestBody InventoryTargetQuantityUpdateRequest request
-    ) {
+  ) {
 
     Long memberId = userDetails.getMemberId();
 
@@ -180,11 +186,11 @@ public class InventoryController {
   @Operation(
     summary = "입고 품목 목록 조회 API",
     description = """
-        특정 입고 업무(inventoryId)에 추가된 모든 **입고 품목(Inventory_Item)** 목록을 조회합니다.
-
-        승인 요청 전/후 모두 조회 가능
-        목표 입고 수량(quantity), 현재 입고 수량(processed_quantity), 상태(status) 등을 반환
-        """
+      특정 입고 업무(inventoryId)에 추가된 모든 **입고 품목(Inventory_Item)** 목록을 조회합니다.
+      
+      승인 요청 전/후 모두 조회 가능
+      목표 입고 수량(quantity), 현재 입고 수량(processed_quantity), 상태(status) 등을 반환
+      """
   )
   @ApiResponses({
     @ApiResponse(
@@ -196,19 +202,19 @@ public class InventoryController {
         examples = @ExampleObject(
           name = "성공 예시",
           value = """
-                    [
-                      {
-                        "inventoryItemId": 10,
-                        "itemId": 3,
-                        "itemCode": "A-100",
-                        "itemName": "물품명",
-                        "price": 2000,
-                        "targetQuantity": 50,
-                        "processedQuantity": 0,
-                        "status": "NOT_STARTED"
-                      }
-                    ]
-                    """
+            [
+              {
+                "inventoryItemId": 10,
+                "itemId": 3,
+                "itemCode": "A-100",
+                "itemName": "물품명",
+                "price": 2000,
+                "targetQuantity": 50,
+                "processedQuantity": 0,
+                "status": "NOT_STARTED"
+              }
+            ]
+            """
         )
       )
     )
@@ -242,17 +248,17 @@ public class InventoryController {
   @PatchMapping("/{inventoryId}/process")
   @PreAuthorize("hasPermission('INVENTORY', 'WRITE')")
   @Operation(summary = "입고 처리 API",
-  description = """
-    실제 입고된 수량을 반영합니다.
-    IN_PROGRESS 상태에서만 가능
-    Item 재고(quantity) 증가
-    입고 업무 물품(InventoryItem)의 현재 입고된 수량 (processed_quantity) 증가 및 상태 갱신
-    """)
+    description = """
+      실제 입고된 수량을 반영합니다.
+      IN_PROGRESS 상태에서만 가능
+      Item 재고(quantity) 증가
+      입고 업무 물품(InventoryItem)의 현재 입고된 수량 (processed_quantity) 증가 및 상태 갱신
+      """)
   public BaseResponse<Void> processingReceiving(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @PathVariable Long inventoryId,
     @RequestBody @Valid InventoryProcessRequest request
-    ) {
+  ) {
     Long memberId = userDetails.getMemberId();
     inventoryService.processReceiving(memberId, inventoryId, request);
     return BaseResponse.success();
@@ -285,17 +291,17 @@ public class InventoryController {
   @GetMapping
   @Operation(summary = "입고 업무 전체 조회 API",
     description = """
-    회사에 소속된 모든 입고 업무 리스트를 조회합니다.
-    
-    반환 정보:
-    - inventoryId (입고 업무 ID)
-    - projectNumber (프로젝트 번호)
-    - title (업무명)
-    - itemSummary (예: '애플망고 외 2개')
-    - assigneeSummary (입고 담당자 기준)
-    - requestedAt
-    - status
-    """)
+      회사에 소속된 모든 입고 업무 리스트를 조회합니다.
+      
+      - **반환 정보:**
+      - inventoryId (입고 업무 ID)
+      - projectNumber (프로젝트 번호)
+      - inventoryTitle (업무명)
+      - itemSummary (예: '애플망고 외 2개')
+      - assigneeSummary (프로젝트 기준)
+      - requestedAt
+      - inventoryStatus (진행 상태)
+      """)
   @ApiResponses({
     @ApiResponse(
       responseCode = "200",
@@ -306,18 +312,18 @@ public class InventoryController {
         examples = @ExampleObject(
           name = "성공 예시",
           value = """
-                    [
-                      {
-                        "inventoryId": 5,
-                        "projectNumber": "C01-25-001",
-                        "title": "삼성 물산 수출 건",
-                        "itemSummary": "애플망고 외 2개",
-                        "assigneeSummary": "김철수 외 1명",
-                        "requestedAt": "2025-12-21T14:22:00",
-                        "status": "IN_PROGRESS"
-                      }
-                    ]
-                    """
+            [
+              {
+                "inventoryId": 5,
+                "projectNumber": "C01-25-001",
+                "inventoryTitle": "삼성 물산 입고 건",
+                "itemSummary": "애플망고 외 2개",
+                "assigneeSummary": "김철수 외 1명",
+                "requestedAt": "2025-12-21T14:22:00",
+                "inventoryStatus": "IN_PROGRESS"
+              }
+            ]
+            """
         )
       )
     )
@@ -334,18 +340,17 @@ public class InventoryController {
 
   @GetMapping("/{inventoryId}")
   @Operation(summary = "입고 업무 상세 조회 API",
-  description = """
-    회사에 소속된 모든 입고 업무 리스트를 조회합니다.
-    
-    반환 정보:
-    - inventoryId (입고 업무 ID)
-    - projectNumber (프로젝트 번호)
-    - assignees (입고 업무 담당자 전체)
-    - title (업무명)
-    - requestedAt
-    - description
-    - status
-    """)
+    description = """
+      회사에 소속된 모든 입고 업무 리스트를 조회합니다.
+      
+      반환 정보:
+      - projectNumber (프로젝트 번호)
+      - inventoryAssignees (입고 업무 담당자 전체)
+      - inventoryTitle (업무명)
+      - inventoryDescription
+      - inventoryRequestedAt
+      - inventoryStatus
+      """)
   @ApiResponses({
     @ApiResponse(
       responseCode = "200",
@@ -356,18 +361,17 @@ public class InventoryController {
         examples = @ExampleObject(
           name = "성공 예시",
           value = """
-                    [
-                      {
-                        "inventoryId": 5,
-                        "projectNumber": "C01-25-001",
-                        "assignees": ["김철수", "이영희"],
-                        "title": "삼성 물산 수출 건",
-                        "requestedAt": "2025-12-21T14:22:00",
-                        "description": "과일류 입고 처리",
-                        "status": "IN_PROGRESS"
-                      }
-                    ]
-                    """
+            [
+              {
+                "projectNumber": "C01-25-001",
+                "inventoryAssignees": ["김철수", "이영희"],
+                "inventoryTitle": "삼성 물산 수출 건",
+                "inventoryDescription": "과일류 입고 처리",
+                "inventoryRequestedAt": "2025-12-21T14:22:00",
+                "inventoryStatus": "IN_PROGRESS"
+              }
+            ]
+            """
         )
       )
     )

@@ -11,9 +11,12 @@ import com.nexerp.domain.logistics.service.LogisticsService;
 import com.nexerp.global.common.response.BaseResponse;
 import com.nexerp.global.security.details.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -42,17 +45,44 @@ public class LogisticsController {
   @Operation(
     summary = "출하 업무 전체 조회 API",
     description = """
-      본인이 속한 회사의 모든 출하 업무 리스트를 조회합니다.
+      회사에 소속된 모든 출하 업무 리스트를 조회합니다.
+      
       - **반환 정보:**
       - logisticsId (출하 업무 id)
       - projectNumber (프로젝트 번호)
       - logisticsTitle (업무명)
       - customer (거래처)
       - requestedAt (요청일)
-      - projectMembers(담당자-프로젝트 기준)
+      - assigneeSummary (프로젝트 기준)
       - logisticsStatus(진행상태)
       """
   )
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      description = "출하 업무 전체 조회 성공",
+      content = @Content(
+        mediaType = "application/json",
+        array = @ArraySchema(schema = @Schema(implementation = LogisticsSearchResponse.class)),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            [
+              {
+                "logisticsId": 5,
+                "projectNumber": "C01-25-001",
+                "logisticsTitle": "삼성 물산 수출 건",
+                "customer": "거래처(프로젝트 기준)",
+                "assigneeSummary": "김철수 외 1명",
+                "requestedAt": "2025-12-21T14:22:00",
+                "inventoryStatus": "IN_PROGRESS"
+              }
+            ]
+            """
+        )
+      )
+    )
+  })
   public BaseResponse<List<LogisticsSearchResponse>> getCompanyLogisticsSummaries(
     @AuthenticationPrincipal CustomUserDetails userDetails) {
     Long memberId = userDetails.getMemberId();
@@ -245,6 +275,7 @@ public class LogisticsController {
       출하 업무의 공통 정보와 담당자 리스트 등 상세 내용을 조회합니다.
       - **반환 정보:**
       - projectNumber (프로젝트 번호)
+      - logisticsAssignees  (출하 업무 담당자 전체)
       - logisticsTitle (업무 이름)
       - logisticsDescription (출하 설명)
       - logisticsCarrier (운송수단)
@@ -254,6 +285,33 @@ public class LogisticsController {
       - logisticsStatus (진행상태)
       """
   )
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      description = "출하 업무 상세 조회 성공",
+      content = @Content(
+        mediaType = "application/json",
+        array = @ArraySchema(schema = @Schema(implementation = LogisticsDetailsResponse.class)),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            [
+              {
+                "projectNumber": "C01-25-001",
+                "logisticsAssignees": ["윤민섭", "곽채연"],
+                "logisticsTitle": "삼성 물산 수출 건",
+                "logisticsDescription": "과일류 출하 처리",
+                "logisticsCarrier": "이원진",
+                "logisticsCarrierCompany": "TAVE",
+                "logisticsRequestedAt": "2025-12-21T14:22:00",
+                "logisticsStatus": "IN_PROGRESS"
+              }
+            ]
+            """
+        )
+      )
+    )
+  })
   public BaseResponse<LogisticsDetailsResponse> getLogisticsDetails(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @PathVariable Long logisticsId
