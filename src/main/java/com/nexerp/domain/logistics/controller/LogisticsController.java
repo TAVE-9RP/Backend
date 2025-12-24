@@ -173,11 +173,21 @@ public class LogisticsController {
   @PostMapping("/{logisticsId}/items")
   @PreAuthorize("hasPermission('LOGISTICS', 'WRITE')")
   @Operation(
-    summary = "출하 물품 일괄 추가 API",
+    summary = "출하 예정 품목 추가 API",
     description = """
       출하 업무에 포함될 물품들을 ID 리스트 형식으로 추가합니다.
       - **중복 방지**: 이미 등록된 itemId는 자동으로 제외됩니다.
       - **상태 검증**: ASSIGNED에서만 수정 가능
+      
+      **출하 예정 품목(Llogistics_item) 생성 전용 API**
+      품목의 목표 입고 수량은 이 API에서 입력하지 않으며,  
+      별도의 '목표 수량 설정 API'에서 진행합니다.  
+      이미 목록에 존재하는 품목은 자동으로 제외됩니다.  
+      품목은 '승인 요청' 이전 상태(ASSIGNED)에서만 추가가 가능합니다. 
+      
+      주의  
+      - 실제 재고(Item.quantity) 수량에는 반영되지 않습니다.  
+      - 승인 후(IN_PROGRESS)에는 품목 추가가 불가능합니다.
       """,
     requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
       description = "물품 입력 정보",
@@ -186,10 +196,10 @@ public class LogisticsController {
         mediaType = "application/json",
         schema = @Schema(implementation = LogisticsItemsCreateRequest.class),
         examples = @ExampleObject(
-          name = "출하 물품 추가 예시",
+          name = "출하 예정 물품 추가 요청 예시",
           value = """
             {
-              "itemId": [1, 2, 3]
+              "itemIds": [1, 2, 3]
             }
             """
         )
@@ -202,7 +212,7 @@ public class LogisticsController {
     @Valid @RequestBody LogisticsItemsCreateRequest request
   ) {
     Long memberId = userDetails.getMemberId();
-    logisticsService.addLogisticsItems(memberId, logisticsId, request.getItemId());
+    logisticsService.addLogisticsItems(memberId, logisticsId, request.getItemIds());
     return BaseResponse.success();
   }
 
