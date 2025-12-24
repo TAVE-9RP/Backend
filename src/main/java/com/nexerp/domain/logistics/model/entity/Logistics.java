@@ -127,8 +127,6 @@ public class Logistics {
     }
 
     changeStatus(LogisticsStatus.IN_PROGRESS);
-
-    this.logisticsItems.forEach(item -> item.changeStatus(LogisticsProcessingStatus.IN_PROGRESS));
   }
 
   public void complete() {

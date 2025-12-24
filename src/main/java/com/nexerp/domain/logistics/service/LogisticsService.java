@@ -141,14 +141,6 @@ public class LogisticsService {
 
     validateAssignee(logistics, memberId);
 
-    boolean hasPending = logistics.getLogisticsItems().stream()
-      .anyMatch(li -> li.getProcessingStatus() == LogisticsProcessingStatus.NOT_STARTED);
-
-    if (hasPending) {
-      throw new BaseException(GlobalErrorCode.STATE_CONFLICT,
-        "출하 업무에 승인 대기(NOT_STARTED) 물품이 존재하여 진행 수량을 수정할 수 없습니다.");
-    }
-
     List<Long> requestedIdsList = itemRequests.stream()
       .map(UpdateLogisticsItemDetail::getItemId)
       .toList();
@@ -163,13 +155,13 @@ public class LogisticsService {
     for (UpdateLogisticsItemDetail detail : itemRequests) {
       LogisticsItem li = existingByItemId.get(detail.getItemId());
 
-      li.changeProcessedQuantity(detail.getProcessedQuantity());
+      li.increaseProcessedQuantity(detail.getProcessedQuantity());
 
       // 목표 출하 기준 상태와 출하일 변경
-      if (li.getTargetedQuantity() <= detail.getProcessedQuantity()) {
+      if (li.getTargetedQuantity() <= li.getProcessedQuantity()) {
         li.completedLogisticsItem();
-      } else if (li.getProcessingStatus() == LogisticsProcessingStatus.COMPLETED) {
-        li.undoCompletedLogisticsItem();
+      } else if (li.getProcessingStatus() == LogisticsProcessingStatus.NOT_STARTED) {
+        li.changeStatus(LogisticsProcessingStatus.IN_PROGRESS);
       }
     }
   }

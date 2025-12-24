@@ -93,21 +93,22 @@ public class LogisticsItem {
   }
 
   public void completedLogisticsItem() {
-    this.shipoutDate = LocalDateTime.now();
+    if (this.shipoutDate == null) {
+      this.shipoutDate = LocalDateTime.now();
+    }
     changeStatus(LogisticsProcessingStatus.COMPLETED);
-  }
-
-  public void undoCompletedLogisticsItem() {
-    this.shipoutDate = null;
-    changeStatus(LogisticsProcessingStatus.IN_PROGRESS);
   }
 
   public void changeStatus(LogisticsProcessingStatus status) {
     this.processingStatus = status;
   }
 
-  public void changeProcessedQuantity(Long processedQuantity) {
-    this.processedQuantity = processedQuantity;
+  public void increaseProcessedQuantity(Long processedQuantity) {
+    //재고 감소
+    this.item.decreaseQuantity(processedQuantity);
+
+    // 현재 출하량 증가
+    this.processedQuantity += processedQuantity;
   }
 
 }
