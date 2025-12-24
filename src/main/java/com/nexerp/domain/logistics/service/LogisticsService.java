@@ -155,6 +155,7 @@ public class LogisticsService {
     for (UpdateLogisticsItemDetail detail : itemRequests) {
       LogisticsItem li = existingByItemId.get(detail.getItemId());
 
+      // 출하 수량 변경 + 총 금액 설정
       li.increaseProcessedQuantity(detail.getProcessedQuantity());
 
       // 목표 출하 기준 상태와 출하일 변경

@@ -277,7 +277,7 @@ public class LogisticsController {
     return BaseResponse.success();
   }
 
-  // 목표 출하 수량 + 총 판매액 설정 > ASSIGNED 상태에서만 설정 미반영
+  // 목표 출하 수량 > ASSIGNED 상태에서만 설정 미반영
   @PatchMapping("/{logisticsId}/items/quantities")
   @PreAuthorize("hasPermission('LOGISTICS', 'WRITE')")
   @Operation(

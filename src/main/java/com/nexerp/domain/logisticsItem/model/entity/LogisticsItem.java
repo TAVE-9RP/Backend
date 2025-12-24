@@ -82,14 +82,7 @@ public class LogisticsItem {
       throw new BaseException(GlobalErrorCode.STATE_CONFLICT, "목표 수량은 1 이상이어야 합니다.");
     }
 
-    Long price = this.item.getPrice();
-
-    if (price == null) {
-      throw new BaseException(GlobalErrorCode.STATE_CONFLICT, "물품 가격이 없어 총액을 계산할 수 없습니다.");
-    }
-
     this.targetedQuantity = targetQuantity;
-    this.totalPrice = BigDecimal.valueOf(price).multiply(BigDecimal.valueOf(targetQuantity));
   }
 
   public void completedLogisticsItem() {
@@ -107,8 +100,16 @@ public class LogisticsItem {
     //재고 감소
     this.item.decreaseQuantity(processedQuantity);
 
+    Long price = this.item.getPrice();
+
+    if (price == null) {
+      throw new BaseException(GlobalErrorCode.STATE_CONFLICT, "물품 가격이 없어 총액을 계산할 수 없습니다.");
+    }
+
     // 현재 출하량 증가
     this.processedQuantity += processedQuantity;
+    this.totalPrice = BigDecimal.valueOf(price)
+      .multiply(BigDecimal.valueOf(this.processedQuantity));
   }
 
 }
