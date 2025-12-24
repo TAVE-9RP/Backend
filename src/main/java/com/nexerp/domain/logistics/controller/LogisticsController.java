@@ -156,7 +156,7 @@ public class LogisticsController {
   @Operation(
     summary = "출하 업무 승인 요청 API",
     description = """
-      담당자가 작성을 완료한 출하 업무를 승인 대기(APPROVAL_PENDING) 상태로 전환합니다. 
+      담당자가 작성을 완료한 출하 업무를 승인 대기(PENDING) 상태로 전환합니다. 
       출하 예정 품목(LogisticsItem)이 1개 이상 존재해야 함
       - **상태 검증**: ASSIGNED에서만 수정 가능
       """
