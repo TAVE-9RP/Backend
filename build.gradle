@@ -43,6 +43,13 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
+	// 추출 스케줄러 작업을 위한 batch 의존성 추가.
+	implementation 'org.springframework.boot:spring-boot-starter-batch'
+	implementation 'org.springframework.boot:spring-boot-starter-jdbc' // batch 메타테이블/JDBC 필요
+
+	// S3 의존성(최신 버전)
+	implementation 'software.amazon.awssdk:s3:2.25.28' 
+	implementation 'software.amazon.awssdk:auth:2.25.28'
 }
 
 
