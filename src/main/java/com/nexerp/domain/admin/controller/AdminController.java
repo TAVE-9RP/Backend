@@ -88,11 +88,9 @@ public class AdminController {
   @Operation(
     summary = "출하 업무 승인 API",
     description = """
-      관리자(또는 오너)가 출하 업무를 승인합니다.
-      
-      - 상태 전환: APPROVAL_PENDING -> IN_PROGRESS
-      - 하위 물품 상태: 출하 업무에 포함된 모든 물품의 상태를 IN_PROGRESS로 변경합니다.
-      - 제한: 승인 대기(APPROVAL_PENDING) 상태에서만 승인 가능합니다.
+      오너가 승인 요청된 출하 업무를 승인(IN_PROGRESS) 상태로 변경합니다.
+      PENDING 상태에서만 승인 가능
+      승인 이후 출하 처리 가능
       """
   )
   public BaseResponse<Void> logisticsApproval(
@@ -105,7 +103,7 @@ public class AdminController {
   }
 
   // 입고 승인 처리
-  @PatchMapping("/{inventoryId}/approve")
+  @PatchMapping("/inventory/{inventoryId}/approve")
   @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
   @Operation(summary = "입고 승인 처리(오너)",
     description = """
