@@ -170,7 +170,7 @@ public class LogisticsController {
   }
 
   // 물품 추가
-  @PostMapping("/{logisticsId}/items")
+  @PostMapping("/{logisticsId}/items/batch")
   @PreAuthorize("hasPermission('LOGISTICS', 'WRITE')")
   @Operation(
     summary = "출하 예정 품목 추가 API",
@@ -222,16 +222,17 @@ public class LogisticsController {
   @Operation(
     summary = "출하 물품 목록 조회 API",
     description = """
-         특정 출하 업무에 등록된 모든 물품의 상세 상태와 수량 정보를 조회합니다.
+      특정 출하 업무(logisticsId)에 등록된 모든 **출하 품목(Logistics_Item)** 목록을 조회합니다.
+      LogisticsItem
       - **반환 정보:**
-      - itemId (재고 id)
       - logisticsItemId (출하 재고 id)
+      - itemId (재고 id)
       - itemCode (재고 번호)
       - itemName (재고 이름)
-      - processedQuantity (현재 수량)
-      - targetedQuantity (목표 수량)
       - itemPrice (재고 가격)
-      - itemTotalPrice (총 가격[목표수량 * 가격])
+      - targetedQuantity (목표 수량)
+      - processedQuantity (현재 수량)
+      - itemTotalPrice (총 가격 [목표수량 * 가격])
       - logisticsProcessingStatus (진행상태)
       """
   )
@@ -364,12 +365,19 @@ public class LogisticsController {
   }
 
   // 목표 출하 수량
-  @PatchMapping("/{logisticsId}/items/quantities")
+  @PatchMapping("/{logisticsId}/items/targetQuantity")
   @PreAuthorize("hasPermission('LOGISTICS', 'WRITE')")
   @Operation(
-    summary = "목표 출하 수량 설정 API",
+    summary = "출하 예정 품목의 목표 출하 수량 일괄 수정 API",
     description = """
-      각 물품별로 얼마만큼 출하할 것인지(목표 수량)를 설정합니다.
+      특정 입고 업무(logisticsId)에 등록된 여러 품목들의  
+      **목표 입고 수량(targetQuantity)** 을 한 번에 수정합니다.
+      
+      승인 요청 전(ASSIGNED 상태)에서만 가능  
+      이미 존재하는 logisticsItem의 targetQuantity 필드만 변경  
+      processed_quantity(현재 입고 수량)에는 영향을 주지 않음  
+      담당자로 지정된 멤버만 수정 가능  
+      
       - **상태 검증**: ASSIGNED에서만 수정 가능
       - 요청 시 누락된 물품은 기존 수량을 유지합니다.
       """,
@@ -380,7 +388,7 @@ public class LogisticsController {
         mediaType = "application/json",
         schema = @Schema(implementation = LogisticsItemTargetQuantityRequest.class),
         examples = @ExampleObject(
-          name = "출하 물품 추가 예시",
+          name = "목표 수량 일괄 수정 요청 형식",
           value = """
             {
               "items": [

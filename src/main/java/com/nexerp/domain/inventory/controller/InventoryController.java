@@ -140,7 +140,7 @@ public class InventoryController {
     return BaseResponse.success(response);
   }
 
-  @PatchMapping("/{inventoryId}/items/quantities")
+  @PatchMapping("/{inventoryId}/items/targetQuantity")
   @PreAuthorize("hasPermission('INVENTORY', 'WRITE')")
   @Operation(
     summary = "입고 예정 품목의 목표 입고 수량 일괄 수정 API",
@@ -149,16 +149,19 @@ public class InventoryController {
       **목표 입고 수량(targetQuantity)** 을 한 번에 수정합니다.
       
       승인 요청 전(ASSIGNED 상태)에서만 가능  
-      이미 존재하는 Inventory_Item의 quantity 필드만 변경  
+      이미 존재하는 Inventory_Item의 targetQuantity 필드만 변경  
       processed_quantity(현재 입고 수량)에는 영향을 주지 않음  
       담당자로 지정된 멤버만 수정 가능  
+      
+      - **상태 검증**: ASSIGNED에서만 수정 가능
+      - 요청 시 누락된 물품은 기존 수량을 유지합니다.
       """,
     requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
       description = "추가 파라미터 정보",
       required = true,
       content = @Content(
         mediaType = "application/json",
-        schema = @Schema(implementation = InventoryCommonUpdateRequest.class),
+        schema = @Schema(implementation = InventoryTargetQuantityUpdateRequest.class),
         examples = @ExampleObject(
           name = "목표 수량 일괄 수정 요청 형식",
           value = """
@@ -191,7 +194,7 @@ public class InventoryController {
   @Operation(
     summary = "입고 품목 목록 조회 API",
     description = """
-      특정 입고 업무(inventoryId)에 추가된 모든 **입고 품목(Inventory_Item)** 목록을 조회합니다.
+      특정 입고 업무(inventoryId)에 등록된 모든 **입고 품목(Inventory_Item)** 목록을 조회합니다.
       
       승인 요청 전/후 모두 조회 가능
       목표 입고 수량(quantity), 현재 입고 수량(processed_quantity), 상태(status) 등을 반환
@@ -213,10 +216,10 @@ public class InventoryController {
                 "itemId": 3,
                 "itemCode": "A-100",
                 "itemName": "물품명",
-                "price": 2000,
+                "itemPrice": 2000,
                 "targetQuantity": 50,
                 "processedQuantity": 0,
-                "status": "NOT_STARTED"
+                "inventoryProcessingStatus": "NOT_STARTED"
               }
             ]
             """
