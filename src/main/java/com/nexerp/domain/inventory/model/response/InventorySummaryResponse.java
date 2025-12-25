@@ -1,11 +1,10 @@
 package com.nexerp.domain.inventory.model.response;
 
 import com.nexerp.domain.inventory.model.entity.Inventory;
-import com.nexerp.domain.inventory.model.enums.InventoryStatus;
+import com.nexerp.global.common.model.TaskStatus;
+import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
-
-import java.time.LocalDateTime;
 
 @Getter
 @Builder
@@ -13,13 +12,13 @@ public class InventorySummaryResponse {
 
   private Long inventoryId;
   private String projectNumber;
-  private String title;
+  private String inventoryTitle;
   private String itemSummary; // 애플망고 외 2개
   private String assigneeSummary; // 홍길동 외 3명
   private LocalDateTime requestedAt;
-  private InventoryStatus status;
+  private TaskStatus inventoryStatus;
 
-  public static InventorySummaryResponse from (
+  public static InventorySummaryResponse from(
     Inventory inventory,
     String itemSummary,
     String assigneeSummary
@@ -27,11 +26,11 @@ public class InventorySummaryResponse {
     return InventorySummaryResponse.builder()
       .inventoryId(inventory.getId())
       .projectNumber(inventory.getProject().getNumber())
-      .title(inventory.getTitle())
+      .inventoryTitle(inventory.getTitle())
       .itemSummary(itemSummary)
       .assigneeSummary(assigneeSummary)
       .requestedAt(inventory.getRequestedAt())
-      .status(inventory.getStatus())
+      .inventoryStatus(inventory.getStatus())
       .build();
   }
 }

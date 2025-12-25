@@ -3,7 +3,6 @@ package com.nexerp.domain.logistics.service;
 import com.nexerp.domain.item.model.entity.Item;
 import com.nexerp.domain.item.repository.ItemRepository;
 import com.nexerp.domain.logistics.model.entity.Logistics;
-import com.nexerp.domain.logistics.model.enums.LogisticsStatus;
 import com.nexerp.domain.logistics.model.request.LogisticsItemTargetQuantityRequest.ItemTargetQuantityDetail;
 import com.nexerp.domain.logistics.model.request.LogisticsItemsUpdateRequest.UpdateLogisticsItemDetail;
 import com.nexerp.domain.logistics.model.request.LogisticsUpdateRequest;
@@ -12,14 +11,18 @@ import com.nexerp.domain.logistics.model.response.LogisticsItemResponse;
 import com.nexerp.domain.logistics.model.response.LogisticsSearchResponse;
 import com.nexerp.domain.logistics.repository.LogisticsRepository;
 import com.nexerp.domain.logisticsItem.model.entity.LogisticsItem;
-import com.nexerp.domain.logisticsItem.model.enums.LogisticsProcessingStatus;
 import com.nexerp.domain.logisticsItem.repository.LogisticsItemRepository;
+import com.nexerp.domain.member.model.entity.Member;
+import com.nexerp.domain.member.model.enums.MemberDepartment;
 import com.nexerp.domain.member.service.MemberService;
 import com.nexerp.domain.project.model.entity.Project;
 import com.nexerp.domain.project.service.ProjectService;
+import com.nexerp.domain.projectmember.model.entity.ProjectMember;
 import com.nexerp.domain.projectmember.repository.ProjectMemberRepository;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
+import com.nexerp.global.common.model.TaskProcessingStatus;
+import com.nexerp.global.common.model.TaskStatus;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -60,7 +63,7 @@ public class LogisticsService {
 
     validateAssignee(logistics, memberId);
 
-    if (logistics.getStatus() != LogisticsStatus.ASSIGNED) {
+    if (logistics.getStatus() != TaskStatus.ASSIGNED) {
       throw new BaseException(GlobalErrorCode.BAD_REQUEST, "ASSIGNED 상태에서만 수정할 수 있습니다.");
     }
 
@@ -80,6 +83,10 @@ public class LogisticsService {
       .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "출하 업무를 찾을 수 없습니다."));
 
     validateAssignee(logistics, memberId);
+
+    if (logistics.getLogisticsItems().isEmpty()) {
+      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "출하 예정 품목 1개 이상 필요합니다.");
+    }
 
     logistics.requestApproval();
   }
@@ -102,7 +109,7 @@ public class LogisticsService {
 
     validateAssignee(logistics, memberId);
 
-    if (logistics.getStatus() != LogisticsStatus.ASSIGNED) {
+    if (logistics.getStatus() != TaskStatus.ASSIGNED) {
       throw new BaseException(GlobalErrorCode.BAD_REQUEST, "ASSIGNED 상태에서만 수정할 수 있습니다.");
     }
 
@@ -171,8 +178,8 @@ public class LogisticsService {
       // 목표 출하 기준 상태와 출하일 변경
       if (li.getTargetedQuantity() <= li.getProcessedQuantity()) {
         li.completedLogisticsItem();
-      } else if (li.getProcessingStatus() == LogisticsProcessingStatus.NOT_STARTED) {
-        li.changeStatus(LogisticsProcessingStatus.IN_PROGRESS);
+      } else if (li.getProcessingStatus() == TaskProcessingStatus.NOT_STARTED) {
+        li.changeStatus(TaskProcessingStatus.IN_PROGRESS);
       }
     }
   }
@@ -180,12 +187,18 @@ public class LogisticsService {
   @Transactional(readOnly = true)
   public LogisticsDetailsResponse getLogisticsDetails(Long memberId, Long logisticsId) {
 
-    Logistics logistics = logisticsRepository.findWithProjectAndCompanyById(logisticsId)
+    Logistics logistics = logisticsRepository.findWithProjectCompanyAndMemberById(logisticsId)
       .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "출하 업무를 찾을 수 없습니다."));
 
     validateSameCompany(memberId, logistics);
 
-    return LogisticsDetailsResponse.from(logistics);
+    List<String> assignees = logistics.getProject().getProjectMembers().stream()
+      .map(ProjectMember::getMember)
+      .filter(member -> member.getDepartment() == MemberDepartment.LOGISTICS)
+      .map(Member::getName)
+      .toList();
+
+    return LogisticsDetailsResponse.from(logistics, assignees);
   }
 
   @Transactional
@@ -208,7 +221,7 @@ public class LogisticsService {
 
     validateAssignee(logistics, memberId);
 
-    if (logistics.getStatus() != LogisticsStatus.ASSIGNED) {
+    if (logistics.getStatus() != TaskStatus.ASSIGNED) {
       throw new BaseException(GlobalErrorCode.BAD_REQUEST, "ASSIGNED 상태에서만 수정할 수 있습니다.");
     }
 

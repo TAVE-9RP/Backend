@@ -9,10 +9,10 @@ import lombok.NoArgsConstructor;
 public class InventoryCommonUpdateRequest {
 
   @NotBlank(message = "입고 업무명을 입력하세요.")
-  private String title;
+  private String inventoryTitle;
 
   @NotBlank(message = "업무 설명을 입력하세요.")
-  private String description;
+  private String inventoryDescription;
 
   // 요청일은 사용자가 아닌 백엔드 통해서 처리
 }

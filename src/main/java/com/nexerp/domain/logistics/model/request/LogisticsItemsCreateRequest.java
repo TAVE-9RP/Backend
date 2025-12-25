@@ -15,5 +15,5 @@ import lombok.NoArgsConstructor;
 public class LogisticsItemsCreateRequest {
 
   @NotEmpty(message = "최소 하나 이상의 물품을 선택해야 합니다.")
-  private List<Long> itemId;
+  private List<Long> itemIds;
 }
