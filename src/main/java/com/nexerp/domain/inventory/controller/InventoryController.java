@@ -1,0 +1,417 @@
+package com.nexerp.domain.inventory.controller;
+
+import com.nexerp.domain.inventory.model.request.InventoryCommonUpdateRequest;
+import com.nexerp.domain.inventory.model.request.InventoryItemAddRequest;
+import com.nexerp.domain.inventory.model.request.InventoryProcessRequest;
+import com.nexerp.domain.inventory.model.request.InventoryTargetQuantityUpdateRequest;
+import com.nexerp.domain.inventory.model.response.InventoryDetailResponse;
+import com.nexerp.domain.inventory.model.response.InventoryItemAddResponse;
+import com.nexerp.domain.inventory.model.response.InventoryItemResponse;
+import com.nexerp.domain.inventory.model.response.InventorySummaryResponse;
+import com.nexerp.domain.inventory.service.InventoryService;
+import com.nexerp.global.common.response.BaseResponse;
+import com.nexerp.global.security.details.CustomUserDetails;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/inventory")
+@Tag(name = "입고 업무 관련 API", description = "입고 조회, 생성, 물품 추가 등 입고와 관련된 모든 업무")
+public class InventoryController {
+
+  private final InventoryService inventoryService;
+
+  @PreAuthorize("hasPermission('INVENTORY', 'WRITE')")
+  @PatchMapping("/{inventoryId}")
+  @Operation(
+    summary = "입고 공통 정보 저장 및 수정 API",
+    description = """
+      **물품 추가를 제외한 입고 업무의 공통 정보를 저장 또는 수정합니다.**
+      - 해당 업무 할당된 담당자만 가능
+      - 상태 검증: ASSIGNED에서만 수정 가능
+      - 입고 업무명(title), 업무 설명(description)을 필수
+      - URL 경로의 {inventoryId} 값을 통해 수정할 입고 업무를 지정
+      프로젝트 넘버는 오너가 프로젝트 생성 시 할당되었기에 별도로 지정하지 않습니다.
+      수정과 같은 기능을 하기 때문에 수정 시에도 본 API를 활용합니다.
+      수정 가능 시점은 입고 승인 요청을 보내기 전까지입니다.
+      """,
+    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+      description = "추가 파라미터 정보",
+      required = true,
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = InventoryCommonUpdateRequest.class),
+        examples = @ExampleObject(
+          name = "입고 공통 정보 예시",
+          value = """
+            {
+             "inventoryTitle": "삼성 물산 과일 입고 건",
+             "inventoryDescription": "삼성 물산 망고 200개, 사과 100개, 딸기 100개를 모두 입고 처리하고자 합니다."
+            }
+            """
+        )
+      )
+    ))
+  public BaseResponse<Void> updateInventoryCommon(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @Parameter(
+      name = "inventoryId",
+      description = "수정할 입고 업무의 ID (URL Path에 포함)",
+      required = true,
+      example = "12"
+    )
+    @PathVariable Long inventoryId,
+    @Valid @RequestBody InventoryCommonUpdateRequest request
+  ) {
+    Long memberId = userDetails.getMemberId();
+
+    inventoryService.updateInventoryCommonInfo(inventoryId, memberId, request);
+
+    return BaseResponse.success();
+  }
+
+  @PostMapping("/{inventoryId}/items")
+  @PreAuthorize("hasPermission('INVENTORY', 'WRITE')")
+  @Operation(summary = "입고 예정 품목 추가 API",
+    description = """
+      입고 업무에 여러 개의 품목 또는 한 개의 품목을 추가합니다.
+      기존 재고 검색을 통해서 추가할 때는 여러 개를 추가하겠지만,
+      새 물품 추가를 통해서 추가 시에는 한 개씩 추가 가능합니다.
+      - **중복 방지**: 이미 등록된 itemId는 자동으로 제외됩니다.
+      - **상태 검증**: ASSIGNED에서만 수정 가능
+      
+      **입고 예정 품목(Inventory_Item) 생성 전용 API**
+      품목의 목표 입고 수량은 이 API에서 입력하지 않으며,  
+      별도의 '목표 수량 설정 API'에서 진행합니다.  
+      이미 목록에 존재하는 품목은 자동으로 제외됩니다.  
+      품목은 '승인 요청' 이전 상태(ASSIGNED)에서만 추가가 가능합니다.  
+      
+      주의  
+      - 실제 재고(Item.quantity) 수량에는 반영되지 않습니다.  
+      - 승인 후(IN_PROGRESS)에는 품목 추가가 불가능합니다.
+      """,
+    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+      description = "추가 파라미터 정보",
+      required = true,
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = InventoryCommonUpdateRequest.class),
+        examples = @ExampleObject(
+          name = "입고 예정 품목 추가 요청 형식",
+          value = """
+            {
+             "itemIds": [1, 3, 5]
+            }
+            """
+        )
+      )
+    ))
+  public BaseResponse<InventoryItemAddResponse> addInventoryItems(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @PathVariable Long inventoryId,
+    @Valid @RequestBody InventoryItemAddRequest request
+  ) {
+
+    Long memberId = userDetails.getMemberId();
+
+    InventoryItemAddResponse response = inventoryService.addInventoryItems(memberId, inventoryId,
+      request);
+
+    return BaseResponse.success(response);
+  }
+
+  @PatchMapping("/{inventoryId}/items/targetQuantity")
+  @PreAuthorize("hasPermission('INVENTORY', 'WRITE')")
+  @Operation(
+    summary = "입고 예정 품목의 목표 입고 수량 일괄 수정 API",
+    description = """
+      특정 입고 업무(inventoryId)에 등록된 여러 품목들의  
+      **목표 입고 수량(targetQuantity)** 을 한 번에 수정합니다.
+      
+      승인 요청 전(ASSIGNED 상태)에서만 가능  
+      이미 존재하는 Inventory_Item의 targetQuantity 필드만 변경  
+      processed_quantity(현재 입고 수량)에는 영향을 주지 않음  
+      담당자로 지정된 멤버만 수정 가능  
+      
+      - **상태 검증**: ASSIGNED에서만 수정 가능
+      - 요청 시 누락된 물품은 기존 수량을 유지합니다.
+      """,
+    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+      description = "추가 파라미터 정보",
+      required = true,
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = InventoryTargetQuantityUpdateRequest.class),
+        examples = @ExampleObject(
+          name = "목표 수량 일괄 수정 요청 형식",
+          value = """
+            {
+               "updates": [
+                { "inventoryItemId": 10, "targetQuantity": 50 },
+                { "inventoryItemId": 11, "targetQuantity": 120 }
+              ]
+            }
+            """
+        )
+
+      ))
+  )
+  public BaseResponse<Void> updateTargetQuantities(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @PathVariable Long inventoryId,
+    @Valid @RequestBody InventoryTargetQuantityUpdateRequest request
+  ) {
+
+    Long memberId = userDetails.getMemberId();
+
+    inventoryService.updateTargetQuantities(memberId, inventoryId, request);
+
+    return BaseResponse.success();
+  }
+
+  @GetMapping("/{inventoryId}/items")
+  @PreAuthorize("hasPermission('INVENTORY', 'READ')")
+  @Operation(
+    summary = "입고 품목 목록 조회 API",
+    description = """
+      특정 입고 업무(inventoryId)에 등록된 모든 **입고 품목(Inventory_Item)** 목록을 조회합니다.
+      
+      승인 요청 전/후 모두 조회 가능
+      목표 입고 수량(quantity), 현재 입고 수량(processed_quantity), 상태(status) 등을 반환
+      """
+  )
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      description = "입고 품목 목록 조회 성공",
+      content = @Content(
+        mediaType = "application/json",
+        array = @ArraySchema(schema = @Schema(implementation = InventoryItemResponse.class)),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            [
+              {
+                "inventoryItemId": 10,
+                "itemId": 3,
+                "itemCode": "A-100",
+                "itemName": "물품명",
+                "itemPrice": 2000,
+                "targetQuantity": 50,
+                "processedQuantity": 0,
+                "inventoryProcessingStatus": "NOT_STARTED"
+              }
+            ]
+            """
+        )
+      )
+    )
+  })
+  public BaseResponse<List<InventoryItemResponse>> getInventoryItems(
+    @PathVariable Long inventoryId
+  ) {
+    List<InventoryItemResponse> result = inventoryService.getInventoryItems(inventoryId);
+
+    return BaseResponse.success(result);
+  }
+
+  @PatchMapping("/{inventoryId}/request-approval")
+  @PreAuthorize("hasPermission('INVENTORY', 'WRITE')")
+  @Operation(
+    summary = "입고 승인 요청 API",
+    description = """
+      담당자가 입고 업무를 승인 요청(PENDING) 상태로 전환합니다.
+      ASSIGNED 상태에서만 요청 가능
+      입고 예정 품목(InventoryItem)이 1개 이상 존재해야 함
+      """)
+  public BaseResponse<Void> requestApproval(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @PathVariable Long inventoryId
+  ) {
+    Long memberId = userDetails.getMemberId();
+    inventoryService.requestApproval(memberId, inventoryId);
+    return BaseResponse.success();
+  }
+
+  @PatchMapping("/{inventoryId}/items")
+  @PreAuthorize("hasPermission('INVENTORY', 'WRITE')")
+  @Operation(summary = "실제 입고 처리(수량 반영) API",
+    description = """
+      실제 입고된 수량을 반영합니다.
+      IN_PROGRESS 상태에서만 가능
+      Item 재고(quantity) 증가
+      입고 업무 물품(InventoryItem)의 현재 입고된 수량 (processed_quantity) 증가 및 상태 갱신
+      """,
+    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+      description = "물품 입력 정보",
+      required = true,
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = InventoryProcessRequest.class),
+        examples = @ExampleObject(
+          name = "입고 예시",
+          value = """
+            {
+              "items": [
+                { "inventoryItemId": 1, "receiveQuantity": 1 },
+                { "inventoryItemId": 2, "receiveQuantity": 1 }
+              ]
+            }
+            """
+        )
+      )
+    )
+  )
+  public BaseResponse<Void> processingReceiving(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @PathVariable Long inventoryId,
+    @RequestBody @Valid InventoryProcessRequest request
+  ) {
+    Long memberId = userDetails.getMemberId();
+    inventoryService.processReceiving(memberId, inventoryId, request);
+    return BaseResponse.success();
+  }
+
+  @PreAuthorize("hasPermission('INVENTORY', 'WRITE')")
+  @PatchMapping("/{inventoryId}/complete")
+  @Operation(
+    summary = "입고 업무 최종 완료 처리 API",
+    description = """
+      모든 입고 품목이 완료 상태(COMPLETED)일 때
+      담당자가 '입고 완료' 버튼을 눌러 업무 상태를 COMPLETED로 변경합니다.
+      
+      - 진행 중(IN_PROGRESS) 상태에서만 수행 가능
+      - 하나라도 미완료 품목이 있으면 실패
+      - 담당자로 지정된 직원만 가능
+      """
+  )
+  public BaseResponse<Void> completeInventory(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @PathVariable Long inventoryId
+  ) {
+    Long memberId = userDetails.getMemberId();
+
+    inventoryService.completeInventory(memberId, inventoryId);
+
+    return BaseResponse.success();
+  }
+
+  @GetMapping
+  @Operation(summary = "입고 업무 전체 조회 API",
+    description = """
+      회사에 소속된 모든 입고 업무 리스트를 조회합니다.
+      
+      - **반환 정보:**
+      - inventoryId (입고 업무 ID)
+      - projectNumber (프로젝트 번호)
+      - inventoryTitle (업무명)
+      - itemSummary (예: '애플망고 외 2개')
+      - assigneeSummary (프로젝트 기준)
+      - requestedAt
+      - inventoryStatus (진행 상태)
+      """)
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      description = "입고 업무 전체 조회 성공",
+      content = @Content(
+        mediaType = "application/json",
+        array = @ArraySchema(schema = @Schema(implementation = InventorySummaryResponse.class)),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            [
+              {
+                "inventoryId": 5,
+                "projectNumber": "C01-25-001",
+                "inventoryTitle": "삼성 물산 입고 건",
+                "itemSummary": "애플망고 외 2개",
+                "assigneeSummary": "김철수 외 1명",
+                "requestedAt": "2025-12-21T14:22:00",
+                "inventoryStatus": "IN_PROGRESS"
+              }
+            ]
+            """
+        )
+      )
+    )
+  })
+  public BaseResponse<List<InventorySummaryResponse>> getInventoryList(
+    @AuthenticationPrincipal CustomUserDetails userDetails
+  ) {
+    Long memberId = userDetails.getMemberId();
+    List<InventorySummaryResponse> response =
+      inventoryService.getInventoryList(memberId);
+
+    return BaseResponse.success(response);
+  }
+
+  @GetMapping("/{inventoryId}")
+  @Operation(summary = "입고 업무 상세 조회 API",
+    description = """
+      회사에 소속된 모든 입고 업무 리스트를 조회합니다.
+      
+      반환 정보:
+      - projectNumber (프로젝트 번호)
+      - inventoryAssignees (입고 업무 담당자 전체)
+      - inventoryTitle (업무명)
+      - inventoryDescription
+      - inventoryRequestedAt
+      - inventoryStatus
+      """)
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      description = "입고 업무 상세 조회 성공",
+      content = @Content(
+        mediaType = "application/json",
+        array = @ArraySchema(schema = @Schema(implementation = InventoryDetailResponse.class)),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            [
+              {
+                "projectNumber": "C01-25-001",
+                "inventoryAssignees": ["김철수", "이영희"],
+                "inventoryTitle": "삼성 물산 수출 건",
+                "inventoryDescription": "과일류 입고 처리",
+                "inventoryRequestedAt": "2025-12-21T14:22:00",
+                "inventoryStatus": "IN_PROGRESS"
+              }
+            ]
+            """
+        )
+      )
+    )
+  })
+  public BaseResponse<InventoryDetailResponse> getInventoryDetail(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @PathVariable Long inventoryId
+  ) {
+    Long memberId = userDetails.getMemberId();
+    InventoryDetailResponse response =
+      inventoryService.getInventoryDetail(memberId, inventoryId);
+
+    return BaseResponse.success(response);
+  }
+}
