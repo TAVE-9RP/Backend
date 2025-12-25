@@ -1,17 +1,28 @@
 package com.nexerp.domain.inventory.model.entity;
 
-import com.nexerp.domain.inventory.model.enums.InventoryStatus;
 import com.nexerp.domain.inventoryitem.model.entity.InventoryItem;
 import com.nexerp.domain.project.model.entity.Project;
-import jakarta.persistence.*;
+import com.nexerp.global.common.model.TaskStatus;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "inventory")
@@ -24,7 +35,7 @@ public class Inventory {
   @Column(name = "inventory_id")
   private Long id;
 
-  @ManyToOne(fetch = FetchType.LAZY)
+  @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "project_id", nullable = false)
   private Project project;
 
@@ -43,7 +54,7 @@ public class Inventory {
 
   @Enumerated(EnumType.STRING)
   @Column(name = "inventory_status", nullable = false)
-  private InventoryStatus status;
+  private TaskStatus status;
 
   // 업무 생성일
   @Column(name = "inventory_created_at")
@@ -54,12 +65,12 @@ public class Inventory {
 
   @Builder
   public Inventory(Project project,
-                   String title,
-                   String description,
-                   LocalDateTime requestedAt,
-                   LocalDateTime completedAt,
-                   InventoryStatus status,
-                   LocalDateTime createdAt) {
+    String title,
+    String description,
+    LocalDateTime requestedAt,
+    LocalDateTime completedAt,
+    TaskStatus status,
+    LocalDateTime createdAt) {
     this.project = project;
     this.title = title;
     this.description = description;
@@ -73,28 +84,32 @@ public class Inventory {
   public static Inventory assign(Project project) {
     return Inventory.builder()
       .project(project)
-      .status(InventoryStatus.ASSIGNED)
+      .status(TaskStatus.ASSIGNED)
       .createdAt(LocalDateTime.now())
       .build();
   }
 
-  public void updateCommonInfo(String title, String description, LocalDateTime requestedAt) {
+  public void updateCommonInfo(String title, String description) {
     this.title = title;
     this.description = description;
-    this.requestedAt = requestedAt;
   }
 
-  public void updateStatus(InventoryStatus status, LocalDateTime time) {
+  public void updateStatus(TaskStatus status, LocalDateTime time) {
     this.status = status;
 
     // 승인 요청(PENDING) 시 요청일 갱신
-    if (status == InventoryStatus.PENDING) {
+    if (status == TaskStatus.PENDING) {
       this.requestedAt = time;
     }
 
     // 업무 종료(COMPLETED) 시 완료일 저장
-    if (status == InventoryStatus.COMPLETED) {
+    if (status == TaskStatus.COMPLETED) {
       this.completedAt = time;
     }
+  }
+
+  public void reject() {
+    this.requestedAt = null;
+    updateStatus(TaskStatus.ASSIGNED, null);
   }
 }

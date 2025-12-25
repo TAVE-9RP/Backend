@@ -1,7 +1,7 @@
 package com.nexerp.domain.inventory.service;
 
 import com.nexerp.domain.inventory.model.entity.Inventory;
-import com.nexerp.domain.inventory.model.enums.InventoryStatus;
+import com.nexerp.domain.inventory.model.request.InventoryCommonUpdateRequest;
 import com.nexerp.domain.inventory.model.request.InventoryItemAddRequest;
 import com.nexerp.domain.inventory.model.request.InventoryProcessRequest;
 import com.nexerp.domain.inventory.model.request.InventoryTargetQuantityUpdateRequest;
@@ -10,9 +10,7 @@ import com.nexerp.domain.inventory.model.response.InventoryItemAddResponse;
 import com.nexerp.domain.inventory.model.response.InventoryItemResponse;
 import com.nexerp.domain.inventory.model.response.InventorySummaryResponse;
 import com.nexerp.domain.inventory.repository.InventoryRepository;
-import com.nexerp.domain.inventory.model.request.InventoryCommonUpdateRequest;
 import com.nexerp.domain.inventoryitem.model.entity.InventoryItem;
-import com.nexerp.domain.inventoryitem.model.enums.InventoryProcessingStatus;
 import com.nexerp.domain.inventoryitem.repository.InventoryItemRepository;
 import com.nexerp.domain.item.model.entity.Item;
 import com.nexerp.domain.item.repository.ItemRepository;
@@ -23,13 +21,14 @@ import com.nexerp.domain.projectmember.model.entity.ProjectMember;
 import com.nexerp.domain.projectmember.repository.ProjectMemberRepository;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
+import com.nexerp.global.common.model.TaskProcessingStatus;
+import com.nexerp.global.common.model.TaskStatus;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -55,19 +54,18 @@ public class InventoryService {
       .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "입고 업무를 찾을 수 없습니다."));
 
     // 상태 검증: 승인 요청(PENDING) 이후에는 수정 불가
-    if (inv.getStatus() != InventoryStatus.ASSIGNED) {
+    if (inv.getStatus() != TaskStatus.ASSIGNED) {
       throw new BaseException(GlobalErrorCode.BAD_REQUEST, "ASSIGNED 상태에서만 수정할 수 있습니다.");
     }
 
     inv.updateCommonInfo(
-      request.getTitle(),
-      request.getDescription(),
-      LocalDateTime.now()
+      request.getInventoryTitle(),
+      request.getInventoryDescription()
     );
   }
 
   @Transactional
-  public InventoryItemAddResponse addInventoryItems (
+  public InventoryItemAddResponse addInventoryItems(
     Long memberId,
     Long inventoryId,
     InventoryItemAddRequest request
@@ -82,7 +80,7 @@ public class InventoryService {
 
     for (Long itemId : request.getItemIds()) {
 
-      if(inventoryItemRepository.existsByInventoryIdAndItemId(inventoryId, itemId)) {
+      if (inventoryItemRepository.existsByInventoryIdAndItemId(inventoryId, itemId)) {
         continue; // 이미 존재하는 물품이면 스킵
       }
 
@@ -94,7 +92,7 @@ public class InventoryService {
         .item(item)
         .quantity(0L) // 목표 수량은 별도로 입력
         .processed_quantity(0L)
-        .status(InventoryProcessingStatus.NOT_STARTED)
+        .status(TaskProcessingStatus.NOT_STARTED)
         .build();
 
       InventoryItem saved = inventoryItemRepository.save(inventoryItem);
@@ -115,7 +113,7 @@ public class InventoryService {
 
     validateAssignee(inventoryId, memberId);
 
-    if (inventory.getStatus() != InventoryStatus.ASSIGNED) {
+    if (inventory.getStatus() != TaskStatus.ASSIGNED) {
       throw new BaseException(GlobalErrorCode.BAD_REQUEST, "승인 요청 전까지만 설정 가능합니다.");
     }
 
@@ -137,7 +135,6 @@ public class InventoryService {
     Inventory inventory = inventoryRepository.findById(inventoryId)
       .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "입고 업무를 찾을 수 없습니다."));
 
-
     return inventoryItemRepository.findAllByInventoryId(inventoryId)
       .stream()
       .map(InventoryItemResponse::from)
@@ -152,7 +149,7 @@ public class InventoryService {
 
     validateAssignee(inventoryId, memberId);
 
-    if (inventory.getStatus() != InventoryStatus.ASSIGNED) {
+    if (inventory.getStatus() != TaskStatus.ASSIGNED) {
       throw new BaseException(GlobalErrorCode.BAD_REQUEST, "ASSIGNED 상태에서만 승인 요청을 할 수 있습니다.");
     }
 
@@ -161,27 +158,27 @@ public class InventoryService {
       throw new BaseException(GlobalErrorCode.BAD_REQUEST, "입고 예정 품목 1개 이상 필요합니다.");
     }
 
-    inventory.updateStatus(InventoryStatus.PENDING, LocalDateTime.now());
+    inventory.updateStatus(TaskStatus.PENDING, LocalDateTime.now());
   }
 
   @Transactional
   public void processReceiving(Long memberId, Long inventoryId,
-                               InventoryProcessRequest request) {
+    InventoryProcessRequest request) {
     Inventory inventory = inventoryRepository.findById(inventoryId)
       .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "입고 업무를 찾을 수 없습니다."));
 
     validateAssignee(inventoryId, memberId);
 
-    if (inventory.getStatus() != InventoryStatus.IN_PROGRESS) {
+    if (inventory.getStatus() != TaskStatus.IN_PROGRESS) {
       throw new BaseException(GlobalErrorCode.BAD_REQUEST, "IN_PROGRESS 상태에서만 입고 처리할 수 있습니다.");
     }
 
-    for (InventoryProcessRequest.ProcessUnit unit : request.getProcess()) {
+    for (InventoryProcessRequest.ProcessUnit unit : request.getItems()) {
 
       InventoryItem inventoryItem = inventoryItemRepository.findById(unit.getInventoryItemId())
         .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "입고 예정 품목을 찾을 수 없습니다."));
 
-      if(!inventoryItem.getInventory().getId().equals(inventoryId)) {
+      if (!inventoryItem.getInventory().getId().equals(inventoryId)) {
         throw new BaseException(GlobalErrorCode.FORBIDDEN, "잘못된 입고 품목입니다.");
       }
 
@@ -196,9 +193,9 @@ public class InventoryService {
 
       // 상태 갱신
       if (inventoryItem.getProcessed_quantity() >= inventoryItem.getQuantity()) {
-        inventoryItem.updateStatus(InventoryProcessingStatus.COMPLETED);
+        inventoryItem.updateStatus(TaskProcessingStatus.COMPLETED);
       } else {
-        inventoryItem.updateStatus(InventoryProcessingStatus.IN_PROGRESS);
+        inventoryItem.updateStatus(TaskProcessingStatus.IN_PROGRESS);
       }
     }
   }
@@ -212,23 +209,23 @@ public class InventoryService {
     validateAssignee(inventoryId, memberId);
 
     // 진행 중(IN_PROGRESS) 상태에서만 완료 가능
-    if (inventory.getStatus() != InventoryStatus.IN_PROGRESS) {
-      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "진행 중(IN_PROGRESS) 상태에서만 업무를 완료할 수 있습니다.");
+    if (inventory.getStatus() != TaskStatus.IN_PROGRESS) {
+      throw new BaseException(GlobalErrorCode.BAD_REQUEST,
+        "진행 중(IN_PROGRESS) 상태에서만 업무를 완료할 수 있습니다.");
     }
-
 
     // 모든 품목이 완료 상태인지 확인
     boolean allDone = inventoryItemRepository
       .findAllByInventoryId(inventoryId)
       .stream()
-      .allMatch(item -> item.getStatus() == InventoryProcessingStatus.COMPLETED);
+      .allMatch(item -> item.getStatus() == TaskProcessingStatus.COMPLETED);
 
     if (!allDone) {
       throw new BaseException(GlobalErrorCode.BAD_REQUEST, "아직 완료되지 않은 품목이 있습니다.");
     }
 
     // 업무 최종 완료
-    inventory.updateStatus(InventoryStatus.COMPLETED, LocalDateTime.now());
+    inventory.updateStatus(TaskStatus.COMPLETED, LocalDateTime.now());
   }
 
   public List<InventorySummaryResponse> getInventoryList(Long memberId) {
@@ -241,7 +238,7 @@ public class InventoryService {
     List<Inventory> inventories = inventoryRepository.findAllByProject_Company_Id(companyId);
 
     return inventories.stream()
-      .map(inv ->{
+      .map(inv -> {
 
         // 품목 요약 (애플망고 외 2개)
         List<InventoryItem> items = inventoryItemRepository.findAllByInventoryId(inv.getId());
@@ -256,13 +253,16 @@ public class InventoryService {
         }
 
         // 담당자 요약 (홍길동 외 3명)
-        List<ProjectMember> projectMembers = projectMemberRepository.findAllByProjectId(inv.getProject().getId());
+        List<ProjectMember> projectMembers = projectMemberRepository.findAllByProjectId(
+          inv.getProject().getId());
         List<Member> members = projectMembers.stream()
           .map(ProjectMember::getMember)
           .toList();
 
         String assigneeSummary;
-        if(members.size() == 1) {
+        if (members.isEmpty()) {
+          throw new BaseException(GlobalErrorCode.NOT_FOUND, "프로젝트 담당자를 찾을 수 없습니다.");
+        } else if (members.size() == 1) {
           assigneeSummary = members.get(0).getName();
         } else {
           assigneeSummary = members.get(0).getName()
@@ -284,7 +284,8 @@ public class InventoryService {
 
     validateCompany(memberId, inventory.getProject().getCompany().getId());
 
-    List<ProjectMember> projectMembers = projectMemberRepository.findAllByProjectId(inventory.getProject().getId());
+    List<ProjectMember> projectMembers = projectMemberRepository.findAllByProjectId(
+      inventory.getProject().getId());
 
     // 입고 담당자만 필터링
     List<String> assignees = projectMembers.stream()
@@ -318,7 +319,7 @@ public class InventoryService {
     Member member = memberRepository.findById(memberId)
       .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "해당 직원을 찾을 수 없습니다."));
 
-    if(!member.getCompanyId().equals(companyId)){
+    if (!member.getCompanyId().equals(companyId)) {
       throw new BaseException(GlobalErrorCode.FORBIDDEN, "회사 정보가 일치하지 않습니다.");
     }
   }
