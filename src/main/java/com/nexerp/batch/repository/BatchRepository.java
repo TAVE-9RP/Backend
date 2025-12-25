@@ -7,7 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-public interface ItemRepository extends JpaRepository<Item, Long> {
+public interface BatchRepository extends JpaRepository<Item, Long> {
 
   @Query("""
       select new com.nexerp.batch.dto.ItemRawRow(
