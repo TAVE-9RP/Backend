@@ -21,9 +21,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -61,13 +59,9 @@ public class JwtTokenProvider {     // 토큰 발급
      * 인증 정보(Authentication)를 기반으로 Access Token과 Refresh Token을 생성
      */
     public MemberAuthResponseDto generateToken(Authentication authentication) {
-        // 권한 정보와 사용자 ID 가져오기
-        String authorities = authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.joining(","));
 
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        String memberId = String.valueOf(userDetails.getMemberId());
+        Member member = userDetails.getMember();
 
         long now = (new Date()).getTime();
         Date accessTokenExpiresIn = new Date(now + accessTokenExpirationTime);
@@ -75,8 +69,14 @@ public class JwtTokenProvider {     // 토큰 발급
 
         // Access Token 생성 (Subject: 회원 PK, Claim: 권한)
         String accessToken = Jwts.builder()
-                .setSubject(memberId)
-                .claim("auth", authorities)
+                .setSubject(String.valueOf(member.getId()))
+                .claim("companyId", member.getCompanyId())
+                .claim("department", member.getDepartment().name())
+                .claim("permissions", Map.of(
+                  "inventory", member.getPermissions().getInventoryRole().name(),
+                  "logistics", member.getPermissions().getLogisticsRole().name(),
+                  "management", member.getPermissions().getManagementRole().name()
+                ))
                 .setExpiration(accessTokenExpiresIn)
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
@@ -100,17 +100,6 @@ public class JwtTokenProvider {     // 토큰 발급
     public Authentication getAuthentication(String accessToken) {
         // 클레임 추출
         Claims claims = parseClaims(accessToken);
-
-        if (claims.get("auth") == null) {
-            throw new RuntimeException("권한 정보가 없는 토큰입니다.");
-        }
-
-        // 권한 정보(auth)를 SimpleGrantedAuthority 객체 리스트로 변환
-        Collection<? extends GrantedAuthority> authorities =
-                Arrays.stream(claims.get("auth").toString().split(","))
-                        .map(SimpleGrantedAuthority::new)
-                        .collect(Collectors.toList());
-
         Long memberId = Long.valueOf(claims.getSubject());
 
         Member member = memberRepository.findById(memberId)
@@ -121,7 +110,7 @@ public class JwtTokenProvider {     // 토큰 발급
         return new UsernamePasswordAuthenticationToken(
           principal,
           null,
-          principal.getAuthorities()
+          List.of()
         );
 
     }
