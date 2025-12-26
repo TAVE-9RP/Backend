@@ -1,6 +1,7 @@
 package com.nexerp.global.security.jwt;
 
 import com.nexerp.domain.member.model.entity.Member;
+import com.nexerp.domain.member.model.enums.MemberRole;
 import com.nexerp.domain.member.model.response.MemberAuthResponseDto;
 import com.nexerp.domain.member.repository.MemberRepository;
 import com.nexerp.global.common.exception.BaseException;
@@ -73,9 +74,9 @@ public class JwtTokenProvider {     // 토큰 발급
                 .claim("companyId", member.getCompanyId())
                 .claim("department", member.getDepartment().name())
                 .claim("permissions", Map.of(
-                  "inventory", member.getPermissions().getInventoryRole().name(),
-                  "logistics", member.getPermissions().getLogisticsRole().name(),
-                  "management", member.getPermissions().getManagementRole().name()
+                  "inventory", roleOrNone(member.getPermissions().getInventoryRole()),
+                  "logistics", roleOrNone(member.getPermissions().getLogisticsRole()),
+                  "management", roleOrNone(member.getPermissions().getManagementRole())
                 ))
                 .setExpiration(accessTokenExpiresIn)
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -92,6 +93,10 @@ public class JwtTokenProvider {     // 토큰 발급
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
+    }
+
+    private String roleOrNone(MemberRole role) {
+      return role != null ? role.name() : "NONE";
     }
 
     /**
