@@ -6,7 +6,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class ItemRawRow {
-  private Long itemId;
+  private Long id;
   private Long companyId;
   private String code;
   private String name;

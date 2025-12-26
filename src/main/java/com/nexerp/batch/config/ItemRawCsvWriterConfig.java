@@ -30,7 +30,7 @@ public class ItemRawCsvWriterConfig {
     Path filePath = Path.of(localDir, fileName);
 
     FieldExtractor<ItemRawRow> extractor = item -> new Object[] {
-      item.getItemId(),
+      item.getId(),
       item.getCompanyId(),
       item.getCode(),
       item.getQuantity(),
