@@ -9,6 +9,7 @@ import com.nexerp.domain.logistics.model.entity.Logistics;
 import com.nexerp.domain.logistics.repository.LogisticsRepository;
 import com.nexerp.domain.member.model.entity.Member;
 import com.nexerp.domain.member.model.enums.MemberDepartment;
+import com.nexerp.domain.member.model.response.MemberIdNameResponseDto;
 import com.nexerp.domain.member.repository.MemberRepository;
 import com.nexerp.domain.member.service.MemberService;
 import com.nexerp.domain.project.model.entity.Project;
@@ -19,14 +20,12 @@ import com.nexerp.domain.project.model.response.ProjectDetailResponse;
 import com.nexerp.domain.project.model.response.ProjectSearchResponse;
 import com.nexerp.domain.project.repository.ProjectRepository;
 import com.nexerp.domain.projectmember.model.entity.ProjectMember;
-import com.nexerp.domain.projectmember.model.response.MemberIdNameResponseDto;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -159,6 +158,8 @@ public class ProjectService {
       throw new BaseException(GlobalErrorCode.FORBIDDEN, "해당 프로젝트의 회사 직원이 아닙니다.");
     }
 
+    List<MemberIdNameResponseDto> memberResponses = getProjectMembers(project);
+
     return ProjectDetailResponse.builder()
       .projectNumber(project.getNumber())
       .projectTitle(project.getTitle())
@@ -167,21 +168,14 @@ public class ProjectService {
       .expectedEndDate(project.getExpectedEndDate())
       .endDate(project.getEndDate())
       .createDate(project.getCreateDate())
-      .projectMembers(project.getProjectMembers().stream()
-        // ProjectMember (pm)에서 Member 엔티티를 가져옵니다.
-        .map(pm -> pm.getMember())
-        .map(member -> MemberIdNameResponseDto.builder()
-          .memberId(member.getId())
-          .name(member.getName())
-          .build())
-        .collect(Collectors.toList()))
+      .projectMembers(memberResponses)
       .build();
 
   }
 
   // 담당자 본인의 프로젝트 리스트 조회
   @Transactional(readOnly = true)
-  public List<ProjectDetailResponse> findProjectsByMemberId(Long memberId) {
+  public List<ProjectSearchResponse> findProjectsByMemberId(Long memberId) {
 
     // 회원 정보 조회 (회원의 company_id를 얻고자)
     Member currentMember = memberRepository.findById(memberId)
@@ -189,25 +183,9 @@ public class ProjectService {
 
     Long companyId = currentMember.getCompanyId();
 
-    List<Project> projectList = projectRepository.findProjectsByMemberId(memberId, companyId);
+    List<Project> projects = projectRepository.findProjectsByMemberId(memberId, companyId);
 
-    return projectList.stream()
-      .map(project -> ProjectDetailResponse.builder()
-        .projectNumber(project.getNumber())
-        .projectTitle(project.getTitle())
-        .description(project.getDescription())
-        .customer(project.getCustomer())
-        .expectedEndDate(project.getExpectedEndDate())
-        .endDate(project.getEndDate())
-        .createDate(project.getCreateDate())
-        .projectMembers(project.getProjectMembers().stream()
-          .map(pm -> MemberIdNameResponseDto.builder()
-            .memberId(pm.getMember().getId())
-            .name(pm.getMember().getName())
-            .build())
-          .collect(Collectors.toList()))
-        .build())
-      .collect(Collectors.toList());
+    return ProjectSearchResponse.fromList(projects);
 
   }
 
@@ -279,6 +257,18 @@ public class ProjectService {
   public List<Project> getProjectsWithLogisticsByCompanyId(Long companyId) {
     List<Project> projects = projectRepository.findAllWithLogisticsAndMembersByCompanyId(companyId);
     return projects;
+  }
+
+  @Transactional(readOnly = true)
+  public List<MemberIdNameResponseDto> getProjectMembers(Project project) {
+    List<MemberIdNameResponseDto> memberResponses = project.getProjectMembers().stream()
+      .map(pm -> new MemberIdNameResponseDto(
+        pm.getMember().getId(),
+        pm.getMember().getName()
+      ))
+      .toList();
+
+    return memberResponses;
   }
 
 }
