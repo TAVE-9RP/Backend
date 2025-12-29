@@ -210,6 +210,7 @@ public class LogisticsService {
     validateAssignee(logistics, memberId);
 
     logistics.complete();
+    projectService.completeProject(logistics.getProject().getId());
   }
 
   @Transactional
