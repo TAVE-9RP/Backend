@@ -271,4 +271,11 @@ public class ProjectService {
     return memberResponses;
   }
 
+  @Transactional
+  public void completeProject(Long projectId) {
+    Project project = projectRepository.findByIdWithTasks(projectId)
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "프로젝트를 찾을 수 없습니다."));
+
+    project.complete();
+  }
 }
