@@ -17,6 +17,7 @@ import com.nexerp.domain.item.repository.ItemRepository;
 import com.nexerp.domain.member.model.entity.Member;
 import com.nexerp.domain.member.model.enums.MemberDepartment;
 import com.nexerp.domain.member.repository.MemberRepository;
+import com.nexerp.domain.project.service.ProjectService;
 import com.nexerp.domain.projectmember.model.entity.ProjectMember;
 import com.nexerp.domain.projectmember.repository.ProjectMemberRepository;
 import com.nexerp.global.common.exception.BaseException;
@@ -40,6 +41,7 @@ public class InventoryService {
   private final ItemRepository itemRepository;
   private final InventoryItemRepository inventoryItemRepository;
   private final MemberRepository memberRepository;
+  private final ProjectService projectService;
 
   @Transactional
   public void updateInventoryCommonInfo(
@@ -226,6 +228,7 @@ public class InventoryService {
 
     // 업무 최종 완료
     inventory.updateStatus(TaskStatus.COMPLETED, LocalDateTime.now());
+    projectService.completeProject(inventory.getProject().getId());
   }
 
   public List<InventorySummaryResponse> getInventoryList(Long memberId) {
