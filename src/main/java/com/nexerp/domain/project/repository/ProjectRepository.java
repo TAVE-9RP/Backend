@@ -84,4 +84,10 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
       WHERE p.company.id = :companyId
     """)
   List<Project> findAllWithLogisticsAndMembersByCompanyId(Long companyId);
+
+  @Query("SELECT p FROM Project p " +
+    "LEFT JOIN FETCH p.logistics " +
+    "LEFT JOIN FETCH p.inventory " +
+    "WHERE p.id = :projectId")
+  Optional<Project> findByIdWithTasks(Long projectId);
 }

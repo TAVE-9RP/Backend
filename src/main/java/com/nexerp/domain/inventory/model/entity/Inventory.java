@@ -2,6 +2,8 @@ package com.nexerp.domain.inventory.model.entity;
 
 import com.nexerp.domain.inventoryitem.model.entity.InventoryItem;
 import com.nexerp.domain.project.model.entity.Project;
+import com.nexerp.global.common.exception.BaseException;
+import com.nexerp.global.common.exception.GlobalErrorCode;
 import com.nexerp.global.common.model.TaskStatus;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -105,6 +107,20 @@ public class Inventory {
     // 업무 종료(COMPLETED) 시 완료일 저장
     if (status == TaskStatus.COMPLETED) {
       this.completedAt = time;
+    }
+  }
+
+  public void approve() {
+    if (this.status != TaskStatus.PENDING) {
+      throw new BaseException(GlobalErrorCode.STATE_CONFLICT, "PENDING 상태에서만 승인할 수 있습니다.");
+    }
+
+    // 상태 변경
+    this.status = TaskStatus.IN_PROGRESS;
+
+    // 프로젝트 상태 연쇄 변경
+    if (this.project != null) {
+      this.project.start();
     }
   }
 

@@ -120,11 +120,11 @@ public class ProjectController {
   @GetMapping("/assigned")
   @Operation(summary = "담당자 본인에게 할당된 프로젝트 리스트 조회 api"
   )
-  public BaseResponse<List<ProjectDetailResponse>> findProjectsByMemberId(
-    @AuthenticationPrincipal CustomUserDetails userDetails){
+  public BaseResponse<List<ProjectSearchResponse>> findProjectsByMemberId(
+    @AuthenticationPrincipal CustomUserDetails userDetails) {
     Long memberId = userDetails.getMemberId();
 
-    List<ProjectDetailResponse> result = projectService.findProjectsByMemberId(memberId);
+    List<ProjectSearchResponse> result = projectService.findProjectsByMemberId(memberId);
 
     return BaseResponse.success(result);
   }
@@ -134,7 +134,7 @@ public class ProjectController {
   @Operation(summary = "신규 프로젝트 번호 생성 api"
   )
   public BaseResponse<String> createNewProjectNum(
-    @AuthenticationPrincipal CustomUserDetails userDetails){
+    @AuthenticationPrincipal CustomUserDetails userDetails) {
     Long memberId = userDetails.getMemberId();
 
     String result = projectService.createNewProjectNum(memberId);
