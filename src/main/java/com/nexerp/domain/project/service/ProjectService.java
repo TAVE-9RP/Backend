@@ -264,7 +264,8 @@ public class ProjectService {
     List<MemberIdNameResponseDto> memberResponses = project.getProjectMembers().stream()
       .map(pm -> new MemberIdNameResponseDto(
         pm.getMember().getId(),
-        pm.getMember().getName()
+        pm.getMember().getName(),
+        pm.getMember().getDepartment()
       ))
       .toList();
 
