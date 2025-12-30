@@ -20,7 +20,6 @@ import com.nexerp.domain.member.util.EnumValidatorUtil;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
 import com.nexerp.global.common.model.TaskStatus;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -206,11 +205,7 @@ public class AdminService {
 
     validateOwner(ownerId);
 
-    if (inventory.getStatus() != TaskStatus.PENDING) {
-      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "PENDING 상태에서만 승인할 수 있습니다.");
-    }
-
-    inventory.updateStatus(TaskStatus.IN_PROGRESS, LocalDateTime.now());
+    inventory.approve();
   }
 
   // 오너인지 검증 후 오너인 경우 오너 반환
