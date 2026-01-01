@@ -1,4 +1,4 @@
-package com.nexerp.batch.dto;
+package com.nexerp.batch.model.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
