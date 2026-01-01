@@ -1,6 +1,6 @@
 package com.nexerp.batch.repository;
 
-import com.nexerp.batch.dto.ItemRawRow;
+import com.nexerp.batch.model.dto.ItemRawRow;
 import com.nexerp.domain.item.model.entity.Item;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -1,6 +1,6 @@
 package com.nexerp.batch.job;
 
-import com.nexerp.batch.dto.ItemRawRow;
+import com.nexerp.batch.model.dto.ItemRawRow;
 import com.nexerp.batch.tasklet.S3UploadTasklet;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Job;
