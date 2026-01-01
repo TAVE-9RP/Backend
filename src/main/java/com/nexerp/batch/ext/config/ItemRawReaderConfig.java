@@ -1,7 +1,7 @@
-package com.nexerp.batch.config;
+package com.nexerp.batch.ext.config;
 
-import com.nexerp.batch.model.dto.ItemRawRow;
-import com.nexerp.batch.repository.BatchRepository;
+import com.nexerp.batch.ext.dto.ItemRawRow;
+import com.nexerp.batch.ext.repository.BatchRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.item.data.RepositoryItemReader;
 import org.springframework.context.annotation.Bean;

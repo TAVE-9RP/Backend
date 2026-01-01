@@ -1,4 +1,4 @@
-package com.nexerp.batch.service;
+package com.nexerp.batch.ext.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;

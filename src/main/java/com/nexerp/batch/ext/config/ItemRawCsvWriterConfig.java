@@ -1,6 +1,6 @@
-package com.nexerp.batch.config;
+package com.nexerp.batch.ext.config;
 
-import com.nexerp.batch.model.dto.ItemRawRow;
+import com.nexerp.batch.ext.dto.ItemRawRow;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder;

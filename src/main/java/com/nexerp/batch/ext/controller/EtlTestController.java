@@ -1,6 +1,6 @@
-package com.nexerp.batch.controller;
+package com.nexerp.batch.ext.controller;
 
-import com.nexerp.batch.service.S3TestService;
+import com.nexerp.batch.ext.service.S3TestService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

@@ -1,4 +1,4 @@
-package com.nexerp.batch.scheduler;
+package com.nexerp.batch.ext.scheduler;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
