@@ -5,6 +5,9 @@ import com.nexerp.domain.inventory.model.entity.Inventory;
 import com.nexerp.domain.logistics.model.entity.Logistics;
 import com.nexerp.domain.project.model.enums.ProjectStatus;
 import com.nexerp.domain.projectmember.model.entity.ProjectMember;
+import com.nexerp.global.common.exception.BaseException;
+import com.nexerp.global.common.exception.GlobalErrorCode;
+import com.nexerp.global.common.model.TaskStatus;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -110,5 +113,40 @@ public class Project {
       .build();
   }
 
-  // projectMembers 지정은 민섭님 파트
+  public void start() {
+    if (this.status == ProjectStatus.NOT_STARTED) {
+      this.status = ProjectStatus.IN_PROGRESS;
+    }
+  }
+
+  public boolean canBeCompleted() {
+    if (this.logistics == null && this.inventory == null) {
+      throw new BaseException(GlobalErrorCode.STATE_CONFLICT, "프로젝트에 할당된 업무(물류 또는 재고)가 없습니다.");
+    }
+
+    if (this.logistics != null && this.logistics.getStatus() != TaskStatus.COMPLETED) {
+      return false;
+    }
+
+    if (this.inventory != null && this.inventory.getStatus() != TaskStatus.COMPLETED) {
+      return false;
+    }
+
+    if (this.status == ProjectStatus.COMPLETED) {
+      return false;
+    }
+
+    if (this.status != ProjectStatus.IN_PROGRESS) {
+      return false;
+    }
+
+    return true;
+  }
+
+  public void complete() {
+    if (canBeCompleted()) {
+      this.endDate = LocalDateTime.now();
+      this.status = ProjectStatus.COMPLETED;
+    }
+  }
 }

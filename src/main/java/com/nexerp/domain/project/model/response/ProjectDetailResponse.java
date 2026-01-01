@@ -1,6 +1,6 @@
 package com.nexerp.domain.project.model.response;
 
-import com.nexerp.domain.projectmember.model.response.MemberIdNameResponseDto;
+import com.nexerp.domain.member.model.response.MemberIdNameResponseDto;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
