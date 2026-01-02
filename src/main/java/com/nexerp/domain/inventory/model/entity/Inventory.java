@@ -126,6 +126,6 @@ public class Inventory {
 
   public void reject() {
     this.requestedAt = null;
-    updateStatus(TaskStatus.ASSIGNED, null);
+    updateStatus(TaskStatus.REJECT, null);
   }
 }

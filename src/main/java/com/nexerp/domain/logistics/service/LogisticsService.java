@@ -63,8 +63,9 @@ public class LogisticsService {
 
     validateAssignee(logistics, memberId);
 
-    if (logistics.getStatus() != TaskStatus.ASSIGNED) {
-      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "ASSIGNED 상태에서만 수정할 수 있습니다.");
+    if (logistics.getStatus() != TaskStatus.ASSIGNED
+      && logistics.getStatus() != TaskStatus.REJECT) {
+      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "ASSIGNED 또는 REJECT 상태에서만 수정할 수 있습니다.");
     }
 
     logistics.update(
@@ -109,8 +110,9 @@ public class LogisticsService {
 
     validateAssignee(logistics, memberId);
 
-    if (logistics.getStatus() != TaskStatus.ASSIGNED) {
-      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "ASSIGNED 상태에서만 수정할 수 있습니다.");
+    if (logistics.getStatus() != TaskStatus.ASSIGNED
+      && logistics.getStatus() != TaskStatus.REJECT) {
+      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "ASSIGNED 또는 REJECT 상태에서만 수정할 수 있습니다.");
     }
 
     Set<Long> requestedIds = validateDuplicate(itemRequests);
@@ -222,8 +224,9 @@ public class LogisticsService {
 
     validateAssignee(logistics, memberId);
 
-    if (logistics.getStatus() != TaskStatus.ASSIGNED) {
-      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "ASSIGNED 상태에서만 수정할 수 있습니다.");
+    if (logistics.getStatus() != TaskStatus.ASSIGNED
+      && logistics.getStatus() != TaskStatus.REJECT) {
+      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "ASSIGNED 또는 REJECT 상태에서만 수정할 수 있습니다.");
     }
 
     List<Long> requestedIds = request.stream()
