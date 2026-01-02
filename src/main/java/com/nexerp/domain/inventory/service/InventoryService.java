@@ -52,15 +52,16 @@ public class InventoryService {
 
     validateAssignee(inventoryId, memberId);
 
-    Inventory inv = inventoryRepository.findById(inventoryId)
+    Inventory inventory = inventoryRepository.findById(inventoryId)
       .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "입고 업무를 찾을 수 없습니다."));
 
     // 상태 검증: 승인 요청(PENDING) 이후에는 수정 불가
-    if (inv.getStatus() != TaskStatus.ASSIGNED) {
-      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "ASSIGNED 상태에서만 수정할 수 있습니다.");
+    if (inventory.getStatus() != TaskStatus.ASSIGNED
+      && inventory.getStatus() != TaskStatus.REJECT) {
+      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "ASSIGNED 또는 REJECT 상태에서만 수정할 수 있습니다.");
     }
 
-    inv.updateCommonInfo(
+    inventory.updateCommonInfo(
       request.getInventoryTitle(),
       request.getInventoryDescription()
     );
@@ -75,6 +76,11 @@ public class InventoryService {
 
     Inventory inventory = inventoryRepository.findById(inventoryId)
       .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "입고 업무를 찾을 수 없습니다."));
+
+    if (inventory.getStatus() != TaskStatus.ASSIGNED
+      && inventory.getStatus() != TaskStatus.REJECT) {
+      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "ASSIGNED 또는 REJECT 상태에서만 추가 할 수 있습니다.");
+    }
 
     validateAssignee(inventoryId, memberId);
 
@@ -115,8 +121,9 @@ public class InventoryService {
 
     validateAssignee(inventoryId, memberId);
 
-    if (inventory.getStatus() != TaskStatus.ASSIGNED) {
-      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "승인 요청 전까지만 설정 가능합니다.");
+    if (inventory.getStatus() != TaskStatus.ASSIGNED
+      && inventory.getStatus() != TaskStatus.REJECT) {
+      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "ASSIGNED 또는 REJECT 상태에서만 수정할 수 있습니다.");
     }
 
     for (InventoryTargetQuantityUpdateRequest.QuantityUpdateUnit unit : request.getUpdates()) {
@@ -151,8 +158,9 @@ public class InventoryService {
 
     validateAssignee(inventoryId, memberId);
 
-    if (inventory.getStatus() != TaskStatus.ASSIGNED) {
-      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "ASSIGNED 상태에서만 승인 요청을 할 수 있습니다.");
+    if (inventory.getStatus() != TaskStatus.ASSIGNED
+      && inventory.getStatus() != TaskStatus.REJECT) {
+      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "ASSIGNED 또는 REJECT 상태에서만 수정할 수 있습니다.");
     }
 
     boolean hasItem = inventoryItemRepository.existsByInventoryId(inventoryId);
