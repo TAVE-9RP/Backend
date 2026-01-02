@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: local
+    active: prod
 ---
 server:
   port: 3006
@@ -11,3 +11,18 @@ jwt:
   secret: ${JWT_SECRET}
   access-token-expiration-in-milliseconds: 3600000 # 1시간
   refresh-token-expiration-in-milliseconds: 604800000 # 7일
+
+etl:
+  local-dir: ./etl-data # 실행 경로 기준 폴더 생성됨
+
+cloud:
+  aws:
+    credentials:
+      access-key: ${AWS_ACCESS_KEY}
+      secret-key: ${AWS_SECRET_KEY}
+    s3:
+      bucket: nexerp-etl-bucket
+    region:
+      static: ${AWS_REGION}
+    stack:
+      auto: false
