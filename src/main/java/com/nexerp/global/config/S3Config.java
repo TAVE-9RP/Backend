@@ -27,9 +27,10 @@ public class S3Config {
   @Bean
   public S3Client s3Client() {
 
+    AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKey, secretKey);
+
     return S3Client.builder()
-      // DefaultCredentialsProvider는 EC2의 IAM 역할을 가장 먼저 탐색합니다.
-      .credentialsProvider(DefaultCredentialsProvider.create())
+      .credentialsProvider(StaticCredentialsProvider.create(credentials))
       .region(Region.of(region))
       .build();
   }
