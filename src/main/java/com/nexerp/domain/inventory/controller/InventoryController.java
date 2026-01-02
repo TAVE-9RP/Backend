@@ -48,7 +48,7 @@ public class InventoryController {
     description = """
       **물품 추가를 제외한 입고 업무의 공통 정보를 저장 또는 수정합니다.**
       - 해당 업무 할당된 담당자만 가능
-      - 상태 검증: ASSIGNED에서만 수정 가능
+      - 상태 검증: ASSIGNED 또는 REJECT 에서만 수정 가능
       - 입고 업무명(title), 업무 설명(description)을 필수
       - URL 경로의 {inventoryId} 값을 통해 수정할 입고 업무를 지정
       프로젝트 넘버는 오너가 프로젝트 생성 시 할당되었기에 별도로 지정하지 않습니다.
@@ -98,7 +98,7 @@ public class InventoryController {
       기존 재고 검색을 통해서 추가할 때는 여러 개를 추가하겠지만,
       새 물품 추가를 통해서 추가 시에는 한 개씩 추가 가능합니다.
       - **중복 방지**: 이미 등록된 itemId는 자동으로 제외됩니다.
-      - **상태 검증**: ASSIGNED에서만 수정 가능
+      - **상태 검증**: ASSIGNED 또는 REJECT 에서만 수정 가능
       
       **입고 예정 품목(Inventory_Item) 생성 전용 API**
       품목의 목표 입고 수량은 이 API에서 입력하지 않으며,  
@@ -148,7 +148,7 @@ public class InventoryController {
       특정 입고 업무(inventoryId)에 등록된 여러 품목들의  
       **목표 입고 수량(targetQuantity)** 을 한 번에 수정합니다.
       
-      승인 요청 전(ASSIGNED 상태)에서만 가능  
+      승인 요청 전(ASSIGNED 상태) 또는 반려 상태(REJECT) 에서만 가능  
       이미 존재하는 Inventory_Item의 targetQuantity 필드만 변경  
       processed_quantity(현재 입고 수량)에는 영향을 주지 않음  
       담당자로 지정된 멤버만 수정 가능  
@@ -241,7 +241,7 @@ public class InventoryController {
     summary = "입고 승인 요청 API",
     description = """
       담당자가 입고 업무를 승인 요청(PENDING) 상태로 전환합니다.
-      ASSIGNED 상태에서만 요청 가능
+      ASSIGNED 또는 REJECT 상태에서만 요청 가능
       입고 예정 품목(InventoryItem)이 1개 이상 존재해야 함
       """)
   public BaseResponse<Void> requestApproval(

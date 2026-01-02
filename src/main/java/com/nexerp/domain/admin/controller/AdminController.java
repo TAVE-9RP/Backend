@@ -124,7 +124,7 @@ public class AdminController {
   @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
   @Operation(summary = "입고 거절 처리(오너)",
     description = """
-      오너가 승인 요청된 입고 업무를 거절(ASSIGNED) 상태로 변경합니다.
+      오너가 승인 요청된 입고 업무를 거절(REJECT) 상태로 변경합니다.
       PENDING 상태에서만 거절 가능하며, 거절 시 수정 후 재승인 요청이 필요합니다.
       """)
   public BaseResponse<Void> rejectInventory(
@@ -140,7 +140,7 @@ public class AdminController {
   @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
   @Operation(summary = "출하 거절 처리(오너)",
     description = """
-      오너가 승인 요청된 출하 업무를 거절(ASSIGNED) 상태로 변경합니다.
+      오너가 승인 요청된 출하 업무를 거절(REJECT) 상태로 변경합니다.
       PENDING 상태에서만 거절 가능하며, 거절 시 수정 후 재승인 요청이 필요합니다.
       """)
   public BaseResponse<Void> rejectLogistics(
