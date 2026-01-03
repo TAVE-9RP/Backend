@@ -1,0 +1,47 @@
+package com.nexerp.domain.analytics.scheduler;
+
+import com.nexerp.domain.analytics.application.AnalyticsExportOrchestrator;
+import java.time.LocalDate;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class AnalyticsExportScheduler {
+
+  private final AnalyticsExportOrchestrator orchestrator;
+
+  // 매일 1시
+  @Scheduled(cron = "0 0 1 * * *", zone = "Asia/Seoul")
+  public void runDaily() {
+    // 오늘 날짜로 해야할지 어제로 해야 할지
+    LocalDate date = LocalDate.now();
+    try {
+      log.info("[AnalyticsExport] Scheduled start date={}", date);
+      orchestrator.exportAllFailFastParallel(date);
+      log.info("[AnalyticsExport] Scheduled success date={}", date);
+    } catch (Exception e) {
+      // 실패하면 전체 실패(fail-fast)로 끝나므로 여기서 알람/로그 처리
+      log.error("[AnalyticsExport] Scheduled failed date={}", date, e);
+      throw e; // 원하면 swallow(무시)해도 되지만, 보통은 로그만 남기고 끝냄
+    }
+  }
+
+  //매월 1일 1시
+  @Scheduled(cron = "0 0 1 1 * *", zone = "Asia/Seoul")
+  public void runMonthlyCleanup() {
+    LocalDate now = LocalDate.now();
+    try {
+      log.info("[Cleanup] Monthly storage cleanup started. Reference date: {}", now);
+
+      int deletedCount = orchestrator.deleteTwoMonthsAgo(now);
+
+      log.info("[Cleanup] Monthly storage cleanup finished. Deleted files: {}", deletedCount);
+    } catch (Exception e) {
+      log.error("[Cleanup] Monthly storage cleanup failed. Reference date: {}", now, e);
+    }
+  }
+}
