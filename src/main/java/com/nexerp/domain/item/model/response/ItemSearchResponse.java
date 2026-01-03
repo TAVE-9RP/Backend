@@ -1,6 +1,7 @@
 package com.nexerp.domain.item.model.response;
 
 import com.nexerp.domain.item.model.entity.Item;
+import java.time.LocalDate;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -14,8 +15,10 @@ public class ItemSearchResponse {
   private final Long quantity;
   private final String location;
   private final Long price;
+  private final LocalDate receivedAt;
+  private final LocalDate createdAt;
 
-  public static ItemSearchResponse from (Item i) {
+  public static ItemSearchResponse from(Item i) {
     return ItemSearchResponse.builder()
       .itemId(i.getId())
       .code(i.getCode())
@@ -23,6 +26,8 @@ public class ItemSearchResponse {
       .quantity(i.getQuantity())
       .location(i.getLocation())
       .price(i.getPrice())
+      .receivedAt(i.getReceivedAt().toLocalDate())
+      .createdAt(i.getCreatedAt().toLocalDate())
       .build();
   }
 }
