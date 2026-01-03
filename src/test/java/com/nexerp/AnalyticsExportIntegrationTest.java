@@ -4,7 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.nexerp.domain.analytics.application.AnalyticsExportOrchestrator;
 import com.nexerp.domain.analytics.application.AnalyticsExportOrchestrator.ExportResult;
+import com.nexerp.domain.analytics.domain.ExportFileName;
 import com.nexerp.domain.analytics.domain.ExportTable;
+import com.nexerp.domain.analytics.port.StoragePort;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -28,8 +30,9 @@ class AnalyticsExportIntegrationTest {
 
   @Autowired
   AnalyticsExportOrchestrator orchestrator;
-
   Path generated;
+  @Autowired
+  private StoragePort storage;
 
 //  @AfterEach
 //  void cleanup() throws IOException {
@@ -39,22 +42,27 @@ class AnalyticsExportIntegrationTest {
 //  }
 
   @Test
-  @DisplayName("모든 등록된 테이블을 CSV로 추출하고 파일 내용과 DB 행 개수를 검증한다")
-  void export_all_tables_creates_csv_files_and_verifies_content() throws IOException {
+  @DisplayName("모든 등록된 테이블을 병렬로 추출하고 파일 내용과 행 개수를 검증한다")
+  void export_all_tables_parallel_verifies_content() throws IOException {
     // Given
     System.out.println("### ALL EXPORT TEST START ###");
     LocalDate targetDate = LocalDate.now();
 
     // When
-    // 모든 테이블 추출 실행
-    Map<ExportTable, ExportResult> results = orchestrator.exportAll(targetDate);
+    // (1) 병렬 추출 실행
+    Map<ExportTable, ExportResult> results = orchestrator.exportAllFailFastParallel(targetDate);
 
     // Then
-    assertThat(results).isNotEmpty(); // 최소한 하나 이상의 추출 결과가 있어야 함
+    assertThat(results).isNotEmpty();
     System.out.println("Extracted Tables Count: " + results.size());
 
     for (ExportResult result : results.values()) {
-      var generatedPath = result.path();
+      // (2) ExportResult에 path가 없으므로 storage를 통해 파일 경로를 다시 계산합니다.
+      String fileName = ExportFileName.of(result.table().filePrefix(), result.date()).toFileName();
+      String fullPathStr = storage.resolve(fileName);
+
+      // 4. 검증을 위해 Path 객체로 변환합니다.
+      Path generatedPath = Path.of(fullPathStr);
 
       // 1. 파일이 실제로 존재하는지 확인
       assertThat(Files.exists(generatedPath))
@@ -75,7 +83,7 @@ class AnalyticsExportIntegrationTest {
         .as("%s 테이블의 DB 추출 건수와 파일 기록 건수가 다릅니다", result.table())
         .isEqualTo(result.rowCount());
 
-      System.out.printf("[%s] 경로: %s, 건수: %d%n",
+      System.out.printf("[%s] 파일명: %s, 건수: %d%n",
         result.table(), generatedPath.getFileName(), result.rowCount());
     }
 
