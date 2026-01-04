@@ -29,7 +29,7 @@ public class LogisticsExtractor implements ExtractorPort {
       "date",
       "logistics_id",
       "project_id",
-      "logistics_requested_at",
+      "logistic_created_at",
       "logistics_status",
       "logistics_completed_at"
     };
@@ -40,7 +40,7 @@ public class LogisticsExtractor implements ExtractorPort {
     String sql = """
       SELECT logistics_id,
              project_id,
-             logistics_requested_at,
+             logistic_created_at,
              logistics_status,
              logistics_completed_at
       FROM logistics
@@ -55,7 +55,7 @@ public class LogisticsExtractor implements ExtractorPort {
     return new LogisticsRow(
       rs.getLong("logistics_id"),
       rs.getLong("project_id"),
-      JdbcDateConverters.toLocalDate(rs.getDate("logistics_requested_at")),
+      JdbcDateConverters.toLocalDate(rs.getDate("logistic_created_at")),
       rs.getString("logistics_status"),
       JdbcDateConverters.toLocalDate(rs.getTimestamp("logistics_completed_at"))
     );
