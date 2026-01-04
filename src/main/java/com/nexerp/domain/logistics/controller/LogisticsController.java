@@ -100,7 +100,7 @@ public class LogisticsController {
     description = """
       **물품 추가를 제외한 입고 업무의 공통 정보를 저장 또는 수정합니다.**
       - 해당 업무 할당된 담당자만 가능
-      - 상태 검증: ASSIGNED에서만 수정 가능
+      - 상태 검증: ASSIGNED  또는 REJECT 에서만 수정 가능
       - 출하 업무명(title), 업무 설명(description)을 필수
       - URL 경로의 {logisticsId} 값을 통해 수정할 입고 업무를 지정
       - 프로젝트 넘버는 오너가 프로젝트 생성 시 할당되었기에 별도로 지정하지 않습니다.
@@ -158,7 +158,7 @@ public class LogisticsController {
     description = """
       담당자가 작성을 완료한 출하 업무를 승인 대기(PENDING) 상태로 전환합니다. 
       출하 예정 품목(LogisticsItem)이 1개 이상 존재해야 함
-      - **상태 검증**: ASSIGNED에서만 수정 가능
+      - **상태 검증**: ASSIGNED  또는 REJECT 에서만 수정 가능
       """
   )
   public BaseResponse<Void> requestLogisticsApproval(
@@ -178,7 +178,7 @@ public class LogisticsController {
     description = """
       출하 업무에 포함될 물품들을 ID 리스트 형식으로 추가합니다.
       - **중복 방지**: 이미 등록된 itemId는 자동으로 제외됩니다.
-      - **상태 검증**: ASSIGNED에서만 수정 가능
+      - **상태 검증**: ASSIGNED 또는 REJECT 에서만 수정 가능
       
       **출하 예정 품목(Llogistics_item) 생성 전용 API**
       품목의 목표 입고 수량은 이 API에서 입력하지 않으며,  
@@ -382,7 +382,7 @@ public class LogisticsController {
       processed_quantity(현재 입고 수량)에는 영향을 주지 않음  
       담당자로 지정된 멤버만 수정 가능  
       
-      - **상태 검증**: ASSIGNED에서만 수정 가능
+      - **상태 검증**: ASSIGNED 또는 REJECT 에서만 수정 가능
       - 요청 시 누락된 물품은 기존 수량을 유지합니다.
       """,
     requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(

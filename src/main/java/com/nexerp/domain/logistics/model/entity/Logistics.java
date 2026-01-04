@@ -113,8 +113,8 @@ public class Logistics {
 
   public void requestApproval() {
 
-    if (this.status != TaskStatus.ASSIGNED) {
-      throw new BaseException(GlobalErrorCode.STATE_CONFLICT, "할당 단계에서만 승인 요청이 가능합니다.");
+    if (this.status != TaskStatus.ASSIGNED && this.status != TaskStatus.REJECT) {
+      throw new BaseException(GlobalErrorCode.STATE_CONFLICT, "할당 단계 또는 반려에서 승인 요청이 가능합니다.");
     }
 
     this.requestedAt = LocalDate.now();
@@ -150,6 +150,6 @@ public class Logistics {
 
   public void reject() {
     this.requestedAt = null;
-    changeStatus(TaskStatus.ASSIGNED);
+    changeStatus(TaskStatus.REJECT);
   }
 }
