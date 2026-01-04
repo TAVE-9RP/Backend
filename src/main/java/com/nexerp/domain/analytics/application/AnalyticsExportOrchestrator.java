@@ -163,7 +163,7 @@ public class AnalyticsExportOrchestrator {
   }
 
   public int deleteTwoMonthsAgo(LocalDate now) {
-    YearMonth target = YearMonth.from(now.minusMonths(2)); // 1월이면 11월
+    YearMonth target = YearMonth.from(now.minusMonths(4)); // 1월이면 9월
     AtomicInteger deleted = new AtomicInteger();
 
     storage.listBaseFiles()
