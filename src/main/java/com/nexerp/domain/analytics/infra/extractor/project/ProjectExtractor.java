@@ -30,7 +30,9 @@ public class ProjectExtractor implements ExtractorPort {
       "project_id",
       "company_id",
       "project_status",
-      "project_create_date"
+      "project_create_date",
+      "project_end_date",
+      "project_expected_end_date"
     };
   }
 
@@ -40,7 +42,9 @@ public class ProjectExtractor implements ExtractorPort {
       SELECT project_id, 
              company_id, 
              project_status, 
-             project_create_date 
+             project_create_date,
+             project_end_date,
+             project_expected_end_date
       FROM project 
       ORDER BY project_id
       """;
@@ -56,7 +60,9 @@ public class ProjectExtractor implements ExtractorPort {
       rs.getLong("project_id"),
       rs.getLong("company_id"),
       rs.getString("project_status"),
-      JdbcDateConverters.toLocalDate(rs.getTimestamp("project_create_date"))
+      JdbcDateConverters.toLocalDate(rs.getTimestamp("project_create_date")),
+      JdbcDateConverters.toLocalDate(rs.getTimestamp("project_end_date")),
+      JdbcDateConverters.toLocalDate(rs.getTimestamp("project_expected_end_date"))
     );
   }
 }
