@@ -29,7 +29,7 @@ public class InventoryExtractor implements ExtractorPort {
       "date",
       "inventory_id",
       "project_id",
-      "inventory_requested_at",
+      "inventory_created_at",
       "inventory_status",
       "inventory_completed_at"
     };
@@ -40,7 +40,7 @@ public class InventoryExtractor implements ExtractorPort {
     String sql = """
       SELECT inventory_id,
              project_id,
-             inventory_requested_at,
+             inventory_created_at,
              inventory_status,
              inventory_completed_at
       FROM inventory
@@ -55,7 +55,7 @@ public class InventoryExtractor implements ExtractorPort {
     return new InventoryRow(
       rs.getLong("inventory_id"),
       rs.getLong("project_id"),
-      JdbcDateConverters.toLocalDate(rs.getTimestamp("inventory_requested_at")),
+      JdbcDateConverters.toLocalDate(rs.getTimestamp("inventory_created_at")),
       rs.getString("inventory_status"),
       JdbcDateConverters.toLocalDate(rs.getTimestamp("inventory_completed_at"))
     );

@@ -5,7 +5,7 @@ import java.time.LocalDate;
 public record InventoryRow(
   long inventoryId,
   long projectId,
-  LocalDate requestedAt,
+  LocalDate createdAt,
   String status,
   LocalDate completedAt
 ) {
@@ -15,7 +15,7 @@ public record InventoryRow(
       exportDate.toString(),
       String.valueOf(inventoryId),
       String.valueOf(projectId),
-      requestedAt != null ? requestedAt.toString() : "",
+      createdAt != null ? createdAt.toString() : "",
       status != null ? status : "",
       completedAt != null ? completedAt.toString() : ""
     };
