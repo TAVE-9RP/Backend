@@ -17,8 +17,8 @@ public class AnalyticsExportScheduler {
   // 매일 1시
   @Scheduled(cron = "0 0 1 * * *", zone = "Asia/Seoul")
   public void runDaily() {
-    // 오늘 날짜로 해야할지 어제로 해야 할지
-    LocalDate date = LocalDate.now();
+    // 데이터가 어제  이기 때문에 어제 날짜
+    LocalDate date = LocalDate.now().minusDays(1);
     try {
       log.info("[AnalyticsExport] Scheduled start date={}", date);
       orchestrator.exportAllFailFastParallel(date);
