@@ -1,6 +1,8 @@
 package com.nexerp.domain.logistics.service;
 
 import com.nexerp.domain.item.model.entity.Item;
+import com.nexerp.domain.item.model.entity.ItemHistory;
+import com.nexerp.domain.item.repository.ItemHistoryRepository;
 import com.nexerp.domain.item.repository.ItemRepository;
 import com.nexerp.domain.logistics.model.entity.Logistics;
 import com.nexerp.domain.logistics.model.request.LogisticsItemTargetQuantityRequest.ItemTargetQuantityDetail;
@@ -43,6 +45,7 @@ public class LogisticsService {
   private final ProjectMemberRepository projectMemberRepository;
   private final ItemRepository itemRepository;
   private final LogisticsItemRepository logisticsItemRepository;
+  private final ItemHistoryRepository itemHistoryRepository;
 
   @Transactional(readOnly = true)
   public List<LogisticsSearchResponse> getCompanyLogisticsSummaries(Long memberId) {
@@ -170,12 +173,20 @@ public class LogisticsService {
 
     validateAllItemsExistInLogistics(uniqueIds, existingItems);
 
+    Member member = memberService.getMemberByMemberId(memberId);
+
     // 관계가 없던 itemId 추출
     for (UpdateLogisticsItemDetail detail : itemRequests) {
       LogisticsItem li = existingItems.get(detail.getLogisticsItemId());
 
       // 출하 수량 변경 + 총 금액 설정
       li.increaseProcessedQuantity(detail.getProcessedQuantity());
+      Item item = li.getItem();
+
+      ItemHistory itemHistory = ItemHistory.shipped(
+        item, li.getId(), member, detail.getProcessedQuantity(), item.getQuantity()
+      );
+      itemHistoryRepository.save(itemHistory);
 
       // 목표 출하 기준 상태와 출하일 변경
       if (li.getTargetedQuantity() <= li.getProcessedQuantity()) {
