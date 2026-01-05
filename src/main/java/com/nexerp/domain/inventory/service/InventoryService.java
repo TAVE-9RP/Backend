@@ -16,7 +16,7 @@ import com.nexerp.domain.item.model.entity.Item;
 import com.nexerp.domain.item.repository.ItemRepository;
 import com.nexerp.domain.member.model.entity.Member;
 import com.nexerp.domain.member.model.enums.MemberDepartment;
-import com.nexerp.domain.member.repository.MemberRepository;
+import com.nexerp.domain.member.service.MemberService;
 import com.nexerp.domain.project.service.ProjectService;
 import com.nexerp.domain.projectmember.model.entity.ProjectMember;
 import com.nexerp.domain.projectmember.repository.ProjectMemberRepository;
@@ -40,8 +40,8 @@ public class InventoryService {
   private final ProjectMemberRepository projectMemberRepository;
   private final ItemRepository itemRepository;
   private final InventoryItemRepository inventoryItemRepository;
-  private final MemberRepository memberRepository;
   private final ProjectService projectService;
+  private final MemberService memberService;
 
   @Transactional
   public void updateInventoryCommonInfo(
@@ -241,8 +241,7 @@ public class InventoryService {
 
   public List<InventorySummaryResponse> getInventoryList(Long memberId) {
 
-    Member member = memberRepository.findById(memberId)
-      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "해당 직원을 찾을 수 없습니다."));
+    Member member = memberService.getMemberByMemberId(memberId);
 
     Long companyId = member.getCompanyId();
 
@@ -327,8 +326,7 @@ public class InventoryService {
 
   // 회사 검증
   private void validateCompany(Long memberId, Long companyId) {
-    Member member = memberRepository.findById(memberId)
-      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "해당 직원을 찾을 수 없습니다."));
+    Member member = memberService.getMemberByMemberId(memberId);
 
     if (!member.getCompanyId().equals(companyId)) {
       throw new BaseException(GlobalErrorCode.FORBIDDEN, "회사 정보가 일치하지 않습니다.");
