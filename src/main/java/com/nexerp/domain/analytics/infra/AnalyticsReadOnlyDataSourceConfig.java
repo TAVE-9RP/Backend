@@ -27,6 +27,11 @@ public class AnalyticsReadOnlyDataSourceConfig {
     @Qualifier("analyticsDataSourceProperties") DataSourceProperties props
   ) {
     DataSource ds = props.initializeDataSourceBuilder().build();
+
+    if (ds instanceof com.zaxxer.hikari.HikariDataSource) {
+      ((com.zaxxer.hikari.HikariDataSource) ds).setReadOnly(true);
+    }
+
     log.info("[Analytics-ReadOnly] DataSource initialized. url={}", props.getUrl());
     return ds;
   }
