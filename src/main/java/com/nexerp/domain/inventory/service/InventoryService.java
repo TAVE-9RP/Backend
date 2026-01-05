@@ -13,6 +13,8 @@ import com.nexerp.domain.inventory.repository.InventoryRepository;
 import com.nexerp.domain.inventoryitem.model.entity.InventoryItem;
 import com.nexerp.domain.inventoryitem.repository.InventoryItemRepository;
 import com.nexerp.domain.item.model.entity.Item;
+import com.nexerp.domain.item.model.entity.ItemHistory;
+import com.nexerp.domain.item.repository.ItemHistoryRepository;
 import com.nexerp.domain.item.repository.ItemRepository;
 import com.nexerp.domain.member.model.entity.Member;
 import com.nexerp.domain.member.model.enums.MemberDepartment;
@@ -42,6 +44,7 @@ public class InventoryService {
   private final InventoryItemRepository inventoryItemRepository;
   private final ProjectService projectService;
   private final MemberService memberService;
+  private final ItemHistoryRepository itemHistoryRepository;
 
   @Transactional
   public void updateInventoryCommonInfo(
@@ -183,6 +186,8 @@ public class InventoryService {
       throw new BaseException(GlobalErrorCode.BAD_REQUEST, "IN_PROGRESS 상태에서만 입고 처리할 수 있습니다.");
     }
 
+    Member member = memberService.getMemberByMemberId(memberId);
+
     for (InventoryProcessRequest.ProcessUnit unit : request.getItems()) {
 
       InventoryItem inventoryItem = inventoryItemRepository.findById(unit.getInventoryItemId())
@@ -200,6 +205,12 @@ public class InventoryService {
       // 품목 재고 증가
       Item item = inventoryItem.getItem();
       item.increaseQuantity(qty);
+
+      // 재고 기록 남기기
+      ItemHistory itemHistory = ItemHistory.received(
+        item, inventoryItem.getId(), member, qty, item.getQuantity()
+      );
+      itemHistoryRepository.save(itemHistory);
 
       // 상태 갱신
       if (inventoryItem.getProcessed_quantity() >= inventoryItem.getQuantity()) {
