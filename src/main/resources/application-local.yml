@@ -23,4 +23,10 @@ spring:
 
 
 
+analytics:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${READONLY_DB_URL}
+    username: ${READONLY_DB_USER}
+    password: ${READONLY_DB_PW}
 
