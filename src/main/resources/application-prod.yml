@@ -11,9 +11,9 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQL8Dialect
-  batch:
-    jdbc:
-      initialize-schema: always
-    job:
-      enabled: false
-# batch 관련은 추출 코드 병합 시 삭제 예정
+
+analytics:
+  datasource:
+    url: ${READONLY_DB_URL}
+    username: ${READONLY_DB_USER}
+    password: ${READONLY_DB_PW}

@@ -14,19 +14,12 @@ spring:
     properties:
       hibernate:
         format_sql: true
-  batch:
-    jdbc:
-      initialize-schema: always # 로컬에서는 always 추천
-    job:
-      enabled: false # 앱 시작 시 자동 실행 막고, 스케줄러로만 돌리기
-  # batch 관련은 추출 코드 병합 시 삭제 예정
-
 
 
 analytics:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${READONLY_DB_URL}
-    username: ${READONLY_DB_USER}
-    password: ${READONLY_DB_PW}
+    url: ${READONLY_LOCAL_DB_URL}
+    username: ${READONLY_LOCAL_DB_USER}
+    password: ${READONLY_LOCAL_DB_PW}
 
