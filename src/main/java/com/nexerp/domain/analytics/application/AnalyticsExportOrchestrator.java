@@ -4,10 +4,16 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 import com.nexerp.domain.analytics.domain.ExportFileName;
 import com.nexerp.domain.analytics.domain.ExportTable;
+import com.nexerp.domain.analytics.infra.storage.LocalTmpStorage;
+import com.nexerp.domain.analytics.infra.storage.S3Storage;
 import com.nexerp.domain.analytics.port.CsvWriterPort;
 import com.nexerp.domain.analytics.port.ExtractorPort;
 import com.nexerp.domain.analytics.port.StoragePort;
+
+import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.Collections;
@@ -22,7 +28,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+
+import javax.sql.DataSource;
 
 @Slf4j
 @Service
@@ -30,10 +39,13 @@ import org.springframework.stereotype.Service;
 public class AnalyticsExportOrchestrator {
 
   private final List<ExtractorPort> extractors;
-  private final StoragePort storage;
+  private final LocalTmpStorage storage; // 구현체 구분
+  private final S3Storage s3Storage;
   private final CsvWriterPort writer;
   private final Executor analyticsExportExecutor;
 
+  // READONLY_DB 인식 확인 용도 (로컬, 운영)
+  private final @Qualifier("analyticsReadOnlyDataSource") DataSource analyticsDataSource;
   /**
    * [Fail-Fast 병렬 내보내기] 1. 하나라도 실패하면 즉시 전체 작업을 중단합니다. 2. 실패 시 이미 성공하여 생성된 파일들도 모두 삭제(Cleanup)합니다.
    * 3. 원자적 파일 생성을 위해 임시 파일(tmp)에 먼저 쓰고 성공 시 최종 위치로 이동합니다.
@@ -50,6 +62,7 @@ public class AnalyticsExportOrchestrator {
 
     // 작성된 파일 이름 리스트 (CopyOnWriteArrayList)
     List<String> createdFinalFiles = new CopyOnWriteArrayList<>();
+    List<String> createdS3Keys = new CopyOnWriteArrayList<>(); // S3 롤백용 리스트 추가
 
     CompletableFuture<Void> firstFailure = new CompletableFuture<>();
     // completeExceptionally(실패) 를 한번만 전파하기 위한 원자적 블리언
@@ -91,23 +104,52 @@ public class AnalyticsExportOrchestrator {
 
     try {
       // 전체 성공 시 통과, 하나라도 실패 시 예외가 여기서 터짐
-      race.join();
+      race.join(); // 1.모든 로컬 파일 생성 완료 대기
+
+      log.info("[AnalyticsExport] 로컬 생성 완료. S3 업로드 및 원자적 이동 시작.");
+
+      // 2. S3 업로드 (하나라도 실패 시 예외 처리)
+      uploadAllToS3(createdFinalFiles, createdS3Keys);
+
+      // 3. 성공 시 로컬 파일 삭제 (서버 용량 확보)
+      cleanupLocalFiles(createdFinalFiles);
 
       long allElapsedMs = NANOSECONDS.toMillis(System.nanoTime() - allStart);
       log.info("[AnalyticsExport] 전체 테이블 수={} 총 소요 시간={}", results.size(),
         allElapsedMs);
+      log.info("[AnalyticsExport] 접속 DB URL: {}",
+        analyticsDataSource.getConnection().getMetaData().getURL());
       return results;
 
-    } catch (CompletionException e) {
-      Throwable cause = (e.getCause() != null) ? e.getCause() : e;
+    } catch (Exception e) {
+      Throwable cause = (e instanceof CompletionException) ? e.getCause() : e; // CompletionException, IOException 등을 모두 처리
       log.error("[AnalyticsExport] FAIL-FAST triggered. Export stopped.", cause);
 
       //나머지 스레드 모두 중지
       futures.forEach(f -> f.cancel(true));
-      //성공했던 파일들도 모두 제거
-      cleanupFiles(createdFinalFiles);
+
+      // 롤백 실행: S3에 올라간 파일 삭제 + 로컬 파일 삭제
+      rollback(createdFinalFiles, createdS3Keys);
 
       throw new RuntimeException("분석 데이터 내보내기 중 오류가 발생하여 전체 작업을 중단합니다.", cause);
+    }
+  }
+
+  /**
+   *  모든 파일을 S3로 업로드. 하나라도 실패하면 예외 발생
+   */
+  private void uploadAllToS3(List<String> localPaths, List<String> createdS3Keys) throws IOException {
+    for (String localPath : localPaths) {
+      String fileName = Path.of(localPath).getFileName().toString();
+      String s3Key = s3Storage.resolve(fileName);
+
+      try (OutputStream s30s = s3Storage.openOutputStream(s3Key)) {
+        Files.copy(Path.of(localPath), s30s);
+        createdS3Keys.add(s3Key); // 성공 기록
+        log.info("[S3Upload] Success: {}", s3Key);
+      } catch (Exception e) {
+        throw new IOException("S3 업로드 실패: " + fileName, e);
+      }
     }
   }
 
@@ -148,10 +190,24 @@ public class AnalyticsExportOrchestrator {
     }
   }
 
+  private void rollback(List<String> localFiles, List<String> s3Keys) {
+    // S3 데이터 삭제
+    for (String key : s3Keys) {
+      try {
+        s3Storage.deleteIfExists(key);
+        log.info("[Rollback] Deleted S3 Key: {}", key);
+      } catch (Exception e) {
+        log.warn("[Rollback] S3 삭제 실패: {}", key);
+      }
+    }
+
+    // 로컬 데이터 삭제
+    cleanupLocalFiles(localFiles);
+  }
   /**
    * 실패 시 이미 만들어진 파일들을 정리
    */
-  private void cleanupFiles(List<String> createdFinalFiles) {
+  private void cleanupLocalFiles(List<String> createdFinalFiles) {
     for (String path : createdFinalFiles) {
       try {
         storage.deleteIfExists(path);
@@ -161,29 +217,29 @@ public class AnalyticsExportOrchestrator {
       }
     }
   }
-
-  public int deleteTwoMonthsAgo(LocalDate now) {
-    YearMonth target = YearMonth.from(now.minusMonths(4)); // 1월이면 9월
-    AtomicInteger deleted = new AtomicInteger();
-
-    storage.listBaseFiles()
-      .forEach(fileName -> {
-        ExportFileName parsed;
-        try {
-          parsed = ExportFileName.parse(fileName);
-        } catch (IllegalArgumentException e) {
-          return;
-        }
-
-        if (YearMonth.from(parsed.date()).equals(target)) {
-          String fullName = storage.resolve(fileName).toString();
-          storage.deleteIfExists(fullName);
-          deleted.incrementAndGet();
-        }
-      });
-
-    return deleted.get();
-  }
+// 주석 처리한 이유는 로컬 파일은 s3로 적재 성공 시에도 메모리 확보를 위해 삭제하도록 변경
+//  public int deleteFourMonthsAgo(LocalDate now) {
+//    YearMonth target = YearMonth.from(now.minusMonths(4)); // 1월이면 9월
+//    AtomicInteger deleted = new AtomicInteger();
+//
+//    storage.listBaseFiles()
+//      .forEach(fileName -> {
+//        ExportFileName parsed;
+//        try {
+//          parsed = ExportFileName.parse(fileName);
+//        } catch (IllegalArgumentException e) {
+//          return;
+//        }
+//
+//        if (YearMonth.from(parsed.date()).equals(target)) {
+//          String fullName = storage.resolve(fileName).toString();
+//          storage.deleteIfExists(fullName);
+//          deleted.incrementAndGet();
+//        }
+//      });
+//
+//    return deleted.get();
+//  }
 
   //ExportResult 객체 하나는 데이터베이스의 특정 테이블 하나를 CSV 파일 하나로 추출한 결과
   public record ExportResult(ExportTable table, LocalDate date, long rowCount) {
