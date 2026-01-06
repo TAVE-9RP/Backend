@@ -16,8 +16,8 @@ public class AnalyticsExportScheduler {
 
   private final AnalyticsExportOrchestrator orchestrator;
 
-  // 매일 1시
-  // @Scheduled(cron = "0 11 3 * * *", zone = "Asia/Seoul")
+  // 매일 새벽 2시
+  @Scheduled(cron = "0 0 2 * * *", zone = "Asia/Seoul")
   public void runDaily() {
     // 데이터가 어제  이기 때문에 어제 날짜
     LocalDate date = LocalDate.now().minusDays(1);
