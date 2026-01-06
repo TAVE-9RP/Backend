@@ -7,7 +7,9 @@ public record AnalyticsExportProperties(
   // 로컬 저장 위치 파일 명 제외
   String localPath,
   // 제거 주기
-  int retentionMonths
+  int retentionMonths,
+  String s3Bucket,
+  String s3KeyPrefix
 ) {
 
 }
