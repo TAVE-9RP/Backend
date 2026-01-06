@@ -1,7 +1,7 @@
 package com.nexerp;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import com.nexerp.domain.analytics.application.AnalyticsExportOrchestrator;
 import com.nexerp.domain.analytics.application.AnalyticsExportOrchestrator.ExportResult;
 import com.nexerp.domain.analytics.domain.ExportFileName;
@@ -16,6 +16,8 @@ import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.batch.BatchAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
@@ -26,6 +28,7 @@ import org.springframework.test.context.TestPropertySource;
   "analytics.export.local-path=build/tmp-test"
 })
 @SpringBootTest(classes = NexerpApplication.class)
+@EnableAutoConfiguration(exclude = {BatchAutoConfiguration.class})
 class AnalyticsExportIntegrationTest {
 
   @Autowired
@@ -88,5 +91,32 @@ class AnalyticsExportIntegrationTest {
     }
 
     System.out.println("### ALL EXPORT TEST SUCCESS ###");
+  }
+
+  @Test
+  void all_exports_S3_upload_test() throws IOException{
+    // Given
+    LocalDate testDate = LocalDate.now().minusDays(1);
+
+    // When
+    Map<ExportTable, ExportResult> results = assertDoesNotThrow(() ->
+      orchestrator.exportAllFailFastParallel(testDate)
+    );
+
+    // S3에 실제로 파일이 올라갔는지 storagePort(S3Storage)를 통해 확인
+    assertThat(results).isNotEmpty();
+
+    for (ExportResult result : results.values()) {
+      String fileName = ExportFileName.of(result.table().filePrefix(), result.date()).toFileName();
+      String s3Key = storage.resolve(fileName); // S3용 Key 경로 생성
+
+      List<String> s3Files = storage.listBaseFiles();
+
+      assertThat(s3Files)
+        .as("S3 버킷에 파일이 존재하지 않습니다: %s", fileName)
+        .contains(fileName);
+
+      System.out.println("[S3 Verification Success] Found Key: " + s3Key);
+    }
   }
 }
