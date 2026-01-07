@@ -146,4 +146,12 @@ public class MemberService {
 
     return member.getCompanyId();
   }
+
+  @Transactional(readOnly = true)
+  public Member getMemberByMemberId(Long memberId) {
+    Member member = memberRepository.findById(memberId)
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND,
+        String.format("회원 정보를 찾을 수 없습니다. (ID: %d)", memberId)));
+    return member;
+  }
 }
