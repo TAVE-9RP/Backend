@@ -26,7 +26,11 @@ public class ItemSearchResponse {
       .quantity(i.getQuantity())
       .location(i.getLocation())
       .price(i.getPrice())
-      .receivedAt(i.getReceivedAt().toLocalDate())
+      .receivedAt(
+        i.getReceivedAt() != null
+          ? i.getReceivedAt().toLocalDate()
+          : null
+      )
       .createdAt(i.getCreatedAt().toLocalDate())
       .build();
   }
