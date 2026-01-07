@@ -1,20 +1,23 @@
 package com.nexerp.domain.item.service;
 
+import com.nexerp.domain.item.model.entity.Item;
+import com.nexerp.domain.item.model.entity.ItemHistory;
 import com.nexerp.domain.item.model.request.ItemCreateRequest;
 import com.nexerp.domain.item.model.response.ItemCreateResponse;
-import com.nexerp.domain.item.model.entity.Item;
+import com.nexerp.domain.item.model.response.ItemHistoryResponse;
 import com.nexerp.domain.item.model.response.ItemSearchResponse;
+import com.nexerp.domain.item.repository.ItemHistoryRepository;
 import com.nexerp.domain.item.repository.ItemRepository;
 import com.nexerp.domain.member.model.entity.Member;
 import com.nexerp.domain.member.repository.MemberRepository;
+import com.nexerp.domain.member.service.MemberService;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
+import java.time.LocalDateTime;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +25,8 @@ public class ItemService {
 
   private final ItemRepository itemRepository;
   private final MemberRepository memberRepository;
+  private final MemberService memberService;
+  private final ItemHistoryRepository itemHistoryRepository;
 
   @Transactional
   public ItemCreateResponse createItem(Long memberId, ItemCreateRequest request) {
@@ -74,5 +79,19 @@ public class ItemService {
     return items.stream()
       .map(ItemSearchResponse::from)
       .toList();
+  }
+
+  @Transactional(readOnly = true)
+  public List<ItemHistoryResponse> getItemHistories(Long memberId, Long itemId) {
+
+    Long memberCompanyId = memberService.getCompanyIdByMemberId(memberId);
+
+    Item item = itemRepository.findByIdAndCompanyId(itemId, memberCompanyId)
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.FORBIDDEN, "회원 회사의 물품이 아닙니다."));
+
+    List<ItemHistory> itemHistories = itemHistoryRepository.findByItemIdOrderByProcessedAtDesc(
+      item.getId());
+
+    return ItemHistoryResponse.fromList(itemHistories);
   }
 }
