@@ -11,3 +11,8 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQL8Dialect
+analytics:
+  datasource:
+    url: ${READONLY_DB_URL}
+    username: ${READONLY_DB_USER}
+    password: ${READONLY_DB_PW}
