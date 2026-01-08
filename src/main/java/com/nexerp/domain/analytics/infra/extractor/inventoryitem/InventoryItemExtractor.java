@@ -1,7 +1,6 @@
 package com.nexerp.domain.analytics.infra.extractor.inventoryitem;
 
 import com.nexerp.domain.analytics.domain.ExportTable;
-import com.nexerp.domain.analytics.infra.extractor.logisticsitem.LogisticsItemRow;
 import com.nexerp.domain.analytics.port.ExtractorPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -47,12 +46,11 @@ public class InventoryItemExtractor implements ExtractorPort {
       .map(row -> row.toCsvArray(date));
   }
 
-  private LogisticsItemRow mapToRow(ResultSet rs, int rowNum) throws SQLException {
-    return new LogisticsItemRow(
-      rs.getLong("logistics_item_id"),
+  private InventoryItemRow mapToRow(ResultSet rs, int rowNum) throws SQLException {
+    return new InventoryItemRow(
+      rs.getLong("inventory_item_id"),
       rs.getLong("item_id"),
-      rs.getLong("logistics_id"),
-      rs.getLong("logistics_processed_quantity")
+      rs.getLong("inventory_id")
     );
   }
 
