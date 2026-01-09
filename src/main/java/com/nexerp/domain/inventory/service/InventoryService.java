@@ -343,4 +343,49 @@ public class InventoryService {
       throw new BaseException(GlobalErrorCode.FORBIDDEN, "회사 정보가 일치하지 않습니다.");
     }
   }
+
+  public List<InventorySummaryResponse> findInventoryByMemberId(Long memberId) {
+
+    Member member = memberService.getMemberByMemberId(memberId);
+
+    List<Inventory> inventories = inventoryRepository.findAllAssignedToMember(member.getCompanyId(),
+      memberId);
+    return inventories.stream()
+      .map(inv -> {
+
+        // 품목 요약 (애플망고 외 2개)
+        List<InventoryItem> items = inventoryItemRepository.findAllByInventoryId(inv.getId());
+        String itemSummary;
+        if (items.isEmpty()) {
+          itemSummary = "-";
+        } else if (items.size() == 1) {
+          itemSummary = items.get(0).getItem().getName();
+        } else {
+          itemSummary = items.get(0).getItem().getName()
+            + " 외 " + (items.size() - 1) + "개";
+        }
+
+        // 담당자 요약 (홍길동 외 3명)
+        List<ProjectMember> projectMembers = projectMemberRepository.findAllByProjectId(
+          inv.getProject().getId());
+        List<Member> members = projectMembers.stream()
+          .map(ProjectMember::getMember)
+          .toList();
+
+        String assigneeSummary;
+        if (members.isEmpty()) {
+          throw new BaseException(GlobalErrorCode.NOT_FOUND, "프로젝트 담당자를 찾을 수 없습니다.");
+        } else if (members.size() == 1) {
+          assigneeSummary = members.get(0).getName();
+        } else {
+          assigneeSummary = members.get(0).getName()
+            + " 외 " + (members.size() - 1) + "명";
+        }
+
+        return InventorySummaryResponse.from(
+          inv, itemSummary, assigneeSummary
+        );
+      })
+      .toList();
+  }
 }
