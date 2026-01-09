@@ -18,6 +18,7 @@ import com.nexerp.domain.member.model.entity.Member;
 import com.nexerp.domain.member.model.enums.MemberDepartment;
 import com.nexerp.domain.member.service.MemberService;
 import com.nexerp.domain.project.model.entity.Project;
+import com.nexerp.domain.project.repository.ProjectRepository;
 import com.nexerp.domain.project.service.ProjectService;
 import com.nexerp.domain.projectmember.model.entity.ProjectMember;
 import com.nexerp.domain.projectmember.repository.ProjectMemberRepository;
@@ -41,6 +42,7 @@ public class LogisticsService {
 
   private final MemberService memberService;
   private final ProjectService projectService;
+  private final ProjectRepository projectRepository;
   private final LogisticsRepository logisticsRepository;
   private final ProjectMemberRepository projectMemberRepository;
   private final ItemRepository itemRepository;
@@ -330,4 +332,10 @@ public class LogisticsService {
     }
   }
 
+  public List<LogisticsSearchResponse> getLogisticsAssignees(Long memberId) {
+    Member member = memberService.getMemberByMemberId(memberId);
+    List<Project> projects = projectRepository.findProjectsAndLogisticsByMemberId(
+      memberId, member.getCompanyId());
+    return LogisticsSearchResponse.fromList(projects);
+  }
 }
