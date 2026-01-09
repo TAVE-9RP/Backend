@@ -2,6 +2,8 @@ package com.nexerp.domain.analytics.scheduler;
 
 import com.nexerp.domain.analytics.application.AnalyticsExportOrchestrator;
 import java.time.LocalDate;
+
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -14,8 +16,8 @@ public class AnalyticsExportScheduler {
 
   private final AnalyticsExportOrchestrator orchestrator;
 
-  // 매일 1시
-  @Scheduled(cron = "0 0 1 * * *", zone = "Asia/Seoul")
+  // 매일 새벽 2시
+  @Scheduled(cron = "0 0 2 * * *", zone = "Asia/Seoul")
   public void runDaily() {
     // 데이터가 어제  이기 때문에 어제 날짜
     LocalDate date = LocalDate.now().minusDays(1);
@@ -27,21 +29,6 @@ public class AnalyticsExportScheduler {
       // 실패하면 전체 실패(fail-fast)로 끝나므로 여기서 알람/로그 처리
       log.error("[AnalyticsExport] Scheduled failed date={}", date, e);
       throw e; // 원하면 swallow(무시)해도 되지만, 보통은 로그만 남기고 끝냄
-    }
-  }
-
-  //매월 1일 1시
-  @Scheduled(cron = "0 0 1 1 * *", zone = "Asia/Seoul")
-  public void runMonthlyCleanup() {
-    LocalDate now = LocalDate.now();
-    try {
-      log.info("[Cleanup] Monthly storage cleanup started. Reference date: {}", now);
-
-      int deletedCount = orchestrator.deleteTwoMonthsAgo(now);
-
-      log.info("[Cleanup] Monthly storage cleanup finished. Deleted files: {}", deletedCount);
-    } catch (Exception e) {
-      log.error("[Cleanup] Monthly storage cleanup failed. Reference date: {}", now, e);
     }
   }
 }
