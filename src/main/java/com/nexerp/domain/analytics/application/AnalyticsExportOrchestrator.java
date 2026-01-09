@@ -217,29 +217,6 @@ public class AnalyticsExportOrchestrator {
       }
     }
   }
-// 주석 처리한 이유는 로컬 파일은 s3로 적재 성공 시에도 메모리 확보를 위해 삭제하도록 변경
-//  public int deleteFourMonthsAgo(LocalDate now) {
-//    YearMonth target = YearMonth.from(now.minusMonths(4)); // 1월이면 9월
-//    AtomicInteger deleted = new AtomicInteger();
-//
-//    storage.listBaseFiles()
-//      .forEach(fileName -> {
-//        ExportFileName parsed;
-//        try {
-//          parsed = ExportFileName.parse(fileName);
-//        } catch (IllegalArgumentException e) {
-//          return;
-//        }
-//
-//        if (YearMonth.from(parsed.date()).equals(target)) {
-//          String fullName = storage.resolve(fileName).toString();
-//          storage.deleteIfExists(fullName);
-//          deleted.incrementAndGet();
-//        }
-//      });
-//
-//    return deleted.get();
-//  }
 
   //ExportResult 객체 하나는 데이터베이스의 특정 테이블 하나를 CSV 파일 하나로 추출한 결과
   public record ExportResult(ExportTable table, LocalDate date, long rowCount) {

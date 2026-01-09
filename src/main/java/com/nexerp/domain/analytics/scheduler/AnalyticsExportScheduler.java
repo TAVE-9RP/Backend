@@ -31,19 +31,4 @@ public class AnalyticsExportScheduler {
       throw e; // 원하면 swallow(무시)해도 되지만, 보통은 로그만 남기고 끝냄
     }
   }
-
-  // 로컬은 매 실행마다 정리되고, s3 삭제는 LifyCycle을 통해 처리
-//  @Scheduled(cron = "0 0 1 1 * *", zone = "Asia/Seoul")
-//  public void runMonthlyCleanup() {
-//    LocalDate now = LocalDate.now();
-//    try {
-//      log.info("[Cleanup] Monthly storage cleanup started. Reference date: {}", now);
-//
-//      int deletedCount = orchestrator.deleteFourMonthsAgo(now);
-//
-//      log.info("[Cleanup] Monthly storage cleanup finished. Deleted files: {}", deletedCount);
-//    } catch (Exception e) {
-//      log.error("[Cleanup] Monthly storage cleanup failed. Reference date: {}", now, e);
-//    }
-//  }
 }

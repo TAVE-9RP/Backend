@@ -19,8 +19,7 @@ public class KpiScheduler {
   private final KpiIntegrationService kpiIntegrationService;
   private final CompanyService companyService;
 
-  @PostConstruct
-  //@Scheduled(cron = "0 0 4 * * *", zone = "Asia/Seoul")
+  @Scheduled(cron = "0 0 4 * * *", zone = "Asia/Seoul")
   public void scheduleKpiSync() {
     // 테스트용
     // 1. DB에서 활성화된 모든 회사 ID
