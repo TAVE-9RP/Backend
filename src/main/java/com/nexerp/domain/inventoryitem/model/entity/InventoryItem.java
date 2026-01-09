@@ -2,6 +2,8 @@ package com.nexerp.domain.inventoryitem.model.entity;
 
 import com.nexerp.domain.inventory.model.entity.Inventory;
 import com.nexerp.domain.item.model.entity.Item;
+import com.nexerp.global.common.exception.BaseException;
+import com.nexerp.global.common.exception.GlobalErrorCode;
 import com.nexerp.global.common.model.TaskProcessingStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -68,6 +70,13 @@ public class InventoryItem {
   }
 
   public void updateProcessedQuantity(Long addedQuantity) {
+    long nextProcessedQuantity = addedQuantity + this.processed_quantity;
+    if (nextProcessedQuantity > this.quantity) {
+      throw new BaseException(GlobalErrorCode.BAD_REQUEST,
+        "목표 수량을 초과할 수 없습니다. (목표 수량 =" + this.quantity + ", 처리 이후 예상 수량=" + nextProcessedQuantity
+          + ")"
+      );
+    }
     this.processed_quantity += addedQuantity;
   }
 
