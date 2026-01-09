@@ -344,7 +344,7 @@ public class InventoryService {
     }
   }
 
-  public List<InventorySummaryResponse> findInventoryByMemberId(Long memberId) {
+  public List<InventorySummaryResponse> getInventoryAssignees(Long memberId) {
 
     Member member = memberService.getMemberByMemberId(memberId);
 

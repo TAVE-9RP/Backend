@@ -459,7 +459,7 @@ public class InventoryController {
     @AuthenticationPrincipal CustomUserDetails userDetails) {
     Long memberId = userDetails.getMemberId();
     List<InventorySummaryResponse> response =
-      inventoryService.findInventoryByMemberId(memberId);
+      inventoryService.getInventoryAssignees(memberId);
     return BaseResponse.success(response);
   }
 }
