@@ -50,8 +50,8 @@ public class ItemService {
       .location(request.getLocation())
       .createdAt(LocalDateTime.now())
       .receivedAt(null)
-      .safetyStock(null)
-      .targetStock(null)
+      .safetyStock(0L)
+      .targetStock(0L)
       .build();
 
     Item saved = itemRepository.save(item);
