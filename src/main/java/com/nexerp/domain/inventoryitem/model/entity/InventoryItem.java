@@ -73,7 +73,8 @@ public class InventoryItem {
     long nextProcessedQuantity = addedQuantity + this.processed_quantity;
     if (nextProcessedQuantity > this.quantity) {
       throw new BaseException(GlobalErrorCode.BAD_REQUEST,
-        "목표 수량을 초과할 수 없습니다. (목표 수량 =" + this.quantity + ", 처리 이후 예상 수량=" + nextProcessedQuantity
+        "목표 수량을 초과할 수 없습니다. (물품 id =" + this.id + "목표 수량 =" + this.quantity + ", 처리 이후 예상 수량="
+          + nextProcessedQuantity
           + ")"
       );
     }
