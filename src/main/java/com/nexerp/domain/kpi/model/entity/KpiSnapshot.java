@@ -1,5 +1,6 @@
-package com.nexerp.batch.kpi.model.entity;
+package com.nexerp.domain.kpi.model.entity;
 
+import com.nexerp.domain.kpi.model.response.IntegratedKpiResponse;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -32,11 +33,11 @@ public class KpiSnapshot {
 
   // 실제 KPI 결과 값
   private Double projectCompletionRate;
-  private Double taskDelayRate;
+  private Double longTermTaskRate;
   private Double safetyStockRate;
-  private Double inventoryTurnover;
-  private Double avgLogisticsLeadTimeHours;
-
+  private Double turnOverRate;
+  private Double shipmentLeadTimeAvg;
+  private Double shippingCompletionRate;
   // 예측 KPI
   private Double preInventoryTurnover;
   private Double preAvgLogisticsLeadTimeHours;
@@ -51,20 +52,16 @@ public class KpiSnapshot {
     this.calculatedAt = calculatedAt;
   }
 
-  // 부분 업데이트 메서드
-  public void updateSafetyStock(Double rate, LocalDateTime calculatedAt) {
-    this.safetyStockRate = rate;
+  // 통합 업데이트 메서드
+  public void updateAllMetrics(IntegratedKpiResponse.Metrics metrics, LocalDateTime calculatedAt) {
+    this.safetyStockRate = metrics.getSafetyStockRate();
+    this.shipmentLeadTimeAvg = metrics.getShipmentLeadTimeAvg();
+    this.shippingCompletionRate = metrics.getShippingCompletionRate();
+    this.projectCompletionRate = metrics.getProjectCompletionRate();
+    this.longTermTaskRate = metrics.getLongTermTaskRate();
+    this.turnOverRate = metrics.getTurnOverRate();
     this.calculatedAt = calculatedAt;
   }
 
-  public void updateProjectKpi(Double completionRate, Double delayRate, LocalDateTime calculatedAt) {
-    this.projectCompletionRate = completionRate;
-    this.taskDelayRate = delayRate;
-    this.calculatedAt = calculatedAt;
-  }
 
-  public void updatePredictions(Double preInventory, Double preLeadTime, LocalDateTime calculatedAt) {
-    this.preInventoryTurnover = preInventory;
-    this.preAvgLogisticsLeadTimeHours = preLeadTime;
-  }
 }
