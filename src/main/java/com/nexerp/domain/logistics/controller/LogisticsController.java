@@ -416,4 +416,53 @@ public class LogisticsController {
     return BaseResponse.success();
   }
 
+  @GetMapping("/assigned")
+  @Operation(
+    summary = "출하 업무 전체 조회 API",
+    description = """
+      회사에 소속된 모든 출하 업무 리스트를 조회합니다.
+      
+      - **반환 정보:**
+      - logisticsId (출하 업무 id)
+      - projectNumber (프로젝트 번호)
+      - logisticsTitle (업무명)
+      - customer (거래처)
+      - requestedAt (요청일)
+      - assigneeSummary (프로젝트 기준)
+      - logisticsStatus(진행상태)
+      """
+  )
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      description = "속한 출하 업무 조회 성공",
+      content = @Content(
+        mediaType = "application/json",
+        array = @ArraySchema(schema = @Schema(implementation = LogisticsSearchResponse.class)),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            [
+              {
+                "logisticsId": 5,
+                "projectNumber": "C01-25-001",
+                "logisticsTitle": "삼성 물산 수출 건",
+                "customer": "거래처(프로젝트 기준)",
+                "assigneeSummary": "김철수 외 1명",
+                "requestedAt": "2025-12-21T14:22:00",
+                "logisticsStatus": "IN_PROGRESS"
+              }
+            ]
+            """
+        )
+      )
+    )
+  })
+  public BaseResponse<List<LogisticsSearchResponse>> getLogisticsAssignees(
+    @AuthenticationPrincipal CustomUserDetails userDetails) {
+    Long memberId = userDetails.getMemberId();
+    List<LogisticsSearchResponse> result = logisticsService.getLogisticsAssignees(memberId);
+
+    return BaseResponse.success(result);
+  }
 }
