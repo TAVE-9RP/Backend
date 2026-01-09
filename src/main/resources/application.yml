@@ -10,7 +10,7 @@ analytics:
   export:
     local-path: ./tmp
     retention-months: 2
-    s3-bucket: ${S3_BUCKET}
+    s3-bucket: ${S3_BUCKET} # 분석 데이터가 쌓이는 버킷
     s3-key-prefix: exports/daily
 
 
@@ -27,7 +27,7 @@ cloud:
       access-key: ${AWS_ACCESS_KEY}
       secret-key: ${AWS_SECRET_KEY}
     s3:
-      bucket: ${S3_BUCKET}
+      bucket: ${S3_BUCKET} # 기본 스토리지 버킷
     region:
       static: ${AWS_REGION}
     stack:
