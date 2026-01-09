@@ -15,6 +15,7 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -69,16 +70,16 @@ public class Item {
 
   @Builder
   public Item(
-      Long companyId,
-      String code,
-      String name,
-      Long price,
-      Long quantity,
-      LocalDateTime receivedAt,
-      String location,
-      LocalDateTime createdAt,
-      Long safetyStock,
-      Long targetStock) {
+    Long companyId,
+    String code,
+    String name,
+    Long price,
+    Long quantity,
+    LocalDateTime receivedAt,
+    String location,
+    LocalDateTime createdAt,
+    Long safetyStock,
+    Long targetStock) {
     this.companyId = companyId;
     this.code = code;
     this.name = name;
@@ -104,5 +105,19 @@ public class Item {
     }
 
     this.quantity -= removedQuantity;
+  }
+
+  public void updateItemTargetStock(Long targetStock) {
+    if (Objects.equals(this.targetStock, targetStock)) {
+      return;
+    }
+    this.targetStock = targetStock;
+  }
+
+  public void updateItemSafetyStock(Long safetyStock) {
+    if (Objects.equals(this.safetyStock, safetyStock)) {
+      return;
+    }
+    this.safetyStock = safetyStock;
   }
 }

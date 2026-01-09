@@ -68,13 +68,14 @@ public class LogisticsItem {
 
   public static LogisticsItem create(Logistics logistics, Item item) {
     return LogisticsItem.builder()
-        .logistics(logistics)
-        .item(item)
-        .processedQuantity(0L)
-        .targetedQuantity(0L)
-        .processingStatus(TaskProcessingStatus.NOT_STARTED)
-        .shipoutDate(null)
-        .build();
+      .logistics(logistics)
+      .item(item)
+      .processedQuantity(0L)
+      .targetedQuantity(0L)
+      .totalPrice(BigDecimal.ZERO)
+      .processingStatus(TaskProcessingStatus.NOT_STARTED)
+      .shipoutDate(null)
+      .build();
   }
 
   public void applyTargetQuantity(Long targetQuantity) {
@@ -109,7 +110,7 @@ public class LogisticsItem {
     // 현재 출하량 증가
     this.processedQuantity += processedQuantity;
     this.totalPrice = BigDecimal.valueOf(price)
-        .multiply(BigDecimal.valueOf(this.processedQuantity));
+      .multiply(BigDecimal.valueOf(this.processedQuantity));
   }
 
 }
