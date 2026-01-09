@@ -21,7 +21,7 @@ public class KpiScheduler {
 
   @Scheduled(cron = "0 0 4 * * *", zone = "Asia/Seoul")
   public void scheduleKpiSync() {
-    // 테스트용
+
     // 1. DB에서 활성화된 모든 회사 ID
     List<Long> allCompanyIds = companyService.getAllCompanyIds();
 
