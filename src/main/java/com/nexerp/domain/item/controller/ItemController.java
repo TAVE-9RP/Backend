@@ -11,9 +11,12 @@ import com.nexerp.domain.item.service.ItemService;
 import com.nexerp.global.common.response.BaseResponse;
 import com.nexerp.global.security.details.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -32,7 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/items")
-@Tag(name = "물품 관련 API", description = "물품 추가, 조회")
+@Tag(name = "품목 관련 API", description = "품목 추가, 조회 등")
 public class ItemController {
 
   private final ItemService itemService;
@@ -40,13 +43,13 @@ public class ItemController {
   @PreAuthorize("hasPermission('INVENTORY', 'WRITE')")
   @PostMapping
   @Operation(
-    summary = "신규 재고(Item) 생성 API",
+    summary = "신규 품목(Item) 생성 API",
     description = """
-      로그인한 직원이 속한 **자신의 회사**에 새로운 재고(Item)를 생성합니다.
+      로그인한 직원이 속한 **자신의 회사**에 새로운 품목(Item)를 생성합니다.
       신규 품목(Item)을 생성합니다.
       
       ✔ quantity는 항상 0으로 생성됩니다.
-      ✔ 승인 전이므로 실제 재고 반영이 아닙니다.
+      ✔ 승인 전이므로 실제 품목 반영이 아닙니다.
       ✔ 생성 후 반환된 itemId로 입고 목록 추가 API를 바로 호출하면 됩니다.
       """,
     requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -76,13 +79,13 @@ public class ItemController {
 
   @GetMapping
   @Operation(
-    summary = "기존 재고 검색 API",
+    summary = "기존 물품 검색 API",
     description = """
-      로그인한 직원이 속한 **자신의 회사 재고만** 검색합니다.
+      로그인한 직원이 속한 **자신의 회사 물품만** 검색합니다.
       
-      기존 재고(Item)를 키워드로 검색합니다.
-      ✔ 재고 번호(code), 품목명(name), 위치(location) 등을 부분 검색합니다.
-      ✔ keyword가 비어 있으면 전체 재고를 반환합니다.
+      기존 물품(Item)를 키워드로 검색합니다.
+      ✔ 물품 번호(code), 물품명(name), 위치(location) 등을 부분 검색합니다.
+      ✔ keyword가 비어 있으면 전체 물품을 반환합니다.
       ✔ INVENTORY READ 권한이 필요합니다.
       """
   )
@@ -97,6 +100,25 @@ public class ItemController {
     return BaseResponse.success(results);
   }
 
+  @Operation(
+    summary = "품목 상세 조회",
+    description = """
+      특정 물품 상세 정보(물품, 가격, 위치, 목표/안전 재고 등)를 조회합니다.
+      - **반환 정보:**
+      - itemId (품목 식별자 ID)
+      - code (품목 코드)
+      - name (품목 이름)
+      - quantity (현재 재고 수량)
+      - price (품목 출하 단가)
+      - location (창고 내 위치)
+      - createdAt (품목 등록 일시)
+      - targetStock (목표 재고 수량)
+      - safetyStock (안전 재고 수량)
+      """
+  )
+  @ApiResponses(value = {
+    @ApiResponse(responseCode = "200", description = "요청에 성공했습니다.")
+  })
   @GetMapping("/{itemId}")
   public BaseResponse<ItemDetailResponse> getItemDetail(
     @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -108,6 +130,45 @@ public class ItemController {
     return BaseResponse.success(result);
   }
 
+  @Operation(
+    summary = "품목 이력 조회",
+    description = "특정 품목의 재고 변동 및 업무 처리 이력을 리스트로 조회합니다."
+  )
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      description = "요청에 성공했습니다.",
+      content = @Content(
+        mediaType = "application/json",
+        array = @ArraySchema(schema = @Schema(implementation = ItemHistoryResponse.class)),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            [
+              {
+                "itemHistoryId": 105,
+                "itemId": 1,
+                "taskType": "LOGISTICS",
+                "memberId": 5,
+                "memberName": "홍길동",
+                "processedAt": "2024-03-21T14:30:00",
+                "changeQuantity": -10
+              },
+              {
+                "itemHistoryId": 102,
+                "itemId": 1,
+                "taskType": "INVENTORY",
+                "memberId": 3,
+                "memberName": "이영희",
+                "processedAt": "2024-03-20T10:00:00",
+                "changeQuantity": 50
+              }
+            ]
+            """
+        )
+      )
+    )
+  })
   @GetMapping("/{itemId}/history")
   public BaseResponse<List<ItemHistoryResponse>> getItemHistories(
     @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -118,6 +179,13 @@ public class ItemController {
     return BaseResponse.success(results);
   }
 
+  @Operation(
+    summary = "목표 재고 수량 수정",
+    description = "특정 물품의 목표 재고 수량(Target Stock)을 수정합니다. targetStock은 필수이며 0 이상이어야 합니다."
+  )
+  @ApiResponses(value = {
+    @ApiResponse(responseCode = "200", description = "요청에 성공했습니다.")
+  })
   @PatchMapping("/{itemId}/target-stock")
   public BaseResponse<Void> updateItemTargetStock(
     @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -129,6 +197,13 @@ public class ItemController {
     return BaseResponse.success();
   }
 
+  @Operation(
+    summary = "안전 재고 수량 수정",
+    description = "특정 물품의 목표 재고 수량(Safety Stock)을 수정합니다. safetyStock은 필수이며 0 이상이어야 합니다."
+  )
+  @ApiResponses(value = {
+    @ApiResponse(responseCode = "200", description = "요청에 성공했습니다.")
+  })
   @PatchMapping("/{itemId}/safety-stock")
   public BaseResponse<Void> updateItemTargetStock(
     @AuthenticationPrincipal CustomUserDetails userDetails,
