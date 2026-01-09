@@ -1,7 +1,10 @@
 package com.nexerp.domain.item.controller;
 
 import com.nexerp.domain.item.model.request.ItemCreateRequest;
+import com.nexerp.domain.item.model.request.ItemSafetyStockUpdateRequest;
+import com.nexerp.domain.item.model.request.ItemTargetStockUpdateRequest;
 import com.nexerp.domain.item.model.response.ItemCreateResponse;
+import com.nexerp.domain.item.model.response.ItemDetailResponse;
 import com.nexerp.domain.item.model.response.ItemHistoryResponse;
 import com.nexerp.domain.item.model.response.ItemSearchResponse;
 import com.nexerp.domain.item.service.ItemService;
@@ -18,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -93,6 +97,17 @@ public class ItemController {
     return BaseResponse.success(results);
   }
 
+  @GetMapping("/{itemId}")
+  public BaseResponse<ItemDetailResponse> getItemDetail(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @PathVariable Long itemId
+  ) {
+    Long memberId = userDetails.getMemberId();
+
+    ItemDetailResponse result = itemService.getItemDetail(memberId, itemId);
+    return BaseResponse.success(result);
+  }
+
   @GetMapping("/{itemId}/history")
   public BaseResponse<List<ItemHistoryResponse>> getItemHistories(
     @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -101,5 +116,27 @@ public class ItemController {
     Long memberId = userDetails.getMemberId();
     List<ItemHistoryResponse> results = itemService.getItemHistories(memberId, itemId);
     return BaseResponse.success(results);
+  }
+
+  @PatchMapping("/{itemId}/target-stock")
+  public BaseResponse<Void> updateItemTargetStock(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @PathVariable Long itemId,
+    @Valid @RequestBody ItemTargetStockUpdateRequest request
+  ) {
+    Long memberId = userDetails.getMemberId();
+    itemService.updateItemTargetStock(memberId, itemId, request.getTargetStock());
+    return BaseResponse.success();
+  }
+
+  @PatchMapping("/{itemId}/safety-stock")
+  public BaseResponse<Void> updateItemTargetStock(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @PathVariable Long itemId,
+    @Valid @RequestBody ItemSafetyStockUpdateRequest request
+  ) {
+    Long memberId = userDetails.getMemberId();
+    itemService.updateItemSafetyStock(memberId, itemId, request.getSafetyStock());
+    return BaseResponse.success();
   }
 }
