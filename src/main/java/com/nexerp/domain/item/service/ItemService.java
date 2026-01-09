@@ -4,6 +4,7 @@ import com.nexerp.domain.item.model.entity.Item;
 import com.nexerp.domain.item.model.entity.ItemHistory;
 import com.nexerp.domain.item.model.request.ItemCreateRequest;
 import com.nexerp.domain.item.model.response.ItemCreateResponse;
+import com.nexerp.domain.item.model.response.ItemDetailResponse;
 import com.nexerp.domain.item.model.response.ItemHistoryResponse;
 import com.nexerp.domain.item.model.response.ItemSearchResponse;
 import com.nexerp.domain.item.repository.ItemHistoryRepository;
@@ -49,8 +50,8 @@ public class ItemService {
       .location(request.getLocation())
       .createdAt(LocalDateTime.now())
       .receivedAt(null)
-      .safetyStock(null)
-      .targetStock(null)
+      .safetyStock(0L)
+      .targetStock(0L)
       .build();
 
     Item saved = itemRepository.save(item);
@@ -93,5 +94,35 @@ public class ItemService {
       item.getId());
 
     return ItemHistoryResponse.fromList(itemHistories);
+  }
+
+  @Transactional(readOnly = true)
+  public ItemDetailResponse getItemDetail(Long memberId, Long itemId) {
+    Long memberCompanyId = memberService.getCompanyIdByMemberId(memberId);
+
+    Item item = itemRepository.findByIdAndCompanyId(itemId, memberCompanyId)
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.FORBIDDEN, "회원 회사의 물품이 아닙니다."));
+    return ItemDetailResponse.from(item);
+  }
+
+  @Transactional
+  public void updateItemTargetStock(Long memberId, Long itemId,
+    Long targetStock) {
+    Long memberCompanyId = memberService.getCompanyIdByMemberId(memberId);
+
+    Item item = itemRepository.findByIdAndCompanyId(itemId, memberCompanyId)
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.FORBIDDEN, "회원 회사의 물품이 아닙니다."));
+
+    item.updateItemTargetStock(targetStock);
+  }
+
+  @Transactional
+  public void updateItemSafetyStock(Long memberId, Long itemId, Long safetyStock) {
+    Long memberCompanyId = memberService.getCompanyIdByMemberId(memberId);
+
+    Item item = itemRepository.findByIdAndCompanyId(itemId, memberCompanyId)
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.FORBIDDEN, "회원 회사의 물품이 아닙니다."));
+
+    item.updateItemSafetyStock(safetyStock);
   }
 }

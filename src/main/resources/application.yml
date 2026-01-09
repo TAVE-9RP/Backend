@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: prod
+    active: local
 ---
 server:
   port: 3006
@@ -10,6 +10,8 @@ analytics:
   export:
     local-path: ./tmp
     retention-months: 2
+    s3-bucket: ${S3_BUCKET} # 분석 데이터가 쌓이는 버킷
+    s3-key-prefix: exports/daily
 
 
 # JWT 설정 추가
@@ -17,3 +19,16 @@ jwt:
   secret: ${JWT_SECRET}
   access-token-expiration-in-milliseconds: 3600000 # 1시간
   refresh-token-expiration-in-milliseconds: 604800000 # 7일
+
+
+cloud:
+  aws:
+    credentials:
+      access-key: ${AWS_ACCESS_KEY}
+      secret-key: ${AWS_SECRET_KEY}
+    s3:
+      bucket: ${S3_BUCKET} # 기본 스토리지 버킷
+    region:
+      static: ${AWS_REGION}
+    stack:
+      auto: false
