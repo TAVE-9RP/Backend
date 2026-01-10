@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e  # 명령어 하나라도 실패하면 즉시 중단
 
 HOST=$EC2_HOST
 USER=$EC2_USER
