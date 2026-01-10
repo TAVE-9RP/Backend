@@ -3,7 +3,7 @@ name: Deploy to EC2 with ECR
 on:
   push:
     branches:
-      - feature/88/infra-ecr-cicd  # 일시적으로 작업 브랜치로 설정
+      - main
   workflow_dispatch:
 
 jobs:
