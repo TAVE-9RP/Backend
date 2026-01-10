@@ -7,16 +7,18 @@ KEY_PATH="key.pem"
 echo "$EC2_SSH_KEY" > $KEY_PATH
 chmod 600 $KEY_PATH
 
-# .env 파일 생성 (Secrets에 저장된 전체 내용을 전달)
-# 이 단계가 있어야 docker run 시 --env-file이 작동합니다.
+# EC2의 지문을 미리 스캔하여 신뢰할 수 있는 목록에 추가
+mkdir -p ~/.ssh
+ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
+
 echo "${ENV_FILE}" > .env
 
 
 # EC2 서버로 .env 파일 전송
-scp -i $KEY_PATH -o StrictHostKeyChecking=no .env $USER@$HOST:/home/$USER/nexerp/
+scp -i $KEY_PATH .env $USER@$HOST:/home/$USER/nexerp/
 
 # EC2 서버 접속 및 배포 명령 실행
-ssh -i $KEY_PATH -o StrictHostKeyChecking=no $USER@$HOST <<EOF
+ssh -i $KEY_PATH $USER@$HOST <<EOF
   # 1. ECR 로그인
   aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin ${ECR_REGISTRY_URL}
 
