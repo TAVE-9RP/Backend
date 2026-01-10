@@ -13,6 +13,7 @@ ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
 
 echo "${ENV_FILE}" > .env
 
+ssh -i $KEY_PATH $USER@$HOST "mkdir -p /home/$USER/nexerp"
 
 # EC2 서버로 .env 파일 전송
 scp -i $KEY_PATH .env $USER@$HOST:/home/$USER/nexerp/
