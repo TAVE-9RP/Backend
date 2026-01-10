@@ -11,10 +11,12 @@ chmod 600 $KEY_PATH
 # 이 단계가 있어야 docker run 시 --env-file이 작동합니다.
 echo "${ENV_FILE}" > .env
 
-# EC2 서버로 .env 파일 전송
-scp -i $KEY_PATH .env $USER@$HOST:/home/$USER/nexerp/
 
-ssh -i $KEY_PATH $USER@$HOST <<EOF
+# EC2 서버로 .env 파일 전송
+scp -i $KEY_PATH -o StrictHostKeyChecking=no .env $USER@$HOST:/home/$USER/nexerp/
+
+# EC2 서버 접속 및 배포 명령 실행
+ssh -i $KEY_PATH -o StrictHostKeyChecking=no $USER@$HOST <<EOF
   # 1. ECR 로그인
   aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin ${ECR_REGISTRY_URL}
 
