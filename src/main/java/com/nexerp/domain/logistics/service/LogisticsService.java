@@ -18,6 +18,7 @@ import com.nexerp.domain.member.model.entity.Member;
 import com.nexerp.domain.member.model.enums.MemberDepartment;
 import com.nexerp.domain.member.service.MemberService;
 import com.nexerp.domain.project.model.entity.Project;
+import com.nexerp.domain.project.repository.ProjectRepository;
 import com.nexerp.domain.project.service.ProjectService;
 import com.nexerp.domain.projectmember.model.entity.ProjectMember;
 import com.nexerp.domain.projectmember.repository.ProjectMemberRepository;
@@ -28,6 +29,7 @@ import com.nexerp.global.common.model.TaskStatus;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -41,21 +43,12 @@ public class LogisticsService {
 
   private final MemberService memberService;
   private final ProjectService projectService;
+  private final ProjectRepository projectRepository;
   private final LogisticsRepository logisticsRepository;
   private final ProjectMemberRepository projectMemberRepository;
   private final ItemRepository itemRepository;
   private final LogisticsItemRepository logisticsItemRepository;
   private final ItemHistoryRepository itemHistoryRepository;
-
-  @Transactional(readOnly = true)
-  public List<LogisticsSearchResponse> getCompanyLogisticsSummaries(Long memberId) {
-
-    Long companyId = memberService.getCompanyIdByMemberId(memberId);
-
-    List<Project> projects = projectService.getProjectsWithLogisticsByCompanyId(companyId);
-
-    return LogisticsSearchResponse.fromList(projects);
-  }
 
   @Transactional
   public void updateLogisticsDetails(Long memberId, Long logisticsId,
@@ -328,6 +321,84 @@ public class LogisticsService {
     if (!isAssigned) {
       throw new BaseException(GlobalErrorCode.FORBIDDEN, "해당 업무에 접근할 수 없습니다.");
     }
+  }
+
+  @Transactional(readOnly = true)
+  public List<LogisticsSearchResponse> searchLogisticsCompany(Long memberId, String keyword) {
+
+    Long companyId = memberService.getCompanyIdByMemberId(memberId);
+
+    // id만 조회
+    List<Long> projectIds = logisticsRepository.findProjectIdsWithLogisticsByKeyword(companyId,
+      keyword);
+    if (projectIds.isEmpty()) {
+      return List.of();
+    }
+
+    // Project, Logistics 조회
+    List<Project> projects = logisticsRepository.findProjectsWithLogisticsByIds(projectIds);
+
+    // ProjectMembers 가져오기
+    List<ProjectMember> projectMembers = projectMemberRepository.findAllByProjectIdInWithMember(
+      projectIds);
+    Map<Long, List<String>> memberNamesByProjectId = projectMembers.stream()
+      .collect(Collectors.groupingBy(
+        pm -> pm.getProject().getId(),
+        Collectors.mapping(pm -> pm.getMember().getName(), Collectors.toList())
+      ));
+
+    // projects와 projectIds 매칭
+    Map<Long, Project> projectById = projects.stream()
+      .collect(Collectors.toMap(Project::getId, Function.identity()));
+
+    return projectIds.stream()
+      .map(projectById::get)
+      // id만 존재 객체 없는 경우 null로 방어
+      .filter(Objects::nonNull)
+      //LogisticsSearchResponse 생성
+      .map(p -> LogisticsSearchResponse.from(
+        p,
+        memberNamesByProjectId.getOrDefault(p.getId(), List.of())
+      ))
+      .filter(Objects::nonNull)
+      .toList();
+  }
+
+  @Transactional(readOnly = true)
+  public List<LogisticsSearchResponse> searchLogisticsAssignees(Long memberId, String keyword) {
+
+    Long companyId = memberService.getCompanyIdByMemberId(memberId);
+
+    // Step1: IDs (본인 소속)
+    List<Long> projectIds = logisticsRepository.findProjectIdsForLogisticsSearchByCompanyAndMember(
+      companyId, memberId, keyword);
+    if (projectIds.isEmpty()) {
+      return List.of();
+    }
+
+    // Step2
+    List<Project> projects = logisticsRepository.findProjectsWithLogisticsByIds(projectIds);
+
+    // Step3
+    List<ProjectMember> pms = projectMemberRepository.findAllByProjectIdInWithMember(projectIds);
+    Map<Long, List<String>> memberNamesByProjectId = pms.stream()
+      .collect(Collectors.groupingBy(
+        pm -> pm.getProject().getId(),
+        Collectors.mapping(pm -> pm.getMember().getName(), Collectors.toList())
+      ));
+
+    Map<Long, Project> projectById = projects.stream()
+      .collect(Collectors.toMap(Project::getId, Function.identity()));
+
+    return projectIds.stream()
+      .map(projectById::get)
+      .filter(Objects::nonNull)
+      .map(p -> LogisticsSearchResponse.from(
+        p,
+        memberNamesByProjectId.getOrDefault(p.getId(), List.of())
+      ))
+      .filter(Objects::nonNull)
+      .toList();
   }
 
 }

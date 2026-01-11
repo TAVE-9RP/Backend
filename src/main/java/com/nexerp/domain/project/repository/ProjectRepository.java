@@ -90,4 +90,23 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     "LEFT JOIN FETCH p.inventory " +
     "WHERE p.id = :projectId")
   Optional<Project> findByIdWithTasks(Long projectId);
+
+  @Query("""
+        SELECT DISTINCT p
+        FROM Project p
+        JOIN FETCH p.company c
+        LEFT JOIN FETCH p.logistics l
+        LEFT JOIN FETCH p.projectMembers pm
+        LEFT JOIN FETCH pm.member m
+        WHERE p.company.id = :companyId
+          AND EXISTS (
+              SELECT 1
+              FROM ProjectMember pm
+              WHERE pm.project = p
+                AND pm.member.id = :memberId
+          )
+        ORDER BY p.createDate DESC
+    """)
+  List<Project> findProjectsAndLogisticsByMemberId(
+    Long memberId, Long companyId);
 }

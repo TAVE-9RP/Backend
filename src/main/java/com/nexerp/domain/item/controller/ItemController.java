@@ -186,6 +186,7 @@ public class ItemController {
   @ApiResponses(value = {
     @ApiResponse(responseCode = "200", description = "요청에 성공했습니다.")
   })
+  @PreAuthorize("hasPermission('INVENTORY', 'WRITE')")
   @PatchMapping("/{itemId}/target-stock")
   public BaseResponse<Void> updateItemTargetStock(
     @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -204,6 +205,7 @@ public class ItemController {
   @ApiResponses(value = {
     @ApiResponse(responseCode = "200", description = "요청에 성공했습니다.")
   })
+  @PreAuthorize("hasPermission('INVENTORY', 'WRITE')")
   @PatchMapping("/{itemId}/safety-stock")
   public BaseResponse<Void> updateItemTargetStock(
     @AuthenticationPrincipal CustomUserDetails userDetails,

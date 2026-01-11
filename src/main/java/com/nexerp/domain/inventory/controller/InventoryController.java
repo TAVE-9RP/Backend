@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -317,10 +318,12 @@ public class InventoryController {
   }
 
   @GetMapping
-  @Operation(summary = "입고 업무 전체 조회 API",
+  @Operation(
+    summary = "입고 업무 전체/키워드 조회 API",
     description = """
-      회사에 소속된 모든 입고 업무 리스트를 조회합니다.
-      
+      회사에 소속된 모든 입고 업무 리스트 중 키워드를 통해 조회합니다.
+      - 키워드는 Inventory 제목, 프로젝트 제목, 프로젝트 번호 중에 포함된 Inventory 조회
+      - Param의 keyword를 추가하여 조회 합니다. 만약 전체 조회시에는 "" 사용
       - **반환 정보:**
       - inventoryId (입고 업무 ID)
       - projectNumber (프로젝트 번호)
@@ -333,7 +336,7 @@ public class InventoryController {
   @ApiResponses({
     @ApiResponse(
       responseCode = "200",
-      description = "입고 업무 전체 조회 성공",
+      description = "입고 업무 조회 성공",
       content = @Content(
         mediaType = "application/json",
         array = @ArraySchema(schema = @Schema(implementation = InventorySummaryResponse.class)),
@@ -356,12 +359,13 @@ public class InventoryController {
       )
     )
   })
-  public BaseResponse<List<InventorySummaryResponse>> getInventoryList(
-    @AuthenticationPrincipal CustomUserDetails userDetails
+  public BaseResponse<List<InventorySummaryResponse>> searchInventoryCompany(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @RequestParam("keyword") String keyword
   ) {
     Long memberId = userDetails.getMemberId();
     List<InventorySummaryResponse> response =
-      inventoryService.getInventoryList(memberId);
+      inventoryService.searchInventoryCompany(memberId, keyword);
 
     return BaseResponse.success(response);
   }
@@ -412,6 +416,58 @@ public class InventoryController {
     InventoryDetailResponse response =
       inventoryService.getInventoryDetail(memberId, inventoryId);
 
+    return BaseResponse.success(response);
+  }
+
+  @GetMapping("/assigned")
+  @Operation(
+    summary = "프로젝트 기준 속한 본인이 입고 업무 키워드 리스트 조회 api",
+    description = """
+      본인이 소속된 프로젝트의 모든 입고 업무 리스트를 키워드를 통해 조회합니다.
+      - 키워드는 Inventory 제목, 프로젝트 제목, 프로젝트 번호 중에 포함된 Inventory 조회
+      - Param의 keyword를 추가하여 조회 합니다. 만약 전체 조회시에는 "" 사용
+      - **반환 정보:**
+      - inventoryId (입고 업무 ID)
+      - projectNumber (프로젝트 번호)
+      - inventoryTitle (업무명)
+      - itemSummary (예: '애플망고 외 2개')
+      - assigneeSummary (프로젝트 기준)
+      - requestedAt
+      - inventoryStatus (진행 상태)
+      """)
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      description = "입고 업무 조회 성공",
+      content = @Content(
+        mediaType = "application/json",
+        array = @ArraySchema(schema = @Schema(implementation = InventorySummaryResponse.class)),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            [
+              {
+                "inventoryId": 5,
+                "projectNumber": "C01-25-001",
+                "inventoryTitle": "삼성 물산 입고 건",
+                "itemSummary": "애플망고 외 2개",
+                "assigneeSummary": "김철수 외 1명",
+                "requestedAt": "2025-12-21T14:22:00",
+                "inventoryStatus": "IN_PROGRESS"
+              }
+            ]
+            """
+        )
+      )
+    )
+  })
+  public BaseResponse<List<InventorySummaryResponse>> searchInventoryAssigned(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @RequestParam("keyword") String keyword
+  ) {
+    Long memberId = userDetails.getMemberId();
+    List<InventorySummaryResponse> response =
+      inventoryService.searchInventoryAssigned(memberId, keyword);
     return BaseResponse.success(response);
   }
 }
