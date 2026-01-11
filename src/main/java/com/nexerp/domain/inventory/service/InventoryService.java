@@ -29,6 +29,10 @@ import com.nexerp.global.common.model.TaskStatus;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -250,53 +254,6 @@ public class InventoryService {
     projectService.completeProject(inventory.getProject().getId());
   }
 
-  public List<InventorySummaryResponse> getInventoryList(Long memberId) {
-
-    Member member = memberService.getMemberByMemberId(memberId);
-
-    Long companyId = member.getCompanyId();
-
-    List<Inventory> inventories = inventoryRepository.findAllByProject_Company_Id(companyId);
-
-    return inventories.stream()
-      .map(inv -> {
-
-        // 품목 요약 (애플망고 외 2개)
-        List<InventoryItem> items = inventoryItemRepository.findAllByInventoryId(inv.getId());
-        String itemSummary;
-        if (items.isEmpty()) {
-          itemSummary = "-";
-        } else if (items.size() == 1) {
-          itemSummary = items.get(0).getItem().getName();
-        } else {
-          itemSummary = items.get(0).getItem().getName()
-            + " 외 " + (items.size() - 1) + "개";
-        }
-
-        // 담당자 요약 (홍길동 외 3명)
-        List<ProjectMember> projectMembers = projectMemberRepository.findAllByProjectId(
-          inv.getProject().getId());
-        List<Member> members = projectMembers.stream()
-          .map(ProjectMember::getMember)
-          .toList();
-
-        String assigneeSummary;
-        if (members.isEmpty()) {
-          throw new BaseException(GlobalErrorCode.NOT_FOUND, "프로젝트 담당자를 찾을 수 없습니다.");
-        } else if (members.size() == 1) {
-          assigneeSummary = members.get(0).getName();
-        } else {
-          assigneeSummary = members.get(0).getName()
-            + " 외 " + (members.size() - 1) + "명";
-        }
-
-        return InventorySummaryResponse.from(
-          inv, itemSummary, assigneeSummary
-        );
-      })
-      .toList();
-  }
-
   // 업무 상세 조회
   public InventoryDetailResponse getInventoryDetail(Long memberId, Long inventoryId) {
 
@@ -344,48 +301,128 @@ public class InventoryService {
     }
   }
 
-  public List<InventorySummaryResponse> getInventoryAssignees(Long memberId) {
+
+  @Transactional(readOnly = true)
+  public List<InventorySummaryResponse> searchInventoryCompany(Long memberId, String keyword) {
 
     Member member = memberService.getMemberByMemberId(memberId);
+    Long companyId = member.getCompanyId();
 
-    List<Inventory> inventories = inventoryRepository.findAllAssignedToMember(member.getCompanyId(),
-      memberId);
-    return inventories.stream()
+    List<Long> inventoryIds = inventoryRepository.findInventoryIdsForSearchByCompany(companyId,
+      keyword);
+    if (inventoryIds.isEmpty()) {
+      return List.of();
+    }
+
+    // Step2: Inventory + Project
+    List<Inventory> inventories = inventoryRepository.findInventoriesWithProjectByIds(inventoryIds);
+
+    // Step3-1: InventoryItem 벌크
+    List<InventoryItem> inventoryItems = inventoryItemRepository.findAllByInventoryIdInWithItem(
+      inventoryIds);
+    Map<Long, List<InventoryItem>> itemsByInventoryId =
+      inventoryItems.stream().collect(Collectors.groupingBy(ii -> ii.getInventory().getId()));
+
+    // Step3-2: ProjectMember 벌크
+    List<Long> projectIds = inventories.stream()
+      .map(inv -> inv.getProject().getId())
+      .distinct()
+      .toList();
+
+    List<ProjectMember> pms = projectMemberRepository.findAllByProjectIdInWithMember(projectIds);
+    Map<Long, List<String>> memberNamesByProjectId =
+      pms.stream().collect(Collectors.groupingBy(
+        pm -> pm.getProject().getId(),
+        Collectors.mapping(pm -> pm.getMember().getName(), Collectors.toList())
+      ));
+
+    // IN 조회 순서 보장 X → Step1 ID 순서대로 정렬
+    Map<Long, Inventory> invById = inventories.stream()
+      .collect(Collectors.toMap(Inventory::getId, Function.identity()));
+
+    return inventoryIds.stream()
+      .map(invById::get)
+      .filter(Objects::nonNull)
       .map(inv -> {
-
-        // 품목 요약 (애플망고 외 2개)
-        List<InventoryItem> items = inventoryItemRepository.findAllByInventoryId(inv.getId());
-        String itemSummary;
-        if (items.isEmpty()) {
-          itemSummary = "-";
-        } else if (items.size() == 1) {
-          itemSummary = items.get(0).getItem().getName();
-        } else {
-          itemSummary = items.get(0).getItem().getName()
-            + " 외 " + (items.size() - 1) + "개";
-        }
-
-        // 담당자 요약 (홍길동 외 3명)
-        List<ProjectMember> projectMembers = projectMemberRepository.findAllByProjectId(
-          inv.getProject().getId());
-        List<Member> members = projectMembers.stream()
-          .map(ProjectMember::getMember)
-          .toList();
-
-        String assigneeSummary;
-        if (members.isEmpty()) {
-          throw new BaseException(GlobalErrorCode.NOT_FOUND, "프로젝트 담당자를 찾을 수 없습니다.");
-        } else if (members.size() == 1) {
-          assigneeSummary = members.get(0).getName();
-        } else {
-          assigneeSummary = members.get(0).getName()
-            + " 외 " + (members.size() - 1) + "명";
-        }
-
-        return InventorySummaryResponse.from(
-          inv, itemSummary, assigneeSummary
+        String itemSummary = summarizeItems(
+          itemsByInventoryId.getOrDefault(inv.getId(), List.of()));
+        String assigneeSummary = summarizeAssignees(
+          memberNamesByProjectId.getOrDefault(inv.getProject().getId(), List.of())
         );
+        return InventorySummaryResponse.from(inv, itemSummary, assigneeSummary);
       })
       .toList();
   }
+
+  @Transactional(readOnly = true)
+  public List<InventorySummaryResponse> searchInventoryAssigned(Long memberId, String keyword) {
+
+    Member member = memberService.getMemberByMemberId(memberId);
+    Long companyId = member.getCompanyId();
+
+    List<Long> inventoryIds =
+      inventoryRepository.findInventoryIdsForSearchByCompanyAndMember(companyId, memberId,
+        keyword);
+
+    if (inventoryIds.isEmpty()) {
+      return List.of();
+    }
+
+    List<Inventory> inventories = inventoryRepository.findInventoriesWithProjectByIds(inventoryIds);
+
+    List<InventoryItem> inventoryItems = inventoryItemRepository.findAllByInventoryIdInWithItem(
+      inventoryIds);
+    Map<Long, List<InventoryItem>> itemsByInventoryId =
+      inventoryItems.stream().collect(Collectors.groupingBy(ii -> ii.getInventory().getId()));
+
+    List<Long> projectIds = inventories.stream()
+      .map(inv -> inv.getProject().getId())
+      .distinct()
+      .toList();
+
+    List<ProjectMember> projectMembers = projectMemberRepository.findAllByProjectIdInWithMember(
+      projectIds);
+    Map<Long, List<String>> memberNamesByProjectId =
+      projectMembers.stream().collect(Collectors.groupingBy(
+        pm -> pm.getProject().getId(),
+        Collectors.mapping(pm -> pm.getMember().getName(), Collectors.toList())
+      ));
+
+    Map<Long, Inventory> invById = inventories.stream()
+      .collect(Collectors.toMap(Inventory::getId, Function.identity()));
+
+    return inventoryIds.stream()
+      .map(invById::get)
+      .filter(Objects::nonNull)
+      .map(inv -> {
+        String itemSummary = summarizeItems(
+          itemsByInventoryId.getOrDefault(inv.getId(), List.of()));
+        String assigneeSummary = summarizeAssignees(
+          memberNamesByProjectId.getOrDefault(inv.getProject().getId(), List.of())
+        );
+        return InventorySummaryResponse.from(inv, itemSummary, assigneeSummary);
+      })
+      .toList();
+  }
+
+  private String summarizeItems(List<InventoryItem> items) {
+    if (items == null || items.isEmpty()) {
+      return "-";
+    }
+    if (items.size() == 1) {
+      return items.get(0).getItem().getName();
+    }
+    return items.get(0).getItem().getName() + " 외 " + (items.size() - 1) + "개";
+  }
+
+  private String summarizeAssignees(List<String> memberNames) {
+    if (memberNames == null || memberNames.isEmpty()) {
+      return "-";
+    }
+    if (memberNames.size() == 1) {
+      return memberNames.get(0);
+    }
+    return memberNames.get(0) + " 외 " + (memberNames.size() - 1) + "명";
+  }
+
 }
