@@ -62,4 +62,10 @@ public class CompanyService {
     return company;
   }
 
+  // KPI 스케줄러 회사 식별 용도
+  @Transactional(readOnly = true)
+  public List<Long> getAllCompanyIds() {
+    return companyRepository.findAllIds();
+  }
+
 }
