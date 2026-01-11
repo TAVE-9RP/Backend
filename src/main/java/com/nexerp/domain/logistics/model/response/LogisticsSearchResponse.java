@@ -2,8 +2,6 @@ package com.nexerp.domain.logistics.model.response;
 
 import com.nexerp.domain.logistics.model.entity.Logistics;
 import com.nexerp.domain.project.model.entity.Project;
-import com.nexerp.global.common.exception.BaseException;
-import com.nexerp.global.common.exception.GlobalErrorCode;
 import com.nexerp.global.common.model.TaskStatus;
 import java.time.LocalDate;
 import java.util.List;
@@ -33,21 +31,15 @@ public class LogisticsSearchResponse {
 
   private final TaskStatus logisticsStatus;
 
-  public static LogisticsSearchResponse from(Project project) {
-
+  public static LogisticsSearchResponse from(Project project, List<String> memberNames) {
     Logistics logistics = project.getLogistics();
-
     if (logistics == null) {
       return null;
     }
 
-    List<String> memberNames = project.getProjectMembers().stream()
-      .map(pm -> pm.getMember().getName())
-      .toList();
-
     String assigneeSummary;
-    if (memberNames.isEmpty()) {
-      throw new BaseException(GlobalErrorCode.NOT_FOUND, "프로젝트 담당자를 찾을 수 없습니다.");
+    if (memberNames == null || memberNames.isEmpty()) {
+      assigneeSummary = "-";
     } else if (memberNames.size() == 1) {
       assigneeSummary = memberNames.get(0);
     } else {
@@ -65,10 +57,4 @@ public class LogisticsSearchResponse {
       .build();
   }
 
-  public static List<LogisticsSearchResponse> fromList(List<Project> projects) {
-    return projects.stream()
-      .map(LogisticsSearchResponse::from)
-      .filter(r -> r != null)
-      .toList();
-  }
 }
