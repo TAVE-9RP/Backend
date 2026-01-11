@@ -6,7 +6,6 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.List;
-
 import lombok.Builder;
 import lombok.Getter;
 
@@ -22,6 +21,9 @@ public class ProjectCreateRequest {
 
   @NotBlank(message = "프로젝트 설명을 작성하세요")
   private String projectDescription;
+
+  @NotBlank(message = "프로젝트 업무 설명을 작성하세요")
+  private String projectTaskDescription;
 
   private String projectCustomer;
 

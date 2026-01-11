@@ -98,6 +98,18 @@ public class LogisticsItem {
   }
 
   public void increaseProcessedQuantity(Long processedQuantity) {
+
+    long nextProcessedQuantity = this.processedQuantity + processedQuantity;
+    if (nextProcessedQuantity > this.targetedQuantity) {
+      throw new BaseException(GlobalErrorCode.BAD_REQUEST,
+        "목표 수량을 초과할 수 없습니다. (물품 id =" + this.id + "목표 수량 =" + this.targetedQuantity
+          + ", 처리 이후 예상 수량="
+          + nextProcessedQuantity
+          + ")"
+      );
+
+    }
+
     //재고 감소
     this.item.decreaseQuantity(processedQuantity);
 

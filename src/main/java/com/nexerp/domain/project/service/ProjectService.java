@@ -54,6 +54,7 @@ public class ProjectService {
       request.getProjectNumber(),
       request.getProjectName(),
       request.getProjectDescription(),
+      request.getProjectTaskDescription(),
       request.getProjectCustomer(),
       request.getProjectExpectedEndDate()
     );
@@ -164,6 +165,7 @@ public class ProjectService {
       .projectNumber(project.getNumber())
       .projectTitle(project.getTitle())
       .description(project.getDescription())
+      .taskDescription(project.getTaskDescription())
       .customer(project.getCustomer())
       .expectedEndDate(project.getExpectedEndDate())
       .endDate(project.getEndDate())

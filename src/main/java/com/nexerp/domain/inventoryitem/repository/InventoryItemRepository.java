@@ -1,9 +1,9 @@
 package com.nexerp.domain.inventoryitem.repository;
 
 import com.nexerp.domain.inventoryitem.model.entity.InventoryItem;
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.util.List;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 public interface InventoryItemRepository extends JpaRepository<InventoryItem, Long> {
 
@@ -11,5 +11,15 @@ public interface InventoryItemRepository extends JpaRepository<InventoryItem, Lo
   boolean existsByInventoryId(Long inventoryId);
 
   boolean existsByInventoryIdAndItemId(Long inventoryId, Long itemId);
+
   List<InventoryItem> findAllByInventoryId(Long inventoryId);
+
+  @Query("""
+      select ii
+      from InventoryItem ii
+        join fetch ii.item it
+      where ii.inventory.id in :inventoryIds
+    """)
+  List<InventoryItem> findAllByInventoryIdInWithItem(List<Long> inventoryIds);
+
 }
