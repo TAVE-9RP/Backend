@@ -56,6 +56,7 @@ public class ProjectController {
               "projectNumber": "PRO_1",
               "projectName": "프로젝트 이름",
               "projectDescription":"이원진의 간절한 프로젝트입니다.",
+              "projectTaskDescription": "이원진님 코드 짜세요",
               "projectCustomer":"wonjin",
               "projectExpectedEndDate":"2025-01-02",
               "assigneeIds": [1, 2, 3]
