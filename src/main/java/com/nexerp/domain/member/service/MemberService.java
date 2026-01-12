@@ -8,6 +8,7 @@ import com.nexerp.domain.member.model.enums.MemberRequestStatus;
 import com.nexerp.domain.member.model.request.MemberLoginRequestDto;
 import com.nexerp.domain.member.model.request.MemberSignupRequestDto;
 import com.nexerp.domain.member.model.response.MemberAuthResponseDto;
+import com.nexerp.domain.member.model.response.MemberInfoResponseDto;
 import com.nexerp.domain.member.repository.MemberRepository;
 import com.nexerp.domain.member.util.EnumValidatorUtil;
 import com.nexerp.global.common.exception.BaseException;
@@ -137,6 +138,13 @@ public class MemberService {
     MemberAuthResponseDto newTokens = jwtTokenProvider.generateToken(authentication);
 
     return newTokens;
+  }
+
+
+  @Transactional(readOnly = true)
+  public MemberInfoResponseDto getMemberInfo(Long memberId) {
+    Member member = getMemberByMemberId(memberId);
+    return MemberInfoResponseDto.form(member);
   }
 
   @Transactional(readOnly = true)
