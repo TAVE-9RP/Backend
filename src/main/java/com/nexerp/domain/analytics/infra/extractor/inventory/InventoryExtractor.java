@@ -8,10 +8,12 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class InventoryExtractor implements ExtractorPort {
@@ -37,6 +39,13 @@ public class InventoryExtractor implements ExtractorPort {
 
   @Override
   public Stream<String[]> extractRows(LocalDate date) {
+    try (java.sql.Connection conn = jdbcTemplate.getDataSource().getConnection()) {
+      String dbUrl = conn.getMetaData().getURL();
+      log.info("[InventoryExtractor] Using DB URL: {}", dbUrl);
+    } catch (Exception e) {
+      log.warn("[InventoryExtractor] Failed to retrieve DB URL for logging: {}", e.getMessage());
+    }
+
     String sql = """
       SELECT inventory_id,
              project_id,
