@@ -1,36 +1,43 @@
 #!/bin/bash
+set -e  # 명령어 하나라도 실패하면 즉시 중단
 
 HOST=$EC2_HOST
 USER=$EC2_USER
 KEY_PATH="key.pem"
 
-# PEM 키 복사 후 권한 설정
 echo "$EC2_SSH_KEY" > $KEY_PATH
 chmod 600 $KEY_PATH
 
-# gradlew 실행 권한 부여 및 빌드
-chmod +x ./gradlew
-./gradlew bootJar
+# EC2의 지문을 미리 스캔하여 신뢰할 수 있는 목록에 추가
+mkdir -p ~/.ssh
+ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
 
-# JAR 복사
-JAR_PATH=$(find build/libs -name "*.jar" | head -n 1)
-cp "$JAR_PATH" app.jar
+echo "${ENV_FILE}" > .env
 
-# EC2에 디렉토리 생성
-ssh -i $KEY_PATH $USER@$HOST "mkdir -p ~/nexerp"
+ssh -i $KEY_PATH $USER@$HOST "mkdir -p /home/$USER/nexerp"
 
-# JAR, Dockerfile, .env 전송
-scp -i $KEY_PATH app.jar $USER@$HOST:/home/$USER/nexerp/
-scp -i $KEY_PATH Dockerfile $USER@$HOST:/home/$USER/nexerp/
+# EC2 서버로 .env 파일 전송
 scp -i $KEY_PATH .env $USER@$HOST:/home/$USER/nexerp/
 
-# EC2에서 컨테이너 재시작
+# EC2 서버 접속 및 배포 명령 실행
 ssh -i $KEY_PATH $USER@$HOST <<EOF
-  cd ~/nexerp
+  # 1. ECR 로그인
+  aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin ${ECR_REGISTRY_URL}
+
+  # 2. 기존 컨테이너 중지 및 제거
   docker stop nexerp-container || true
   docker rm nexerp-container || true
-  docker rmi nexerp || true
 
-  docker build -t nexerp .
-  docker run -d --name nexerp-container -p 3006:3006 --env SPRING_PROFILES_ACTIVE=prod --env-file .env nexerp
+  # 3. 새로운 이미지 가져오기
+  docker pull ${ECR_REGISTRY_URL}/nexerp-server:latest
+
+  # 4. 컨테이너 실행 (환경변수 명시적 주입으로 ReadOnly DB 이슈 방지)
+  docker run -d --name nexerp-container \
+    -p 3006:3006 \
+    --env SPRING_PROFILES_ACTIVE=prod \
+    --env-file /home/$USER/nexerp/.env \
+    ${ECR_REGISTRY_URL}/nexerp-server:latest
+
+  # 5. 사용하지 않는 오래된 이미지 삭제 (디스크 용량 관리)
+  docker image prune -f
 EOF
