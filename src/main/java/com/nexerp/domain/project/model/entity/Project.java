@@ -78,6 +78,9 @@ public class Project {
   @Column(name = "project_description", nullable = false)
   private String description;
 
+  @Column(name = "project_task_description", nullable = false)
+  private String taskDescription;
+
   // 거래처(고객사)
   @Column(name = "project_customer")
   private String customer;
@@ -101,12 +104,14 @@ public class Project {
   private LocalDateTime createDate;
 
   public static Project create(Company company, String number, String title, String description,
+    String taskDescription,
     String customer, LocalDate expectedEndDate) {
     return Project.builder()
       .company(company)
       .number(number)
       .title(title)
       .description(description)
+      .taskDescription(taskDescription)
       .customer(customer)
       .status(ProjectStatus.NOT_STARTED)
       .expectedEndDate(expectedEndDate)

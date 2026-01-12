@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -44,10 +45,11 @@ public class LogisticsController {
   @GetMapping
   @PreAuthorize("hasPermission('LOGISTICS', 'READ')")
   @Operation(
-    summary = "출하 업무 전체 조회 API",
+    summary = "출하 업무 전체/키워드 조회 API",
     description = """
-      회사에 소속된 모든 출하 업무 리스트를 조회합니다.
-      
+      회사에 소속된 모든 출하 업무 리스트 중 키워드를 통해 조회합니다.
+      - 키워드는 Logistics 제목, 프로젝트 제목, 프로젝트 번호 중에 포함된 Logistics 조회
+      - Param의 keyword를 추가하여 조회 합니다. 만약 전체 조회시에는 "" 사용
       - **반환 정보:**
       - logisticsId (출하 업무 id)
       - projectNumber (프로젝트 번호)
@@ -61,7 +63,7 @@ public class LogisticsController {
   @ApiResponses({
     @ApiResponse(
       responseCode = "200",
-      description = "출하 업무 전체 조회 성공",
+      description = "출하 업무 조회 성공",
       content = @Content(
         mediaType = "application/json",
         array = @ArraySchema(schema = @Schema(implementation = LogisticsSearchResponse.class)),
@@ -84,10 +86,13 @@ public class LogisticsController {
       )
     )
   })
-  public BaseResponse<List<LogisticsSearchResponse>> getCompanyLogisticsSummaries(
-    @AuthenticationPrincipal CustomUserDetails userDetails) {
+  public BaseResponse<List<LogisticsSearchResponse>> searchLogisticsCompany(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @RequestParam("keyword") String keyword
+  ) {
     Long memberId = userDetails.getMemberId();
-    List<LogisticsSearchResponse> result = logisticsService.getCompanyLogisticsSummaries(memberId);
+    List<LogisticsSearchResponse> result = logisticsService.searchLogisticsCompany(memberId,
+      keyword);
 
     return BaseResponse.success(result);
   }
@@ -416,4 +421,57 @@ public class LogisticsController {
     return BaseResponse.success();
   }
 
+  @GetMapping("/assigned")
+  @Operation(
+    summary = "프로젝트 기준 속한 본인이 출하 업무 키워드 리스트 조회 api",
+    description = """
+      본인이 소속된 프로젝트의 모든 출하 업무 리스트를 키워드를 통해 조회합니다.
+      - 키워드는 Logistics 제목, 프로젝트 제목, 프로젝트 번호 중에 포함된 Logistics 조회
+      - Param의 keyword를 추가하여 조회 합니다. 만약 전체 조회시에는 "" 사용
+      - **반환 정보:**
+      - logisticsId (출하 업무 id)
+      - projectNumber (프로젝트 번호)
+      - logisticsTitle (업무명)
+      - customer (거래처)
+      - requestedAt (요청일)
+      - assigneeSummary (프로젝트 기준)
+      - logisticsStatus(진행상태)
+      """
+  )
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      description = "출하 업무 조회 성공",
+      content = @Content(
+        mediaType = "application/json",
+        array = @ArraySchema(schema = @Schema(implementation = LogisticsSearchResponse.class)),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            [
+              {
+                "logisticsId": 5,
+                "projectNumber": "C01-25-001",
+                "logisticsTitle": "삼성 물산 수출 건",
+                "customer": "거래처(프로젝트 기준)",
+                "assigneeSummary": "김철수 외 1명",
+                "requestedAt": "2025-12-21T14:22:00",
+                "logisticsStatus": "IN_PROGRESS"
+              }
+            ]
+            """
+        )
+      )
+    )
+  })
+  public BaseResponse<List<LogisticsSearchResponse>> searchLogisticsAssignees(
+    @AuthenticationPrincipal CustomUserDetails userDetails,
+    @RequestParam("keyword") String keyword
+  ) {
+    Long memberId = userDetails.getMemberId();
+    List<LogisticsSearchResponse> result = logisticsService.searchLogisticsAssignees(memberId,
+      keyword);
+
+    return BaseResponse.success(result);
+  }
 }

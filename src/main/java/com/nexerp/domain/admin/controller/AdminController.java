@@ -2,13 +2,21 @@ package com.nexerp.domain.admin.controller;
 
 import com.nexerp.domain.admin.model.request.JoinStatusUpdateRequest;
 import com.nexerp.domain.admin.model.request.PermissionUpdateRequest;
+import com.nexerp.domain.admin.model.response.AdminInfoResponse;
 import com.nexerp.domain.admin.model.response.JoinStatusResponse;
 import com.nexerp.domain.admin.model.response.PermissionResponse;
 import com.nexerp.domain.admin.service.AdminService;
 import com.nexerp.domain.logistics.service.LogisticsService;
+import com.nexerp.domain.member.model.response.MemberInfoResponseDto;
 import com.nexerp.global.common.response.BaseResponse;
 import com.nexerp.global.security.details.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -150,6 +158,56 @@ public class AdminController {
     adminService.rejectLogistics(ownerId, logisticsId);
 
     return BaseResponse.success();
+  }
+
+  @GetMapping("/info")
+  @Operation(
+    summary = "관리자 정보 조회 API",
+    description = """
+      회사에 소속된 모든 출하 업무 리스트 중 키워드를 통해 조회합니다.
+      - **반환 정보:**
+      - companyId (회사 id)
+      - adminId
+      - adminName
+      - adminEmail
+      """
+  )
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      description = "관리자 조회 성공",
+      content = @Content(
+        mediaType = "application/json",
+        array = @ArraySchema(schema = @Schema(implementation = MemberInfoResponseDto.class)),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            {
+                 "timestamp": "2026-01-12T05:33:02.431596100Z",
+                 "isSuccess": true,
+                 "status": 200,
+                 "code": "SUCCESS",
+                 "message": "요청에 성공했습니다.",
+                 "result": [
+                     {
+                         "companyId": 1,
+                         "adminId": 1,
+                         "adminName": "MANAGEMENT",
+                         "adminEmail": "test@string"
+                     }
+                 ]
+             }
+            """
+        )
+      )
+    )
+  })
+  public BaseResponse<List<AdminInfoResponse>> getAdminInfo(
+    @AuthenticationPrincipal CustomUserDetails userDetails
+  ) {
+    Long memberId = userDetails.getMemberId();
+    List<AdminInfoResponse> result = adminService.getAdminInfo(memberId);
+    return BaseResponse.success(result);
   }
 
 }

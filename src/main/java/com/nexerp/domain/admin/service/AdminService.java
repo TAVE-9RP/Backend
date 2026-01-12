@@ -4,6 +4,7 @@ import com.nexerp.domain.admin.model.request.JoinStatusUpdateRequest;
 import com.nexerp.domain.admin.model.request.JoinStatusUpdateRequest.StatusUpdateUnit;
 import com.nexerp.domain.admin.model.request.PermissionUpdateRequest;
 import com.nexerp.domain.admin.model.request.PermissionUpdateRequest.PermissionUpdateUnit;
+import com.nexerp.domain.admin.model.response.AdminInfoResponse;
 import com.nexerp.domain.admin.model.response.JoinStatusResponse;
 import com.nexerp.domain.admin.model.response.PermissionResponse;
 import com.nexerp.domain.admin.repository.AdminRepository;
@@ -16,6 +17,7 @@ import com.nexerp.domain.member.model.enums.MemberDepartment;
 import com.nexerp.domain.member.model.enums.MemberPosition;
 import com.nexerp.domain.member.model.enums.MemberRequestStatus;
 import com.nexerp.domain.member.model.enums.MemberRole;
+import com.nexerp.domain.member.service.MemberService;
 import com.nexerp.domain.member.util.EnumValidatorUtil;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
@@ -35,6 +37,7 @@ public class AdminService {
   private final AdminRepository adminRepository;
   private final InventoryRepository inventoryRepository;
   private final LogisticsRepository logisticsRepository;
+  private final MemberService memberService;
 
   // 로그인한 OWNER가 속한 회사의 모든 직원 (요청/승인/거절 포함) 조회
   @Transactional(readOnly = true)
@@ -206,6 +209,14 @@ public class AdminService {
     validateOwner(ownerId);
 
     inventory.approve();
+  }
+
+  @Transactional(readOnly = true)
+  public List<AdminInfoResponse> getAdminInfo(Long memberId) {
+    Member member = memberService.getMemberByMemberId(memberId);
+    List<Member> admins = adminRepository.findByCompanyIdAndPermissions_ManagementRole(
+      member.getCompanyId(), MemberRole.ALL);
+    return AdminInfoResponse.listFrom(admins);
   }
 
   // 오너인지 검증 후 오너인 경우 오너 반환

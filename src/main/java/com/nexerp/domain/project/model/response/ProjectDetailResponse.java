@@ -17,6 +17,8 @@ public class ProjectDetailResponse {
 
   private final String description;
 
+  private final String taskDescription;
+
   private final String customer;
 
   private final LocalDate expectedEndDate;
