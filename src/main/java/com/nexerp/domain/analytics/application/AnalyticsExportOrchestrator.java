@@ -44,8 +44,7 @@ public class AnalyticsExportOrchestrator {
   private final CsvWriterPort writer;
   private final Executor analyticsExportExecutor;
 
-  // READONLY_DB 인식 확인 용도 (로컬, 운영)
-  private final @Qualifier("analyticsReadOnlyDataSource") DataSource analyticsDataSource;
+
   /**
    * [Fail-Fast 병렬 내보내기] 1. 하나라도 실패하면 즉시 전체 작업을 중단합니다. 2. 실패 시 이미 성공하여 생성된 파일들도 모두 삭제(Cleanup)합니다.
    * 3. 원자적 파일 생성을 위해 임시 파일(tmp)에 먼저 쓰고 성공 시 최종 위치로 이동합니다.
@@ -117,8 +116,7 @@ public class AnalyticsExportOrchestrator {
       long allElapsedMs = NANOSECONDS.toMillis(System.nanoTime() - allStart);
       log.info("[AnalyticsExport] 전체 테이블 수={} 총 소요 시간={}", results.size(),
         allElapsedMs);
-      log.info("[AnalyticsExport] 접속 DB URL: {}",
-        analyticsDataSource.getConnection().getMetaData().getURL());
+
       return results;
 
     } catch (Exception e) {
