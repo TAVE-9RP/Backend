@@ -136,6 +136,10 @@ public class Member {
     // REJECTED로 바꾼다고 해서 joinDate를 지우지 않는 쪽으로 설계
   }
 
+  public void updateTokenVersion() {
+    this.tokenVersion++;
+  }
+
   // 권한 설정
   public void setPermissions(ServicePermissions permissions) {
     this.permissions = permissions;

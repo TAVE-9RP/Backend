@@ -175,4 +175,10 @@ public class MemberService {
         String.format("회원 정보를 찾을 수 없습니다. (ID: %d)", memberId)));
     return member;
   }
+
+  @Transactional
+  public void logout(Long memberId) {
+    Member member = getMemberByMemberId(memberId);
+    member.updateTokenVersion();
+  }
 }
