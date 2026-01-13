@@ -17,6 +17,7 @@ import com.nexerp.global.security.details.CustomUserDetails;
 import com.nexerp.global.security.details.CustomUserDetailsService;
 import com.nexerp.global.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -26,6 +27,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MemberService {
@@ -66,6 +68,7 @@ public class MemberService {
       return savedMember.getId();
 
     } catch (DataIntegrityViolationException e) {
+      log.error("DataIntegrityViolationException 종류: " + e.getMostSpecificCause().getMessage());
       throw new BaseException(GlobalErrorCode.DUPLICATE_RESOURCE, "이미 존재하는 아이디 또는 이메일입니다.");
     }
 
