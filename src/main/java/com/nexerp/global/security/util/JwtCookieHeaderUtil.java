@@ -18,7 +18,7 @@ public class JwtCookieHeaderUtil {
 
     // Set-Cookie 헤더 생성
     String cookieHeader = String.format(
-      "refresh_token=%s; Max-Age=%d; Path=/; Secure; HttpOnly; SameSite=Lax",
+      "refresh_token=%s; Max-Age=%d; Path=/; Secure; HttpOnly; SameSite=None",
       refreshToken,
       maxAgeSeconds
     );
@@ -29,7 +29,7 @@ public class JwtCookieHeaderUtil {
 
   public void clearRefreshTokenCookie(HttpServletResponse response) {
     // Max-Age를 0으로 설정하여 브라우저가 즉시 쿠키를 삭제하도록 함
-    String cookieHeader = "refresh_token=; Max-Age=0; Path=/; Secure; HttpOnly; SameSite=Lax";
+    String cookieHeader = "refresh_token=; Max-Age=0; Path=/; Secure; HttpOnly; SameSite=None";
 
     response.addHeader("Set-Cookie", cookieHeader);
   }
