@@ -7,6 +7,7 @@ import com.nexerp.domain.member.repository.MemberRepository;
 import com.nexerp.global.security.details.CustomUserDetails;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -129,15 +130,18 @@ public class JwtTokenProvider {     // 토큰 발급
       Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
       return true;
     } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
-      log.info("잘못된 JWT 서명입니다.", e);
+      log.info("잘못된 JWT 서명입니다.");
+      throw new JwtException("잘못된 JWT 서명입니다."); // 예외를 던짐
     } catch (ExpiredJwtException e) {
-      log.info("만료된 JWT 토큰입니다.", e);
+      log.info("만료된 JWT 토큰입니다.");
+      throw e; // 필터의 catch(ExpiredJwtException)에서 잡을 수 있도록 던짐
     } catch (UnsupportedJwtException e) {
-      log.info("지원되지 않는 JWT 토큰입니다.", e);
+      log.info("지원되지 않는 JWT 토큰입니다.");
+      throw new JwtException("지원되지 않는 토큰입니다.");
     } catch (IllegalArgumentException e) {
-      log.info("JWT 토큰이 잘못되었습니다.", e);
+      log.info("JWT 토큰이 잘못되었습니다.");
+      throw new JwtException("JWT 토큰이 잘못되었습니다.");
     }
-    return false;
   }
 
   // 토큰에서 클레임(Payload) 정보만 추출
