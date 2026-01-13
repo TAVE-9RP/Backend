@@ -22,7 +22,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,8 +29,6 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "member")
 @Getter
-@Builder
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member {
 
@@ -43,7 +40,6 @@ public class Member {
 
   @OneToMany(mappedBy = "member", fetch = FetchType.LAZY,
     cascade = CascadeType.ALL, orphanRemoval = true)
-  @Builder.Default
   private List<ProjectMember> projectMembers = new ArrayList<>();
 
   // 로그인용 ID
@@ -83,8 +79,7 @@ public class Member {
   // ENUM: 가입 상태
   @Enumerated(EnumType.STRING)
   @Column(name = "member_request_status", nullable = false)
-  @Builder.Default
-  private MemberRequestStatus requestStatus = MemberRequestStatus.PENDING;
+  private MemberRequestStatus requestStatus;
 
   // FK: 회사 ID
   @Column(name = "company_id", nullable = false)
