@@ -69,6 +69,7 @@ public class JwtTokenProvider {     // 토큰 발급
     // Access Token 생성 (Subject: 회원 PK, Claim: 권한)
     String accessToken = Jwts.builder()
       .setSubject(String.valueOf(member.getId()))
+      .claim("tokenVersion", member.getTokenVersion())
       .claim("department", member.getDepartment().name())
       .setExpiration(accessTokenExpiresIn)
       .signWith(key, SignatureAlgorithm.HS256)
@@ -76,6 +77,8 @@ public class JwtTokenProvider {     // 토큰 발급
 
     // Refresh Token 생성 (만료 시간만 포함)
     String refreshToken = Jwts.builder()
+      .setSubject(String.valueOf(member.getId()))
+      .claim("tokenVersion", member.getTokenVersion())
       .setExpiration(refreshTokenExpiresIn)
       .signWith(key, SignatureAlgorithm.HS256)
       .compact();
@@ -101,6 +104,12 @@ public class JwtTokenProvider {     // 토큰 발급
 
     Member member = memberRepository.findById(memberId)
       .orElseThrow(() -> new AuthenticationServiceException("토큰에 해당하는 회원이 존재하지 않습니다."));
+
+    Long accessTokenVersion = getTokenVersion(accessToken);
+
+    if (!accessTokenVersion.equals(member.getTokenVersion())) {
+      throw new AuthenticationServiceException("토큰이 더 이상 유효하지 않습니다.");
+    }
 
     CustomUserDetails principal = new CustomUserDetails(member);
 
@@ -159,8 +168,28 @@ public class JwtTokenProvider {     // 토큰 발급
    * 만료된 AT에서 사용자 Id(PK) 추출
    */
   public String getMemberIdFromExpiredToken(String expiredToken) {
-    Claims claims = parseClaims(expiredToken);
-    return claims.getSubject();
+    return getMemberIdFromToken(expiredToken);
+  }
+
+  //RT의 소유자(memberId)를 RT 자체에서 추출
+  public String getMemberIdFromRefreshToken(String refreshToken) {
+    return getMemberIdFromToken(refreshToken);
+  }
+
+  private String getMemberIdFromToken(String token) {
+    return parseClaims(token).getSubject();
+  }
+
+  public Long getTokenVersion(String token) {
+    Claims claims = parseClaims(token);
+    Object tokenVersion = claims.get("tokenVersion");
+    if (tokenVersion == null) {
+      throw new AuthenticationServiceException("토큰에 tokenVersion 정보가 없습니다.");
+    }
+    if (tokenVersion instanceof Number number) {
+      return number.longValue();
+    }
+    return Long.valueOf(tokenVersion.toString());
   }
 
 }
