@@ -90,6 +90,9 @@ public class Member {
   @Column(name = "company_id", nullable = false)
   private Long companyId;
 
+  @Column(name = "token_version", nullable = false)
+  private Long tokenVersion;
+
   // logisticsRole, inventoryRole, managementRole 각각의 권한
   @Embedded
   private ServicePermissions permissions;
@@ -107,6 +110,7 @@ public class Member {
     this.companyId = companyId;
 
     // 처음 가입 시 가입 상태 기본값 (요청대기)
+    this.tokenVersion = 0L;
     this.requestStatus = MemberRequestStatus.PENDING;
   }
 
@@ -130,6 +134,10 @@ public class Member {
     }
 
     // REJECTED로 바꾼다고 해서 joinDate를 지우지 않는 쪽으로 설계
+  }
+
+  public void updateTokenVersion() {
+    this.tokenVersion++;
   }
 
   // 권한 설정

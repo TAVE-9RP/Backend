@@ -7,6 +7,7 @@ import com.nexerp.domain.member.repository.MemberRepository;
 import com.nexerp.global.security.details.CustomUserDetails;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -69,6 +70,7 @@ public class JwtTokenProvider {     // 토큰 발급
     // Access Token 생성 (Subject: 회원 PK, Claim: 권한)
     String accessToken = Jwts.builder()
       .setSubject(String.valueOf(member.getId()))
+      .claim("tokenVersion", member.getTokenVersion())
       .claim("department", member.getDepartment().name())
       .setExpiration(accessTokenExpiresIn)
       .signWith(key, SignatureAlgorithm.HS256)
@@ -76,6 +78,8 @@ public class JwtTokenProvider {     // 토큰 발급
 
     // Refresh Token 생성 (만료 시간만 포함)
     String refreshToken = Jwts.builder()
+      .setSubject(String.valueOf(member.getId()))
+      .claim("tokenVersion", member.getTokenVersion())
       .setExpiration(refreshTokenExpiresIn)
       .signWith(key, SignatureAlgorithm.HS256)
       .compact();
@@ -102,6 +106,12 @@ public class JwtTokenProvider {     // 토큰 발급
     Member member = memberRepository.findById(memberId)
       .orElseThrow(() -> new AuthenticationServiceException("토큰에 해당하는 회원이 존재하지 않습니다."));
 
+    Long accessTokenVersion = getTokenVersion(accessToken);
+
+    if (!accessTokenVersion.equals(member.getTokenVersion())) {
+      throw new AuthenticationServiceException("토큰이 더 이상 유효하지 않습니다.");
+    }
+
     CustomUserDetails principal = new CustomUserDetails(member);
 
     return new UsernamePasswordAuthenticationToken(
@@ -120,15 +130,18 @@ public class JwtTokenProvider {     // 토큰 발급
       Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
       return true;
     } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
-      log.info("잘못된 JWT 서명입니다.", e);
+      log.info("잘못된 JWT 서명입니다.");
+      throw new JwtException("잘못된 JWT 서명입니다."); // 예외를 던짐
     } catch (ExpiredJwtException e) {
-      log.info("만료된 JWT 토큰입니다.", e);
+      log.info("만료된 JWT 토큰입니다.");
+      throw e; // 필터의 catch(ExpiredJwtException)에서 잡을 수 있도록 던짐
     } catch (UnsupportedJwtException e) {
-      log.info("지원되지 않는 JWT 토큰입니다.", e);
+      log.info("지원되지 않는 JWT 토큰입니다.");
+      throw new JwtException("지원되지 않는 토큰입니다.");
     } catch (IllegalArgumentException e) {
-      log.info("JWT 토큰이 잘못되었습니다.", e);
+      log.info("JWT 토큰이 잘못되었습니다.");
+      throw new JwtException("JWT 토큰이 잘못되었습니다.");
     }
-    return false;
   }
 
   // 토큰에서 클레임(Payload) 정보만 추출
@@ -159,8 +172,28 @@ public class JwtTokenProvider {     // 토큰 발급
    * 만료된 AT에서 사용자 Id(PK) 추출
    */
   public String getMemberIdFromExpiredToken(String expiredToken) {
-    Claims claims = parseClaims(expiredToken);
-    return claims.getSubject();
+    return getMemberIdFromToken(expiredToken);
+  }
+
+  //RT의 소유자(memberId)를 RT 자체에서 추출
+  public String getMemberIdFromRefreshToken(String refreshToken) {
+    return getMemberIdFromToken(refreshToken);
+  }
+
+  private String getMemberIdFromToken(String token) {
+    return parseClaims(token).getSubject();
+  }
+
+  public Long getTokenVersion(String token) {
+    Claims claims = parseClaims(token);
+    Object tokenVersion = claims.get("tokenVersion");
+    if (tokenVersion == null) {
+      throw new AuthenticationServiceException("토큰에 tokenVersion 정보가 없습니다.");
+    }
+    if (tokenVersion instanceof Number number) {
+      return number.longValue();
+    }
+    return Long.valueOf(tokenVersion.toString());
   }
 
 }

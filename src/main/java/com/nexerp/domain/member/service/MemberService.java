@@ -128,11 +128,24 @@ public class MemberService {
       throw new BaseException(GlobalErrorCode.STATE_CONFLICT, "Access Token이 아직 유효하여 재발급할 수 없습니다.");
     }
 
-    // 만료된 AT에서 memberId 추출
-    String memberId = jwtTokenProvider.getMemberIdFromExpiredToken(expiredAccessToken);
+    // 토큰이 소유주 확인
+    String atMemberId = jwtTokenProvider.getMemberIdFromExpiredToken(expiredAccessToken);
+    String rtMemberId = jwtTokenProvider.getMemberIdFromRefreshToken(refreshToken);
+    if (!atMemberId.equals(rtMemberId)) {
+      throw new BaseException(GlobalErrorCode.UNAUTHORIZED, "토큰 소유자 정보가 일치하지 않습니다.");
+    }
+
+    Member member = memberRepository.findById(Long.valueOf(rtMemberId))
+      .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "존재하지 않는 회원입니다."));
+
+    // 토큰 버전 검증
+    Long tokenVersion = jwtTokenProvider.getTokenVersion(refreshToken);
+    if (!member.getTokenVersion().equals(tokenVersion)) {
+      throw new BaseException(GlobalErrorCode.UNAUTHORIZED, "이미 무효화된 토큰입니다. 다시 로그인해주세요.");
+    }
 
     // Authentication 객체 생성 (DB 조회 포함)
-    Authentication authentication = customUserDetailsService.createAuthenticationById(memberId);
+    Authentication authentication = customUserDetailsService.createAuthenticationById(rtMemberId);
 
     // 새 토큰 발급
     MemberAuthResponseDto newTokens = jwtTokenProvider.generateToken(authentication);
@@ -161,5 +174,11 @@ public class MemberService {
       .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND,
         String.format("회원 정보를 찾을 수 없습니다. (ID: %d)", memberId)));
     return member;
+  }
+
+  @Transactional
+  public void logout(Long memberId) {
+    Member member = getMemberByMemberId(memberId);
+    member.updateTokenVersion();
   }
 }

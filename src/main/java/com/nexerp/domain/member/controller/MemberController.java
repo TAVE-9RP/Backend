@@ -7,15 +7,16 @@ import com.nexerp.domain.member.model.response.MemberInfoResponseDto;
 import com.nexerp.domain.member.service.MemberService;
 import com.nexerp.global.common.response.BaseResponse;
 import com.nexerp.global.security.details.CustomUserDetails;
-import com.nexerp.global.security.jwt.JwtTokenProvider;
 import com.nexerp.global.security.util.JwtCookieHeaderUtil;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -36,7 +37,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class MemberController {
 
   private final MemberService memberService;
-  private final JwtTokenProvider jwtTokenProvider;
   private final JwtCookieHeaderUtil jwtCookieHeaderUtil;
 
   @PostMapping("/signup")
@@ -142,6 +142,47 @@ public class MemberController {
       .build();
 
     return BaseResponse.success(responseBody);
+  }
+
+  @PostMapping("/logout")
+  @Operation(
+    summary = "로그아웃",
+    description = """
+      현재 로그인 세션을 종료합니다.
+      - 서버: member.tokenVersion을 증가시켜 기존 AccessToken/RefreshToken을 즉시 무효화합니다.
+      - 클라이언트: 응답의 Set-Cookie(refresh_token=; Max-Age=0 ...)로 RefreshToken 쿠키가 삭제됩니다.
+      """,
+    security = @SecurityRequirement(name = "bearerAuth")
+  )
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      description = "로그아웃 성공",
+      headers = {
+        @Header(
+          name = "Set-Cookie",
+          description = "refresh_token 쿠키 삭제(Max-Age=0) 및 보안 속성 유지",
+          schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string")
+        )
+      }
+    ),
+    @ApiResponse(
+      responseCode = "401",
+      description = "인증 실패(토큰 만료/무효/누락)",
+      content = @Content
+    ),
+    @ApiResponse(
+      responseCode = "500",
+      description = "서버 오류",
+      content = @Content
+    )
+  })
+  public BaseResponse<Void> logout(@AuthenticationPrincipal CustomUserDetails userDetails,
+    HttpServletResponse response) {
+    Long memberId = userDetails.getMemberId();
+    memberService.logout(memberId);
+    jwtCookieHeaderUtil.clearRefreshTokenCookie(response);
+    return BaseResponse.success();
   }
 
   @GetMapping("/me")
