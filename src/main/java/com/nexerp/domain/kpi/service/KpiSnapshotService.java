@@ -4,6 +4,7 @@ import com.nexerp.domain.kpi.model.entity.KpiSnapshot;
 import com.nexerp.domain.kpi.model.repository.KpiSnapshotRepository;
 import com.nexerp.domain.kpi.model.response.IntegratedKpiResponse;
 import com.nexerp.domain.kpi.model.response.KpiDashboardResponse;
+import com.nexerp.domain.kpi.model.response.ShipmentLeadTimeChartResponse;
 import com.nexerp.domain.member.service.MemberService;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
@@ -13,11 +14,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class KpiSnapshotService {
-
+  private final KpiHistoryService historyService;
   private final KpiSnapshotRepository snapshotRepository;
   private final MemberService memberService;
 
@@ -52,5 +56,58 @@ public class KpiSnapshotService {
         // 둘 다 없으면 예외 발생
         .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND, "해당 회사의 KPI 기록이 전무합니다."))
       );
+  }
+
+  public ShipmentLeadTimeChartResponse getLeadTimeChartDate(Long memberId) {
+    Long companyId = memberService.getCompanyIdByMemberId(memberId);
+
+    LocalDate lastDayOfPrevMonth = LocalDate.now().withDayOfMonth(1).minusDays(1);
+    LocalDate startOfYear = LocalDate.of(lastDayOfPrevMonth.getYear(), 1, 1);
+
+    // DB에서 해당 범위 모든 스냅샷 조회
+    List<KpiSnapshot> snapshots = snapshotRepository.findAllByCompanyIdAndSnapshotDateBetweenOrderBySnapshotDateAsc(
+      companyId, startOfYear, lastDayOfPrevMonth
+    );
+
+    List<ShipmentLeadTimeChartResponse.MonthValue> chartData = snapshots.stream()
+      .map(s -> new ShipmentLeadTimeChartResponse.MonthValue(
+        s.getSnapshotDate().getMonthValue() + "월",
+        s.getShipmentLeadTimeAvg()))
+      .collect(Collectors.toList());
+    return ShipmentLeadTimeChartResponse.builder()
+      .companyId(companyId)
+      .year(lastDayOfPrevMonth.getYear())
+      .history(chartData)
+      .build();
+  }
+
+  @Transactional public void saveHistoryFromS3(Long companyId, List<Map<String, Object>> historyData) {
+    // 1. 기준 날짜 계산 (전월 말일 및 당해년도)
+    LocalDate lastDayOfPrevMonth = LocalDate.now().withDayOfMonth(1).minusDays(1);
+    int currentYear = lastDayOfPrevMonth.getYear();
+
+    for (Map<String, Object> history: historyData) {
+      String monthStr = (String) history.get("month");
+      Double value = (Double) history.get("value");
+
+      int month = Integer.parseInt(monthStr.replace("월", ""));
+
+      // 2. 해당 월의 말일 계산
+      LocalDate snapshotDate = LocalDate.of(currentYear, month, 1)
+        .withDayOfMonth(LocalDate.of(currentYear, month, 1).lengthOfMonth());
+
+      if (snapshotDate.isAfter(lastDayOfPrevMonth)) continue;
+
+      if (snapshotRepository.findByCompanyIdAndSnapshotDate(companyId, snapshotDate).isEmpty()) {
+        KpiSnapshot historySnapshot = KpiSnapshot.builder()
+          .companyId(companyId)
+          .snapshotDate(snapshotDate)
+          .calculatedAt(LocalDateTime.now())
+          .build();
+
+        historySnapshot.updateShipmentLeadTimeOnly(value);
+        snapshotRepository.save(historySnapshot);
+      }
+    }
   }
 }
