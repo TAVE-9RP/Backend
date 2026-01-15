@@ -46,16 +46,4 @@ public class KpiScheduler {
     log.info("KPI 동기화 프로세스 완료");
   }
 
-    // 1월 기준 테스트용
-  @PostConstruct
-  public void backfillKpiData() {
-    LocalDate lastDayOfPrevMonth = LocalDate.now().withDayOfMonth(1).minusDays(1);
-
-    for (long i = 1; i <= 10; i++) {
-      List<Map<String, Object>> history = historyService.getShipmentLeadTimeHistory(i);
-      snapshotService.saveHistoryFromS3(i, history);
-
-      kpiIntegrationService.syncIntegratedKpiFromS3(i, lastDayOfPrevMonth);
-    }
-  }
 }
