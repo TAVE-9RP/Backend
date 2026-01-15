@@ -58,6 +58,7 @@ public class KpiSnapshotService {
       );
   }
 
+  @Transactional(readOnly=true)
   public ShipmentLeadTimeChartResponse getLeadTimeChartDate(Long memberId) {
     Long companyId = memberService.getCompanyIdByMemberId(memberId);
 
@@ -81,7 +82,8 @@ public class KpiSnapshotService {
       .build();
   }
 
-  @Transactional public void saveHistoryFromS3(Long companyId, List<Map<String, Object>> historyData) {
+  @Transactional
+  public void saveHistoryFromS3(Long companyId, List<Map<String, Object>> historyData) {
     // 1. 기준 날짜 계산 (전월 말일 및 당해년도)
     LocalDate lastDayOfPrevMonth = LocalDate.now().withDayOfMonth(1).minusDays(1);
     int currentYear = lastDayOfPrevMonth.getYear();
