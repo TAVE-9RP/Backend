@@ -16,7 +16,6 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
           :keyword is null or :keyword = ''
           or inv.title like concat('%', :keyword, '%')
           or p.number like concat('%', :keyword, '%')
-          or p.title like concat('%', :keyword, '%')
         )
       order by inv.createdAt desc
     """)
@@ -40,7 +39,6 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
           :keyword = ''
           or inv.title like concat('%', :keyword, '%')
           or p.number like concat('%', :keyword, '%')
-          or p.title like concat('%', :keyword, '%')
         )
       order by inv.createdAt desc
     """)
