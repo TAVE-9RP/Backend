@@ -9,6 +9,7 @@ import com.nexerp.domain.logistics.model.response.LogisticsItemResponse;
 import com.nexerp.domain.logistics.model.response.LogisticsSearchResponse;
 import com.nexerp.domain.logistics.service.LogisticsService;
 import com.nexerp.global.common.response.BaseResponse;
+import com.nexerp.global.config.SwaggerConfig;
 import com.nexerp.global.security.details.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -18,6 +19,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -37,6 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/logistics")
 @RequiredArgsConstructor
 @Tag(name = "출하 업무 관련 API", description = "출하 업무 조회, 생성, 물품 관리 및 출하 수량 반영 등과 관련된 모든 업무")
+@SecurityRequirement(name = SwaggerConfig.AT_SCHEME)
 public class LogisticsController {
 
   private final LogisticsService logisticsService;

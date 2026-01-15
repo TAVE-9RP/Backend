@@ -7,11 +7,13 @@ import com.nexerp.domain.project.model.response.ProjectDetailResponse;
 import com.nexerp.domain.project.model.response.ProjectSearchResponse;
 import com.nexerp.domain.project.service.ProjectService;
 import com.nexerp.global.common.response.BaseResponse;
+import com.nexerp.global.config.SwaggerConfig;
 import com.nexerp.global.security.details.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -30,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/projects")
 @RequiredArgsConstructor
 @Tag(name = "프로젝트 관련 API", description = "생성 / 키워드를 통한 조회(리스트) 등")
+@SecurityRequirement(name = SwaggerConfig.AT_SCHEME)
 public class ProjectController {
 
   private final ProjectService projectService;

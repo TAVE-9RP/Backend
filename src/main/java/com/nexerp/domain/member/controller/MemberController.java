@@ -6,9 +6,11 @@ import com.nexerp.domain.member.model.response.MemberAuthResponseDto;
 import com.nexerp.domain.member.model.response.MemberInfoResponseDto;
 import com.nexerp.domain.member.service.MemberService;
 import com.nexerp.global.common.response.BaseResponse;
+import com.nexerp.global.config.SwaggerConfig;
 import com.nexerp.global.security.details.CustomUserDetails;
 import com.nexerp.global.security.util.JwtCookieHeaderUtil;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -119,11 +121,16 @@ public class MemberController {
   @PostMapping("/reissue")
   @Operation(
     summary = "토큰 재발급 api",
-    description = "헤더 Authorization에 만료된 AT를 입력해야합니다."
+    security = @SecurityRequirement(name = SwaggerConfig.AT_SCHEME),
+    description = """
+      헤더 Authorization에 만료된 AT, 쿠키에는 올바른를 입력해야합니다.
+      - Authorization = Bearer eyJhbGciOiJIUzI...
+      - Cookie: refresh_token= eyJhbGciOiJIUzI...
+      """
   )
   public BaseResponse<MemberAuthResponseDto> reissueToken(
-    @RequestHeader("Authorization") String authorizationHeader, // 만료된 AT
-    @CookieValue(value = "refresh_token") String refreshToken,  // RT
+    @Parameter(hidden = true) @RequestHeader("Authorization") String authorizationHeader, // 만료된 AT
+    @Parameter(hidden = true) @CookieValue(value = "refresh_token") String refreshToken,  // RT
     HttpServletResponse response // 새 RT를 쿠키로 설정
   ) {
     // Authorization 헤더에서 Bearer 제거
@@ -147,12 +154,12 @@ public class MemberController {
   @PostMapping("/logout")
   @Operation(
     summary = "로그아웃",
+    security = @SecurityRequirement(name = SwaggerConfig.AT_SCHEME),
     description = """
       현재 로그인 세션을 종료합니다.
       - 서버: member.tokenVersion을 증가시켜 기존 AccessToken/RefreshToken을 즉시 무효화합니다.
       - 클라이언트: 응답의 Set-Cookie(refresh_token=; Max-Age=0 ...)로 RefreshToken 쿠키가 삭제됩니다.
-      """,
-    security = @SecurityRequirement(name = "bearerAuth")
+      """
   )
   @ApiResponses({
     @ApiResponse(
@@ -188,6 +195,7 @@ public class MemberController {
   @GetMapping("/me")
   @Operation(
     summary = "본인 정보 조회 API",
+    security = @SecurityRequirement(name = SwaggerConfig.AT_SCHEME),
     description = """
       회사에 소속된 모든 출하 업무 리스트 중 키워드를 통해 조회합니다.
       - **반환 정보:**

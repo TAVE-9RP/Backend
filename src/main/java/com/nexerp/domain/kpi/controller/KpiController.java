@@ -1,10 +1,10 @@
 package com.nexerp.domain.kpi.controller;
 
-import com.nexerp.domain.inventory.model.response.InventoryItemResponse;
 import com.nexerp.domain.kpi.model.response.KpiDashboardResponse;
 import com.nexerp.domain.kpi.model.response.ShipmentLeadTimeChartResponse;
 import com.nexerp.domain.kpi.service.KpiSnapshotService;
 import com.nexerp.global.common.response.BaseResponse;
+import com.nexerp.global.config.SwaggerConfig;
 import com.nexerp.global.security.details.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/kpi")
 @RequiredArgsConstructor
 @Tag(name = "KPI 대시보드 관련 API", description = "관리, 재고, 물류 서비스 홈 화면에 들어갈 모든 KPI")
+@SecurityRequirement(name = SwaggerConfig.AT_SCHEME)
 public class KpiController {
 
   private final KpiSnapshotService kpiSnapshotService;
@@ -72,9 +74,9 @@ public class KpiController {
       )
     )
   })
-  public BaseResponse<KpiDashboardResponse> getMyCompanyDashboard (
+  public BaseResponse<KpiDashboardResponse> getMyCompanyDashboard(
     @AuthenticationPrincipal CustomUserDetails userDetails
-    ) {
+  ) {
     KpiDashboardResponse response = kpiSnapshotService.getMonthlyKpi(userDetails.getMemberId());
 
     return BaseResponse.success(response);
