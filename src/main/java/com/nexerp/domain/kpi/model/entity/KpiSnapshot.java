@@ -39,8 +39,16 @@ public class KpiSnapshot {
   private Double shipmentLeadTimeAvg;
   private Double shippingCompletionRate;
   // 예측 KPI
-  private Double preInventoryTurnover;
-  private Double preAvgLogisticsLeadTimeHours;
+  private Double predTurnOverRate;
+  private Double predShipmentLeadTime;
+
+  // 장기 업무 상세 수치
+  private Integer totalTaskCount;
+  private Integer logisticsTaskCount;
+  private Integer inventoryTaskCount;
+  private Integer totalDelayedCount;
+  private Integer logisticsDelayedCount;
+  private Integer inventoryDelayedCount;
 
   @Column(nullable = false)
   private LocalDateTime calculatedAt;
@@ -60,7 +68,19 @@ public class KpiSnapshot {
     this.projectCompletionRate = metrics.getProjectCompletionRate();
     this.longTermTaskRate = metrics.getLongTermTaskRate();
     this.turnOverRate = metrics.getTurnOverRate();
+    this.predShipmentLeadTime = metrics.getPredShipmentLeadTime();
+    this.predTurnOverRate = metrics.getPredTurnOverRate();
+    this.totalTaskCount = metrics.getTotalTaskCount();
+    this.logisticsTaskCount = metrics.getLogisticsTaskCount();
+    this.inventoryTaskCount = metrics.getInventoryTaskCount();
+    this.totalDelayedCount = metrics.getTotalDelayedCount();
+    this.logisticsDelayedCount = metrics.getLogisticsDelayedCount();
+    this.inventoryDelayedCount = metrics.getInventoryDelayedCount();
     this.calculatedAt = calculatedAt;
+  }
+
+  public void updateShipmentLeadTimeOnly(Double shipmentLeadTimeAvg) {
+    this.shipmentLeadTimeAvg = shipmentLeadTimeAvg;
   }
 
 
