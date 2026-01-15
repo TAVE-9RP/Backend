@@ -20,6 +20,14 @@ public class KpiDashboardResponse {
   private final Double projectCompletionRate;
   private final Double longTermTaskRate;
   private final Double turnOverRate;
+  private final Double predShipmentLeadTime;
+  private final Double predTurnOverRate;
+  private final Integer totalTaskCount;
+  private final Integer logisticsTaskCount;
+  private final Integer inventoryTaskCount;
+  private final Integer totalDelayedCount;
+  private final Integer logisticsDelayedCount;
+  private final Integer inventoryDelayedCount;
 
   public static KpiDashboardResponse from (KpiSnapshot s) {
     return KpiDashboardResponse.builder()
@@ -31,6 +39,14 @@ public class KpiDashboardResponse {
       .projectCompletionRate(s.getProjectCompletionRate())
       .longTermTaskRate(s.getLongTermTaskRate())
       .turnOverRate(s.getTurnOverRate())
+      .predShipmentLeadTime(s.getPredShipmentLeadTime())
+      .predTurnOverRate(s.getPredTurnOverRate())
+      .totalTaskCount(s.getTotalTaskCount())
+      .logisticsTaskCount(s.getLogisticsTaskCount())
+      .inventoryTaskCount(s.getInventoryTaskCount())
+      .totalDelayedCount(s.getTotalDelayedCount())
+      .logisticsDelayedCount(s.getLogisticsDelayedCount())
+      .inventoryDelayedCount(s.getInventoryDelayedCount())
       .build();
   }
 }

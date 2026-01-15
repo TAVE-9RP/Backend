@@ -51,7 +51,7 @@ public class LogisticsController {
     summary = "출하 업무 전체/키워드 조회 API",
     description = """
       회사에 소속된 모든 출하 업무 리스트 중 키워드를 통해 조회합니다.
-      - 키워드는 Logistics 제목, 프로젝트 제목, 프로젝트 번호 중에 포함된 Logistics 조회
+      - 키워드는 Logistics 제목, 프로젝트 번호 중에 포함된 Logistics 조회
       - Param의 keyword를 추가하여 조회 합니다. 만약 전체 조회시에는 "" 사용
       - **반환 정보:**
       - logisticsId (출하 업무 id)
@@ -429,7 +429,7 @@ public class LogisticsController {
     summary = "프로젝트 기준 속한 본인이 출하 업무 키워드 리스트 조회 api",
     description = """
       본인이 소속된 프로젝트의 모든 출하 업무 리스트를 키워드를 통해 조회합니다.
-      - 키워드는 Logistics 제목, 프로젝트 제목, 프로젝트 번호 중에 포함된 Logistics 조회
+      - 키워드는 Logistics 제목, 프로젝트 번호 중에 포함된 Logistics 조회
       - Param의 keyword를 추가하여 조회 합니다. 만약 전체 조회시에는 "" 사용
       - **반환 정보:**
       - logisticsId (출하 업무 id)
