@@ -1,7 +1,9 @@
 package com.nexerp.domain.kpi.schduler;
 
+import com.nexerp.domain.kpi.service.KpiHistoryService;
 import com.nexerp.domain.kpi.service.KpiIntegrationService;
 import com.nexerp.domain.company.service.CompanyService;
+import com.nexerp.domain.kpi.service.KpiSnapshotService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,13 +12,16 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class KpiScheduler {
 
+  private final KpiHistoryService historyService;
   private final KpiIntegrationService kpiIntegrationService;
+  private final KpiSnapshotService snapshotService;
   private final CompanyService companyService;
 
   @Scheduled(cron = "0 0 4 * * *", zone = "Asia/Seoul")
@@ -41,16 +46,4 @@ public class KpiScheduler {
     log.info("KPI 동기화 프로세스 완료");
   }
 
-    // 1월 기준 테스트용
-//  @PostConstruct
-//  public void backfillKpiData() {
-//    List<Long> companyIds = companyService.getAllCompanyIds();
-//    // 발표용 타겟 날짜 설정
-//    LocalDate targetDate = LocalDate.of(2025, 12, 31);
-//
-//    for (Long companyId : companyIds) {
-//      // report_2025-12-31.json을 읽어 DB에 저장
-//      kpiIntegrationService.syncIntegratedKpiFromS3(companyId, targetDate);
-//    }
-//  }
 }

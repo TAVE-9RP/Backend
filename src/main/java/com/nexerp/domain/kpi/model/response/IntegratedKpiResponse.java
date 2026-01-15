@@ -23,5 +23,13 @@ public class IntegratedKpiResponse {
     private Double projectCompletionRate;
     private Double longTermTaskRate;
     private Double turnOverRate;
+    private Double predShipmentLeadTime;
+    private Double predTurnOverRate;
+    private Integer totalTaskCount;
+    private Integer logisticsTaskCount;
+    private Integer inventoryTaskCount;
+    private Integer totalDelayedCount;
+    private Integer logisticsDelayedCount;
+    private Integer inventoryDelayedCount;
   }
 }
