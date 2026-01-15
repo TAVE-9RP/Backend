@@ -83,7 +83,7 @@ public class KpiController {
   }
 
   @Operation(
-    summary = "전월 KPI 분석 결과 조회 API",
+    summary = "출하 리드타임 시계열 조회 API",
     description = """
       출하 리드타임의 1~12월 결과를 시계열 형식의 연동이 가능하도록 반환합니다.
       """
