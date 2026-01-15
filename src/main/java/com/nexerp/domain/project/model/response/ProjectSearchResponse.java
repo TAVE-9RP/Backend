@@ -4,6 +4,7 @@ import com.nexerp.domain.project.model.entity.Project;
 import com.nexerp.domain.project.model.enums.ProjectStatus;
 import com.nexerp.global.common.exception.BaseException;
 import com.nexerp.global.common.exception.GlobalErrorCode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,16 +20,12 @@ public class ProjectSearchResponse {
   private final String projectNumber;
 
   private final String projectTitle;
-
-  private String projectDescription;
-
   private final String projectCustomer;
-
   private final LocalDateTime projectCreateDate;
-
+  private final LocalDate projectExpectedEndDate;
   private final String projectMembers;
-
   private final ProjectStatus status;
+  private String projectDescription;
 
   public static ProjectSearchResponse from(Project project) {
 
@@ -52,6 +49,7 @@ public class ProjectSearchResponse {
       .projectDescription(project.getDescription())
       .projectCustomer(project.getCustomer())
       .projectCreateDate(project.getCreateDate())
+      .projectExpectedEndDate(project.getExpectedEndDate())
       .projectMembers(assigneeSummary)
       .status(project.getStatus())
       .build();
