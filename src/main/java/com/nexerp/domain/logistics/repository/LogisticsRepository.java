@@ -58,7 +58,6 @@ public interface LogisticsRepository extends JpaRepository<Logistics, Long> {
           and (
             :keyword is null or :keyword = ''
             or (p.number like concat('%', :keyword, '%')
-            or p.title like concat('%', :keyword, '%')
             or l.title like concat('%', :keyword, '%'))
           )
         order by p.createDate desc
@@ -83,7 +82,6 @@ public interface LogisticsRepository extends JpaRepository<Logistics, Long> {
           :keyword = ''
           or l.title like concat('%', :keyword, '%')
           or p.number like concat('%', :keyword, '%')
-          or p.title like concat('%', :keyword, '%')
         )
       order by p.createDate desc
     """)
