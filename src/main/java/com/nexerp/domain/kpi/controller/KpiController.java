@@ -30,46 +30,62 @@ public class KpiController {
 
   private final KpiSnapshotService kpiSnapshotService;
 
-  @GetMapping("/dashboard")
-  @Operation(
-    summary = "전월 KPI 분석 결과 조회 API",
-    description = """
-      모든 KPI의 전월의 말일을 기준으로 최종 분석 결과를 조회합니다.
-      
-      ex) 2026년 1월에 사용 중이라면, 2025년 12월 31일의 최종 분석 결과를 조회
-      
-      safetyStockRate: 안전재고 확보율
-      shipmentLeadTimeAvg: 출하 리드타임
-      shipmentCompletionRate: 출하 완료율
-      projectCompletionRate: 프로젝트 처리 완료율
-      longTermTaskRate: 업무 장기 처리율
-      turnOverRate: 재고 회전율
-      
-      """
-  )
-  @ApiResponses({
-    @ApiResponse(
-      responseCode = "200",
-      description = "모든 KPI 조회 성공",
-      content = @Content(
-        mediaType = "application/json",
-        array = @ArraySchema(schema = @Schema(implementation = KpiDashboardResponse.class)),
-        examples = @ExampleObject(
-          name = "성공 예시",
-          value = """
-            [
-              {
-                "companyId": 1,
-                "snapshotDate": "2025-12-31",
-                "safetyStockRate": 98.2,
-                "shipmentLeadTimeAvg": 48.5,
-                "shipmentCompletionRate": 99.0,
-                "projectCompletionRate": 85.5,
-                "longTermTaskRate": 12.0,
-                "turnOverRate": 5.4
-              }
-            ]
-            """
+    @GetMapping("/dashboard")
+    @Operation(
+      summary = "전월 KPI 분석 결과 조회 API",
+      description = """
+        모든 KPI의 전월의 말일을 기준으로 최종 분석 결과를 조회합니다.
+        
+        ex) 2026년 1월에 사용 중이라면, 2025년 12월 31일의 최종 분석 결과를 조회
+        
+        safetyStockRate: 안전재고 확보율
+        shipmentLeadTimeAvg: 출하 리드타임
+        shipmentCompletionRate: 출하 완료율
+        projectCompletionRate: 프로젝트 처리 완료율
+        longTermTaskRate: 업무 장기 처리율
+        turnOverRate: 재고 회전율
+        predShipmentLeadTime: 예측 출하 리드타임
+        predTurnOverRate: 예측 재고 회전율
+        totalTaskCount: 전체 업무 개수
+        logisticsTaskCount: 출하 업무 개수
+        inventoryTaskCount: 입고 업무 개수
+        totalDelayedCount: 전체 지연 업무 개수
+        logisticsDelayedCount: 출하 지연 업무 개수
+        inventoryDelayedCount: 입고 지연 업무 개수
+        
+        """
+    )
+    @ApiResponses({
+      @ApiResponse(
+        responseCode = "200",
+        description = "모든 KPI 조회 성공",
+        content = @Content(
+          mediaType = "application/json",
+          array = @ArraySchema(schema = @Schema(implementation = KpiDashboardResponse.class)),
+          examples = @ExampleObject(
+            name = "성공 예시",
+            value = """
+              [
+                {
+                  "companyId": 1,
+                  "snapshotDate": "2025-12-31",
+                  "safetyStockRate": 98.2,
+                  "shipmentLeadTimeAvg": 48.5,
+                  "shipmentCompletionRate": 99.0,
+                  "projectCompletionRate": 85.5,
+                  "longTermTaskRate": 12.0,
+                  "turnOverRate": 5.4,
+                  "predShipmentLeadTime": 10.6,
+                  "predTurnOverRate": 72.4,
+                  "totalTaskCount": 10,
+                  "logisticsTaskCount": 5,
+                  "inventoryTaskCount": 3,
+                  "totalDelayedCount": 7,
+                  "logisticsDelayedCount": 4,
+                  "inventoryDelayedCount": 1
+                }
+              ]
+              """
         )
       )
     )
