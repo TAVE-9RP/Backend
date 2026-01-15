@@ -9,6 +9,7 @@ import com.nexerp.domain.admin.service.AdminService;
 import com.nexerp.domain.logistics.service.LogisticsService;
 import com.nexerp.domain.member.model.response.MemberInfoResponseDto;
 import com.nexerp.global.common.response.BaseResponse;
+import com.nexerp.global.config.SwaggerConfig;
 import com.nexerp.global.security.details.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -17,6 +18,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -34,6 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/admin")
 @RequiredArgsConstructor
+@SecurityRequirement(name = SwaggerConfig.AT_SCHEME)
 public class AdminController {
 
   private final AdminService adminService;
