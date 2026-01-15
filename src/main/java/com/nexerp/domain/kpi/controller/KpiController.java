@@ -105,48 +105,48 @@ public class KpiController {
                 "history": [
                      {
                          "month": "1월",
-                         "value" 310.5
+                         "value": 310.5
                      },
                      {
                          "month": "2월",
-                         "value" 325.2
+                         "value": 325.2
                      },
                      {
                          "month": "3월",
-                         "value" 318.0
+                         "value": 318.0
                      },
                      {
                          "month": "4월",
-                         "value" 340.8
+                         "value": 340.8
                      },
                      {
                          "month": "5월",
-                         "value" 355.1
+                         "value": 355.1
                      },
                      {
                          "month": "6월",
-                         "value" 348.4
+                         "value": 348.4
                      },
                      {
                          "month": "7월",
-                         "value" 370.2
+                         "value": 370.2
                      },
                      {
                          "month": "8월",
-                         "value" 385.9
+                         "value": 385.9
                      },
                      {
                          "month": "10월",
-                         "value" 390.1
+                         "value": 390.1
                      },
                      {
                          "month": "11월",
-                         "value" 395.7
+                         "value": 395.7
                      },
                      {
                          "month": "12월",
-                         "value" 397.33
-                     },
+                         "value": 397.33
+                     }
                  ]
               }
             ]
