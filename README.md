@@ -16,7 +16,7 @@ NexERP는 NextGen(차세대)과 ERP(전사적 자원 관리)를 결합한 서비
 
 ---
 ## SW 아키텍처
-<img width="1212" height="1191" alt="image" src="https://github.com/user-attachments/assets/a866cb4d-dc3f-4bd7-bdf2-380bc0d0315d" />
+<img width="700" height="500" alt="image" src="https://github.com/user-attachments/assets/a866cb4d-dc3f-4bd7-bdf2-380bc0d0315d" />
 
 ### 서비스 인프라 및 CI/CD (Main Infrastructure)
 사용자가 서비스에 접속하고 최신 코드가 배포되는 핵심 경로
@@ -79,23 +79,26 @@ NexERP의 핵심인 예측 KPI를 생성하기 위한 배치 처리 프로세스
 ### 📁 폴더 구조
 
 ```
-com.example.app
-├─ domain   // 비즈니스 로직               
-│  ├─ member            
-│  │  ├─ controller
-│  │  ├─ service
-│  │  ├─ repository
-│  │  ├─ model
-│  │  │  ├─ entity
-│  │  │  ├─ request
-│  │  │  └─ response
-│  └─ project
-│     └─ ... (동일 패턴)
-└─ global   // 프로젝트 전반에 걸쳐 사용되는 공통 인프라 및 정책                
-   ├─ common            
-   ├─ config          
-   ├─ handler         
-   ├─ security        
+nexerp
+├─ domain
+│  ├─ admin
+│  ├─ analytics
+│  ├─ company
+│  ├─ inventory
+│  ├─ inventoryitem
+│  ├─ item
+│  ├─ kpi
+│  ├─ logistics
+│  ├─ logisticsItem
+│  ├─ member
+│  ├─ project
+│  └─ projectmember
+│
+└─ global
+   ├─ common
+   ├─ config
+   ├─ handler
+   └─ security     
                       
 ```
 ---
@@ -138,7 +141,7 @@ com.example.app
 | **!BREAKING CHANGE**  | **큰 API 변경**                    | | **fix**   | **버그 수정**                    | 
 | **!HOTFIX**           | **긴급한 버그 수정**                   | 
 
-#### 4-2-3. 커밋 메시지 예시
+#### 커밋 메시지 예시
 ```
 feature: 로그인 API 구현
 refactor: UserService 로직 분리
