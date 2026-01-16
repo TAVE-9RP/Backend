@@ -16,7 +16,7 @@ NexERP는 NextGen(차세대)과 ERP(전사적 자원 관리)를 결합한 서비
 
 ---
 ## SW 아키텍처
-<img width="700" height="500" alt="image" src="https://github.com/user-attachments/assets/a866cb4d-dc3f-4bd7-bdf2-380bc0d0315d" />
+<img width="600" height="700" alt="image" src="https://github.com/user-attachments/assets/a866cb4d-dc3f-4bd7-bdf2-380bc0d0315d" />
 
 ### 서비스 인프라 및 CI/CD (Main Infrastructure)
 사용자가 서비스에 접속하고 최신 코드가 배포되는 핵심 경로
