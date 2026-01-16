@@ -1,19 +1,22 @@
 # NexERP Backend
+<img width="857" height="430" alt="image" src="https://github.com/user-attachments/assets/88185657-e38c-43ff-bfc0-d646d691bc0d" />
 
 ## 프로젝트 개요
 
 <blockquote>
 NexERP는 NextGen(차세대)과 ERP(전사적 자원 관리)를 결합한 서비스로 단순한 관리를 넘어 내일의 성장을 주도하는 클라우드 솔루션을 제공합니다.
 </blockquote>
+
 #### 👥 프로젝트 백엔드 팀원
 
 | _이름_ |                                                                 이원진                                                                  |                                                                  윤민섭                                                                  |                                                                 곽채연                                                                 |
 |:----:|:------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------------------------------------------:|
-| _역할_ |                                                    BE(프로젝트, 물류 등 핵심 도메인, CSV 추출)                                                     |BE(입고 전반, ETL 파이프라인 구축, 아키텍처 고도화)  |                                                BE(회원가입, 로그인 구현, FE 1명 결원으로 FE 개발 수행)                                                |
+| _역할_ |                                                    BE(프로젝트, 물류 등의 핵심 기능과 추가 기능 개발, DB Extract 작업)                                                     |BE(입고 전반, ETL 파이프라인 구축, 아키텍처 고도화)  |                                                BE(회원가입, 로그인 구현, FE 1명 결원으로 FE 개발 수행)                                                |
 |      | <a href="https://github.com/zldzldzz"><img src="https://avatars.githubusercontent.com/u/127071704?v=4" width="128" height="128"></a> |   <a href="https://github.com/minsubyun1"><img src="https://avatars.githubusercontent.com/u/75060858?v=4" width="128" height="128"></a>    | <a href="https://github.com/kwak513"><img src="https://avatars.githubusercontent.com/u/184176081?v=4" width="128" height="128"></a> |
 
 ---
 ## SW 아키텍처
+<img width="1212" height="1191" alt="image" src="https://github.com/user-attachments/assets/a866cb4d-dc3f-4bd7-bdf2-380bc0d0315d" />
 
 ### 서비스 인프라 및 CI/CD (Main Infrastructure)
 사용자가 서비스에 접속하고 최신 코드가 배포되는 핵심 경로
@@ -42,7 +45,6 @@ NexERP의 핵심인 예측 KPI를 생성하기 위한 배치 처리 프로세스
 
 ### 협업 도구
 [![My Skills](https://skillicons.dev/icons?i=notion,discord,figma,swagger&perline=3)](https://skillicons.dev)
----
 
 ## 주요 기능
 ### 회원/인증
