@@ -2,7 +2,9 @@ package com.nexerp.domain.company.service;
 
 import com.nexerp.domain.company.model.entity.Company;
 import com.nexerp.domain.company.model.request.CompanyCreateRequest;
+import com.nexerp.domain.company.model.request.CompanyLogoUploadRequest;
 import com.nexerp.domain.company.model.response.CompanyCreateResponse;
+import com.nexerp.domain.company.model.response.CompanyLogoUploadResponse;
 import com.nexerp.domain.company.model.response.CompanySearchResponse;
 import com.nexerp.domain.company.repository.CompanyRepository;
 import com.nexerp.global.common.exception.BaseException;
@@ -12,12 +14,16 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
 public class CompanyService {
 
   private final CompanyRepository companyRepository;
+  private final CompanyLogoService companyLogoService;
 
   @Transactional
   public CompanyCreateResponse createCompany(
@@ -30,8 +36,7 @@ public class CompanyService {
     Company newCompany = Company.create(
       companyCreateRequest.getName(),
       companyCreateRequest.getIndustryType(),
-      companyCreateRequest.getDescription(),
-      companyCreateRequest.getImagePath()
+      companyCreateRequest.getDescription()
     );
 
     //관리자와 연결 필요
@@ -50,7 +55,7 @@ public class CompanyService {
       .findByNameContainingIgnoreCaseOrderByNameAsc(keyword);
 
     return companies.stream()
-      .map(CompanySearchResponse::from)
+      .map(c -> CompanySearchResponse.from(c, companyLogoService.buildLogoUrl(c.getImagePath())))
       .collect(Collectors.toList());
   }
 
@@ -68,4 +73,43 @@ public class CompanyService {
     return companyRepository.findAllIds();
   }
 
+  @Transactional
+  public CompanyLogoUploadResponse updateCompanyLogo(Long companyId,
+    CompanyLogoUploadRequest request) {
+
+    MultipartFile file = request.getFile();
+    if (file == null || file.isEmpty()) {
+      throw new BaseException(GlobalErrorCode.BAD_REQUEST, "로고 파일이 비어있습니다.");
+    }
+
+    Company company = getCompanyEntity(companyId);
+    String oldKey = company.getImagePath();
+
+    // 1) S3 업로드
+    String newKey = companyLogoService.uploadCompanyLogo(companyId, file);
+
+    // 2) 트랜잭션 결과에 따라 정리
+    TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+      @Override
+      public void afterCompletion(int status) {
+        if (status == STATUS_COMMITTED) {
+          // 성공 시에만 기존 파일 삭제
+          if (oldKey != null && !oldKey.isBlank()) {
+            companyLogoService.deleteLogoQuietly(oldKey);
+          }
+        } else if (status == STATUS_ROLLED_BACK) {
+          companyLogoService.deleteLogoQuietly(newKey);
+        }
+      }
+    });
+
+    // 3) DB 저장 (objectKey)
+    company.changeImagePath(newKey);
+
+    // 4) 응답
+    return CompanyLogoUploadResponse.builder()
+      .objectKey(newKey)
+      .logoUrl(companyLogoService.buildLogoUrl(newKey))
+      .build();
+  }
 }
