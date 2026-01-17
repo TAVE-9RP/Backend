@@ -10,7 +10,7 @@ public class WebConfig implements WebMvcConfigurer {
   @Override
   public void addCorsMappings(CorsRegistry registry) {
     registry.addMapping("/**")
-      .allowedOrigins("http://localhost:5173", "https://nexerp.site", "https://nexerp.vercel.app")
+      .allowedOrigins("http://localhost:5173", "https://nexerp.site", "https://nex-erp.vercel.app/")
       .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
       .allowedHeaders("*")
       .allowCredentials(true); // 쿠키나 인증 헤더(Authorization)를 포함
