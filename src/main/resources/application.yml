@@ -28,6 +28,9 @@ cloud:
       secret-key: ${AWS_SECRET_KEY}
     s3:
       bucket: ${S3_BUCKET} # 기본 스토리지 버킷
+      logo:
+        bucket: ${S3_LOGO_BUCKET}
+        baseurl: ${S3_LOGO_BASEURL}
     region:
       static: ${AWS_REGION}
     stack:

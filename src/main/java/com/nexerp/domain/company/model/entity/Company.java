@@ -56,7 +56,7 @@ public class Company {
   @Column(name = "company_description")
   private String description;
 
-  // 회사 로고 이미지
+  // logoObjectKey
   @Column(name = "company_image_path")
   private String imagePath;
 
@@ -71,13 +71,16 @@ public class Company {
   private LocalDateTime updatedAt;
 
   // 회사 생성에 사용
-  public static Company create(String name, String industryType, String description,
-    String imagePath) {
+  public static Company create(String name, String industryType, String description) {
     return Company.builder()
       .name(name)
       .industryType(industryType)
       .description(description)
-      .imagePath(imagePath)
       .build();
   }
+
+  public void changeImagePath(String imagePath) {
+    this.imagePath = imagePath;
+  }
+
 }
