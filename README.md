@@ -10,6 +10,7 @@
 
 ---
 <div id="1"></div>
+
 # NexERP Backend
 
 <img width="857" height="430" alt="image" src="https://github.com/user-attachments/assets/88185657-e38c-43ff-bfc0-d646d691bc0d" />
@@ -27,7 +28,9 @@ NexERP는 NextGen(차세대)과 ERP(전사적 자원 관리)를 결합한 서비
 |            | <a href="https://github.com/zldzldzz"><img src="https://avatars.githubusercontent.com/u/127071704?v=4" width="128" height="128"></a> | <a href="https://github.com/minsubyun1"><img src="https://avatars.githubusercontent.com/u/75060858?v=4" width="128" height="128"></a> | <a href="https://github.com/kwak513"><img src="https://avatars.githubusercontent.com/u/184176081?v=4" width="128" height="128"></a> |
 
 ---
+
 <div id="2"></div>
+
 ## SW 아키텍처
 
 <img width="600" height="700" alt="image" src="https://github.com/user-attachments/assets/a866cb4d-dc3f-4bd7-bdf2-380bc0d0315d" />
@@ -61,6 +64,7 @@ NexERP의 핵심인 예측 KPI를 생성하기 위한 배치 처리 프로세스
 
 ---
 <div id="3"></div>
+
 ## 기술 스택
 
 ### 개발 & 인프라
@@ -106,6 +110,7 @@ NexERP의 핵심인 예측 KPI를 생성하기 위한 배치 처리 프로세스
 
 ---
 <div id="5"></div>
+
 ### 📁 폴더 구조
 
 ```
@@ -135,6 +140,7 @@ nexerp
 ---
 
 <div id="6"></div>
+
 ## 🤝 Git 협업 규칙
 
 ### 이슈 타입 분류
@@ -187,6 +193,7 @@ refactor: UserService 로직 분리
 
 ---
 <div id="7"></div>
+
 ## 🌱 Git 브랜치 전략
 
 ### ✅ 기본 브랜치
