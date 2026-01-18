@@ -1,19 +1,26 @@
 package com.nexerp.domain.company.controller;
 
 import com.nexerp.domain.company.model.request.CompanyCreateRequest;
+import com.nexerp.domain.company.model.request.CompanyLogoUploadRequest;
 import com.nexerp.domain.company.model.response.CompanyCreateResponse;
+import com.nexerp.domain.company.model.response.CompanyLogoUploadResponse;
 import com.nexerp.domain.company.model.response.CompanySearchResponse;
 import com.nexerp.domain.company.service.CompanyService;
 import com.nexerp.global.common.response.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,8 +55,7 @@ public class CompanyController {
             {
               "name": "테스트 회사",
               "industryType": "물류/운송",
-              "description": "중복 테스트용 회사",
-              "imagePath": "http://exmple"
+              "description": "중복 테스트용 회사"
             }
             """
         )
@@ -72,6 +78,49 @@ public class CompanyController {
     @RequestParam("keyword") String keyword) {
 
     List<CompanySearchResponse> result = companyService.searchCompaniesByName(keyword);
+    return BaseResponse.success(result);
+  }
+
+  @PostMapping(value = "/{companyId}/logo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @Operation(
+    summary = "회사 로고 업로드",
+    description = """
+      회사 로고 이미지를 업로드합니다.
+      
+      - 업로드 파일은 S3에 저장되며, DB에는 **S3 objectKey(imagePath)**만 저장합니다.
+      - 프론트 표시용 URL은 **CloudFront 도메인 + objectKey**로 조립한 `logoUrl`로 반환합니다.
+      - 허용 포맷: PNG, JPG/JPEG
+      - 최대 용량: 2MB
+      """)
+  @ApiResponse(
+    responseCode = "200",
+    description = "업로드 성공",
+    content = @Content(
+      mediaType = "application/json",
+      schema = @Schema(implementation = CompanyLogoUploadResponse.class),
+      examples = @ExampleObject(
+        name = "성공 예시",
+        value = """
+          {
+            "success": true,
+            "data": {
+              "objectKey": "assets/company-logos/company_1/7f3a9c9a0b5c4f7a8b9c0d1e2f3a4b5c.png",
+              "logoUrl": "https://dxxxx.cloudfront.net/assets/company-logos/company_1/7f3a9c9a0b5c4f7a8b9c0d1e2f3a4b5c.png"
+            }
+          }
+          """
+      )
+    )
+  )
+  public BaseResponse<CompanyLogoUploadResponse> uploadCompanyLogo(
+    @Parameter(description = "회사 ID", required = true, example = "1")
+    @PathVariable Long companyId,
+
+    @Valid @ModelAttribute CompanyLogoUploadRequest request
+  ) {
+    CompanyLogoUploadResponse result = companyService.updateCompanyLogo(companyId,
+      request);
+
     return BaseResponse.success(result);
   }
 }
