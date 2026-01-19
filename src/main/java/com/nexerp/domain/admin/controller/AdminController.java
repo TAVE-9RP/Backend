@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "인사 관리 API", description = "인사 서비스 직원 조회 및 변경 기능")
+@Tag(name = " 관리자 관련 API", description = "관리자 관련 API 인사/업무 관리, 관리자 정보 조회")
 @RestController
 @RequestMapping("/admin")
 @RequiredArgsConstructor
@@ -42,7 +42,50 @@ public class AdminController {
   private final AdminService adminService;
   private final LogisticsService logisticsService;
 
-  @Operation(summary = "직원 가입 상태 리스트 조회 API", description = "승인 대기 / 승인 / 거절 상태를 포함한 모든 직원의 가입 상태를 조회합니다.")
+  @Operation(
+    summary = "직원 가입 상태 리스트 조회 API",
+    description = "승인 대기 / 승인 / 거절 상태를 포함한 모든 직원의 가입 상태를 조회합니다."
+  )
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      description = "직원 가입 상태 리스트 성공",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = JoinStatusResponse.class),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            {
+                 "timestamp": "2026-01-19T01:24:04.332558500Z",
+                 "isSuccess": true,
+                 "status": 200,
+                 "code": "SUCCESS",
+                 "message": "요청에 성공했습니다.",
+                 "result": [
+                     {
+                         "memberId": 3,
+                         "name": "INVENTORY1",
+                         "department": "INVENTORY",
+                         "position": "ASSISTANT_MANAGER",
+                         "email": "test@string1",
+                         "requestStatus": "APPROVED"
+                     },
+                     {
+                         "memberId": 7,
+                         "name": "LOGISTICS1",
+                         "department": "LOGISTICS",
+                         "position": "INTERN",
+                         "email": "test@string5",
+                         "requestStatus": "APPROVED"
+                     }
+                 ]
+             }
+            """
+        )
+      )
+    )
+  })
   @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
   @GetMapping("/members/statuses")
   public BaseResponse<List<JoinStatusResponse>> getMemberJoinStatusList(
@@ -55,10 +98,34 @@ public class AdminController {
     return BaseResponse.success(result);
   }
 
-  @Operation(summary = "직원 가입 상태 변경 API", description = "직원들의 가입 상태를 변경합니다. (리스트로 받기에 여러명 변경 가능)")
+  @Operation(
+    summary = "직원 가입 상태 변경 API",
+    description = "직원들의 가입 상태를 변경합니다. (리스트로 받기에 여러명 변경 가능)"
+  )
   @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = BaseResponse.class),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            {
+                  "timestamp": "2025-12-26T18:14:23.244638700Z",
+                  "isSuccess": true,
+                  "status": 200,
+                  "code": "SUCCESS",
+                  "message": "요청에 성공했습니다."
+              }
+            """
+        )
+      )
+    )
+  })
   @PatchMapping("members/status")
-  public BaseResponse<List<JoinStatusResponse>> changeMemberRequestStatus(
+  public BaseResponse<Void> changeMemberRequestStatus(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @Valid @RequestBody JoinStatusUpdateRequest request
   ) {
@@ -70,6 +137,43 @@ public class AdminController {
   }
 
   @Operation(summary = "직원 권한 상태 리스트 조회 API", description = "모든 직원의 기본 컬럼을 포함한 권한 상태를 조회합니다.")
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(allOf = {BaseResponse.class, PermissionResponse.class}),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            {
+                   "timestamp": "2025-12-16T00:25:51.339154100Z",
+                   "isSuccess": true,
+                   "status": 200,
+                   "code": "SUCCESS",
+                   "message": "요청에 성공했습니다.",
+                   "result": [
+                       {
+                           "memberId": 3,
+                           "name": "lee",
+                           "department": "LOGISTICS",
+                           "position": "ASSISTANT_MANAGER",
+                           "currentRole": "WRITE"
+                       },
+                       {
+                           "memberId": 4,
+                           "name": "lee",
+                           "department": "INVENTORY",
+                           "position": "MANAGER",
+                           "currentRole": "WRITE"
+                       }
+                   ]
+               }
+            """
+        )
+      )
+    )
+  })
   @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
   @GetMapping("/members/permissions")
   public BaseResponse<List<PermissionResponse>> getMemberPermissions(
@@ -82,6 +186,27 @@ public class AdminController {
 
   // 직원 권한 변경
   @Operation(summary = "직원 권한 상태 변경 API", description = "직원들의 권한 상태를 변경합니다. (리스트로 받기에 여러명 변경 가능)")
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = BaseResponse.class),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            {
+                  "timestamp": "2025-12-26T18:14:23.244638700Z",
+                  "isSuccess": true,
+                  "status": 200,
+                  "code": "SUCCESS",
+                  "message": "요청에 성공했습니다."
+              }
+            """
+        )
+      )
+    )
+  })
   @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
   @PatchMapping("/members/permissions")
   public BaseResponse<Void> updateMemberPermissions(
@@ -94,8 +219,6 @@ public class AdminController {
   }
 
   // 출하 업무 동의
-  @PatchMapping("/logistics/{logisticsId}/approve")
-  @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
   @Operation(
     summary = "출하 업무 승인 API",
     description = """
@@ -104,6 +227,29 @@ public class AdminController {
       승인 이후 출하 처리 가능
       """
   )
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = BaseResponse.class),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            {
+                  "timestamp": "2025-12-26T18:14:23.244638700Z",
+                  "isSuccess": true,
+                  "status": 200,
+                  "code": "SUCCESS",
+                  "message": "요청에 성공했습니다."
+              }
+            """
+        )
+      )
+    )
+  })
+  @PatchMapping("/logistics/{logisticsId}/approve")
+  @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
   public BaseResponse<Void> logisticsApproval(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @PathVariable Long logisticsId) {
@@ -114,14 +260,35 @@ public class AdminController {
   }
 
   // 입고 승인 처리
-  @PatchMapping("/inventory/{inventoryId}/approve")
-  @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
   @Operation(summary = "입고 승인 처리(오너)",
     description = """
       오너가 승인 요청된 입고 업무를 승인(IN_PROGRESS) 상태로 변경합니다.
       PENDING 상태에서만 승인 가능
       승인 이후 입고 처리 가능
       """)
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = BaseResponse.class),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            {
+                  "timestamp": "2025-12-26T18:14:23.244638700Z",
+                  "isSuccess": true,
+                  "status": 200,
+                  "code": "SUCCESS",
+                  "message": "요청에 성공했습니다."
+              }
+            """
+        )
+      )
+    )
+  })
+  @PatchMapping("/inventory/{inventoryId}/approve")
+  @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
   public BaseResponse<Void> approveInventory(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @PathVariable Long inventoryId
@@ -131,13 +298,34 @@ public class AdminController {
     return BaseResponse.success();
   }
 
-  @PatchMapping("/inventory/{inventoryId}/reject")
-  @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
   @Operation(summary = "입고 거절 처리(오너)",
     description = """
       오너가 승인 요청된 입고 업무를 거절(REJECT) 상태로 변경합니다.
       PENDING 상태에서만 거절 가능하며, 거절 시 수정 후 재승인 요청이 필요합니다.
       """)
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = BaseResponse.class),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            {
+                  "timestamp": "2025-12-26T18:14:23.244638700Z",
+                  "isSuccess": true,
+                  "status": 200,
+                  "code": "SUCCESS",
+                  "message": "요청에 성공했습니다."
+              }
+            """
+        )
+      )
+    )
+  })
+  @PatchMapping("/inventory/{inventoryId}/reject")
+  @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
   public BaseResponse<Void> rejectInventory(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @PathVariable Long inventoryId
@@ -147,13 +335,34 @@ public class AdminController {
     return BaseResponse.success();
   }
 
-  @PatchMapping("/logistics/{logisticsId}/reject")
-  @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
   @Operation(summary = "출하 거절 처리(오너)",
     description = """
       오너가 승인 요청된 출하 업무를 거절(REJECT) 상태로 변경합니다.
       PENDING 상태에서만 거절 가능하며, 거절 시 수정 후 재승인 요청이 필요합니다.
       """)
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = BaseResponse.class),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            {
+                  "timestamp": "2025-12-26T18:14:23.244638700Z",
+                  "isSuccess": true,
+                  "status": 200,
+                  "code": "SUCCESS",
+                  "message": "요청에 성공했습니다."
+              }
+            """
+        )
+      )
+    )
+  })
+  @PatchMapping("/logistics/{logisticsId}/reject")
+  @PreAuthorize("hasPermission('MANAGEMENT', 'ALL')")
   public BaseResponse<Void> rejectLogistics(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @PathVariable Long logisticsId) {
@@ -167,7 +376,6 @@ public class AdminController {
   @Operation(
     summary = "관리자 정보 조회 API",
     description = """
-      회사에 소속된 모든 출하 업무 리스트 중 키워드를 통해 조회합니다.
       - **반환 정보:**
       - companyId (회사 id)
       - adminId

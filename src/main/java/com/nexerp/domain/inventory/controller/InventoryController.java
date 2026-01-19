@@ -76,6 +76,27 @@ public class InventoryController {
         )
       )
     ))
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = BaseResponse.class),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            {
+                  "timestamp": "2025-12-26T18:14:23.244638700Z",
+                  "isSuccess": true,
+                  "status": 200,
+                  "code": "SUCCESS",
+                  "message": "요청에 성공했습니다."
+              }
+            """
+        )
+      )
+    )
+  })
   public BaseResponse<Void> updateInventoryCommon(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @Parameter(
@@ -180,6 +201,27 @@ public class InventoryController {
 
       ))
   )
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = BaseResponse.class),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            {
+                  "timestamp": "2025-12-26T18:14:23.244638700Z",
+                  "isSuccess": true,
+                  "status": 200,
+                  "code": "SUCCESS",
+                  "message": "요청에 성공했습니다."
+              }
+            """
+        )
+      )
+    )
+  })
   public BaseResponse<Void> updateTargetQuantities(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @PathVariable Long inventoryId,
@@ -248,6 +290,27 @@ public class InventoryController {
       ASSIGNED 또는 REJECT 상태에서만 요청 가능
       입고 예정 품목(InventoryItem)이 1개 이상 존재해야 함
       """)
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = BaseResponse.class),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            {
+                  "timestamp": "2025-12-26T18:14:23.244638700Z",
+                  "isSuccess": true,
+                  "status": 200,
+                  "code": "SUCCESS",
+                  "message": "요청에 성공했습니다."
+              }
+            """
+        )
+      )
+    )
+  })
   public BaseResponse<Void> requestApproval(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @PathVariable Long inventoryId
@@ -286,6 +349,27 @@ public class InventoryController {
       )
     )
   )
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = BaseResponse.class),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            {
+                  "timestamp": "2025-12-26T18:14:23.244638700Z",
+                  "isSuccess": true,
+                  "status": 200,
+                  "code": "SUCCESS",
+                  "message": "요청에 성공했습니다."
+              }
+            """
+        )
+      )
+    )
+  })
   public BaseResponse<Void> processingReceiving(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @PathVariable Long inventoryId,
@@ -309,6 +393,27 @@ public class InventoryController {
       - 담당자로 지정된 직원만 가능
       """
   )
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = BaseResponse.class),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            {
+                  "timestamp": "2025-12-26T18:14:23.244638700Z",
+                  "isSuccess": true,
+                  "status": 200,
+                  "code": "SUCCESS",
+                  "message": "요청에 성공했습니다."
+              }
+            """
+        )
+      )
+    )
+  })
   public BaseResponse<Void> completeInventory(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @PathVariable Long inventoryId
