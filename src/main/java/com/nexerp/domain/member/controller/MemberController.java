@@ -35,7 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/member")
 @RequiredArgsConstructor
-@Tag(name = "회원 관련 API", description = "회원가입, 로그인, 토큰 재발급")
+@Tag(name = "회원 관련 API", description = "회원가입, 로그인, 토큰 재발급, 회원 정보 조회")
 public class MemberController {
 
   private final MemberService memberService;
@@ -67,6 +67,28 @@ public class MemberController {
       )
     )
   )
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = BaseResponse.class),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            {
+                  "timestamp": "2025-12-26T18:14:23.244638700Z",
+                  "isSuccess": true,
+                  "status": 200,
+                  "code": "SUCCESS",
+                  "message": "요청에 성공했습니다.",
+                  "result": 10
+              }
+            """
+        )
+      )
+    )
+  })
   public BaseResponse<Long> signUp(
     @RequestBody @Valid MemberSignupRequestDto memberSignupRequestDto) {
 
@@ -165,6 +187,22 @@ public class MemberController {
     @ApiResponse(
       responseCode = "200",
       description = "로그아웃 성공",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = BaseResponse.class),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            {
+                  "timestamp": "2025-12-26T18:14:23.244638700Z",
+                  "isSuccess": true,
+                  "status": 200,
+                  "code": "SUCCESS",
+                  "message": "요청에 성공했습니다."
+              }
+            """
+        )
+      ),
       headers = {
         @Header(
           name = "Set-Cookie",
@@ -197,7 +235,6 @@ public class MemberController {
     summary = "본인 정보 조회 API",
     security = @SecurityRequirement(name = SwaggerConfig.AT_SCHEME),
     description = """
-      회사에 소속된 모든 출하 업무 리스트 중 키워드를 통해 조회합니다.
       - **반환 정보:**
       - companyId (회사 id)
       - memberId
