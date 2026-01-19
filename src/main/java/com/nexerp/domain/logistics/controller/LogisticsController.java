@@ -140,6 +140,27 @@ public class LogisticsController {
       )
     )
   )
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = BaseResponse.class),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            {
+                  "timestamp": "2025-12-26T18:14:23.244638700Z",
+                  "isSuccess": true,
+                  "status": 200,
+                  "code": "SUCCESS",
+                  "message": "요청에 성공했습니다."
+              }
+            """
+        )
+      )
+    )
+  })
   public BaseResponse<Void> updateLogisticsDetails(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @Parameter(
@@ -169,6 +190,27 @@ public class LogisticsController {
       - **상태 검증**: ASSIGNED  또는 REJECT 에서만 수정 가능
       """
   )
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = BaseResponse.class),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            {
+                  "timestamp": "2025-12-26T18:14:23.244638700Z",
+                  "isSuccess": true,
+                  "status": 200,
+                  "code": "SUCCESS",
+                  "message": "요청에 성공했습니다."
+              }
+            """
+        )
+      )
+    )
+  })
   public BaseResponse<Void> requestLogisticsApproval(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @PathVariable Long logisticsId
@@ -215,6 +257,27 @@ public class LogisticsController {
       )
     )
   )
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = BaseResponse.class),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            {
+                  "timestamp": "2025-12-26T18:14:23.244638700Z",
+                  "isSuccess": true,
+                  "status": 200,
+                  "code": "SUCCESS",
+                  "message": "요청에 성공했습니다."
+              }
+            """
+        )
+      )
+    )
+  })
   public BaseResponse<Void> createLogisticsItem(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @PathVariable Long logisticsId,
@@ -288,6 +351,27 @@ public class LogisticsController {
       )
     )
   )
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = BaseResponse.class),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            {
+                  "timestamp": "2025-12-26T18:14:23.244638700Z",
+                  "isSuccess": true,
+                  "status": 200,
+                  "code": "SUCCESS",
+                  "message": "요청에 성공했습니다."
+              }
+            """
+        )
+      )
+    )
+  })
   public BaseResponse<Void> updateLogisticsItemProgress(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @PathVariable Long logisticsId,
@@ -367,6 +451,27 @@ public class LogisticsController {
       - 담당자로 지정된 직원만 가능
       """
   )
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = BaseResponse.class),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            {
+                  "timestamp": "2025-12-26T18:14:23.244638700Z",
+                  "isSuccess": true,
+                  "status": 200,
+                  "code": "SUCCESS",
+                  "message": "요청에 성공했습니다."
+              }
+            """
+        )
+      )
+    )
+  })
   public BaseResponse<Void> completeLogistics(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @PathVariable Long logisticsId
@@ -414,6 +519,27 @@ public class LogisticsController {
       )
     )
   )
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = BaseResponse.class),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            {
+                  "timestamp": "2025-12-26T18:14:23.244638700Z",
+                  "isSuccess": true,
+                  "status": 200,
+                  "code": "SUCCESS",
+                  "message": "요청에 성공했습니다."
+              }
+            """
+        )
+      )
+    )
+  })
   public BaseResponse<Void> updateTargetQuantities(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @PathVariable Long logisticsId,
