@@ -13,6 +13,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -69,6 +71,30 @@ public class ProjectController {
       )
     )
   )
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = BaseResponse.class),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            {
+                  "timestamp": "2025-12-26T18:14:23.244638700Z",
+                  "isSuccess": true,
+                  "status": 200,
+                  "code": "SUCCESS",
+                  "message": "요청에 성공했습니다.",
+                  "result": {
+                          "projectId": 4
+                      }
+              }
+            """
+        )
+      )
+    )
+  })
   public BaseResponse<ProjectCreateResponse> createProject(
     @AuthenticationPrincipal CustomUserDetails userDetails,
     @Valid @RequestBody ProjectCreateRequest projectCreateRequest) {
