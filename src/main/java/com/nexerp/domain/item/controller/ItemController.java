@@ -186,8 +186,26 @@ public class ItemController {
     summary = "목표 재고 수량 수정",
     description = "특정 물품의 목표 재고 수량(Target Stock)을 수정합니다. targetStock은 필수이며 0 이상이어야 합니다."
   )
-  @ApiResponses(value = {
-    @ApiResponse(responseCode = "200", description = "요청에 성공했습니다.")
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = BaseResponse.class),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            {
+                  "timestamp": "2025-12-26T18:14:23.244638700Z",
+                  "isSuccess": true,
+                  "status": 200,
+                  "code": "SUCCESS",
+                  "message": "요청에 성공했습니다."
+              }
+            """
+        )
+      )
+    )
   })
   @PreAuthorize("hasPermission('INVENTORY', 'WRITE')")
   @PatchMapping("/{itemId}/target-stock")
@@ -205,8 +223,26 @@ public class ItemController {
     summary = "안전 재고 수량 수정",
     description = "특정 물품의 목표 재고 수량(Safety Stock)을 수정합니다. safetyStock은 필수이며 0 이상이어야 합니다."
   )
-  @ApiResponses(value = {
-    @ApiResponse(responseCode = "200", description = "요청에 성공했습니다.")
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = BaseResponse.class),
+        examples = @ExampleObject(
+          name = "성공 예시",
+          value = """
+            {
+                  "timestamp": "2025-12-26T18:14:23.244638700Z",
+                  "isSuccess": true,
+                  "status": 200,
+                  "code": "SUCCESS",
+                  "message": "요청에 성공했습니다."
+              }
+            """
+        )
+      )
+    )
   })
   @PreAuthorize("hasPermission('INVENTORY', 'WRITE')")
   @PatchMapping("/{itemId}/safety-stock")
