@@ -126,11 +126,6 @@ public class MemberService {
       throw new BaseException(GlobalErrorCode.UNAUTHORIZED, "유효하지 않은 Refresh Token입니다.");
     }
 
-    // 만료되지 않은 AT가 들어온 경우 거부
-    if (!jwtTokenProvider.isTokenExpired(expiredAccessToken)) {
-      throw new BaseException(GlobalErrorCode.STATE_CONFLICT, "Access Token이 아직 유효하여 재발급할 수 없습니다.");
-    }
-
     // 토큰이 소유주 확인
     String atMemberId = jwtTokenProvider.getMemberIdFromExpiredToken(expiredAccessToken);
     String rtMemberId = jwtTokenProvider.getMemberIdFromRefreshToken(refreshToken);
