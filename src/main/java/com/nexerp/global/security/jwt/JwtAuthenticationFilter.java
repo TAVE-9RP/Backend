@@ -47,6 +47,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     if (path.startsWith("/member/signup") ||
       path.startsWith("/member/login") ||
       path.startsWith("/member/reissue") ||
+      path.startsWith("/health") ||
       path.startsWith("/swagger-ui") ||
       path.startsWith("/v3/api-docs")) {
       filterChain.doFilter(request, response);
