@@ -49,7 +49,6 @@ public class CompanyService {
   }
 
   // keyword=""의 경우 전체 리스트 / 없는 키워드는 빈 배열
-  @Transactional(readOnly = true)
   public List<CompanySearchResponse> searchCompaniesByName(String keyword) {
     List<Company> companies = companyRepository
       .findByNameContainingIgnoreCaseOrderByNameAsc(keyword);
