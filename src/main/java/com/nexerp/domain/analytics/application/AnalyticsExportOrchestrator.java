@@ -8,14 +8,10 @@ import com.nexerp.domain.analytics.infra.storage.LocalTmpStorage;
 import com.nexerp.domain.analytics.infra.storage.S3Storage;
 import com.nexerp.domain.analytics.port.CsvWriterPort;
 import com.nexerp.domain.analytics.port.ExtractorPort;
-import com.nexerp.domain.analytics.port.StoragePort;
-
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.time.YearMonth;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
@@ -25,13 +21,9 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-
-import javax.sql.DataSource;
 
 @Slf4j
 @Service
@@ -105,8 +97,6 @@ public class AnalyticsExportOrchestrator {
       // 전체 성공 시 통과, 하나라도 실패 시 예외가 여기서 터짐
       race.join(); // 1.모든 로컬 파일 생성 완료 대기
 
-      log.info("[AnalyticsExport] 로컬 생성 완료. S3 업로드 및 원자적 이동 시작.");
-
       // 2. S3 업로드 (하나라도 실패 시 예외 처리)
       uploadAllToS3(createdFinalFiles, createdS3Keys);
 
@@ -120,7 +110,8 @@ public class AnalyticsExportOrchestrator {
       return results;
 
     } catch (Exception e) {
-      Throwable cause = (e instanceof CompletionException) ? e.getCause() : e; // CompletionException, IOException 등을 모두 처리
+      Throwable cause = (e instanceof CompletionException) ? e.getCause()
+        : e; // CompletionException, IOException 등을 모두 처리
       log.error("[AnalyticsExport] FAIL-FAST triggered. Export stopped.", cause);
 
       //나머지 스레드 모두 중지
@@ -134,17 +125,20 @@ public class AnalyticsExportOrchestrator {
   }
 
   /**
-   *  모든 파일을 S3로 업로드. 하나라도 실패하면 예외 발생
+   * 모든 파일을 S3로 업로드. 하나라도 실패하면 예외 발생
    */
-  private void uploadAllToS3(List<String> localPaths, List<String> createdS3Keys) throws IOException {
+  private void uploadAllToS3(List<String> localPaths, List<String> createdS3Keys)
+    throws IOException {
+
     for (String localPath : localPaths) {
       String fileName = Path.of(localPath).getFileName().toString();
       String s3Key = s3Storage.resolve(fileName);
 
-      try (OutputStream s30s = s3Storage.openOutputStream(s3Key)) {
-        Files.copy(Path.of(localPath), s30s);
+      try {
+        s3Storage.uploadFile(localPath, s3Key);
+
         createdS3Keys.add(s3Key); // 성공 기록
-        log.info("[S3Upload] Success: {}", s3Key);
+
       } catch (Exception e) {
         throw new IOException("S3 업로드 실패: " + fileName, e);
       }
@@ -202,6 +196,7 @@ public class AnalyticsExportOrchestrator {
     // 로컬 데이터 삭제
     cleanupLocalFiles(localFiles);
   }
+
   /**
    * 실패 시 이미 만들어진 파일들을 정리
    */
@@ -209,7 +204,6 @@ public class AnalyticsExportOrchestrator {
     for (String path : createdFinalFiles) {
       try {
         storage.deleteIfExists(path);
-        log.info("[AnalyticsExport] cleanup deleted file={}", path);
       } catch (Exception e) {
         log.warn("[AnalyticsExport] cleanup failed file={}", path, e);
       }
