@@ -2,20 +2,24 @@ package com.nexerp.domain.analytics.infra.storage;
 
 import com.nexerp.domain.analytics.config.AnalyticsExportProperties;
 import com.nexerp.domain.analytics.port.StoragePort;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.*;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.model.S3Object;
 
 @Slf4j
 @Component
@@ -43,20 +47,18 @@ public class S3Storage implements StoragePort {
     return finalPath + ".tmp-" + UUID.randomUUID();
   }
 
-  @Override
-  public OutputStream openOutputStream(String fullPath) throws IOException {
-    return new ByteArrayOutputStream() {
-      @Override
-      public void close() throws IOException {
-        super.close();
-        byte[] bytes = toByteArray();
-        s3Client.putObject(PutObjectRequest.builder()
+  public void uploadFile(String fullPath, String key) {
+    try {
+      s3Client.putObject(PutObjectRequest.builder()
           .bucket(props.s3Bucket())
-          .key(fullPath)
-          .build(), RequestBody.fromBytes(bytes));
-        log.info("[S3Storage] Uploaded to S3: {}", fullPath);
-      }
-    };
+          .key(key)
+          .build(),
+        RequestBody.fromFile(Path.of(fullPath)) // 파일 객체를 직접 전달 (스트리밍)
+      );
+      log.info("[S3Storage] Uploaded to S3: {}", fullPath);
+    } catch (Exception e) {
+      throw new RuntimeException("S3 파일 업로드 실패: " + key, e);
+    }
   }
 
   @Override
