@@ -62,12 +62,6 @@ public class Item {
   @Column(name = "company_id", nullable = false)
   private Long companyId;
 
-  @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<InventoryItem> inventoryItems = new ArrayList<>();
-
-  @OneToMany(mappedBy = "item", cascade = CascadeType.ALL)
-  private List<LogisticsItem> logisticsItems = new ArrayList<>();
-
   @Builder
   public Item(
     Long companyId,
